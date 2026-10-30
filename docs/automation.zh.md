@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md at the T-006 commit; the English file is authoritative -->
+<!-- translation of docs/automation.md at the T-008 commit; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -20,8 +20,12 @@ node scripts/goal-check.mjs --json          # 机器可读
 - 该任务的闸门；
 - 验收覆盖表（`A# → 任务 id`）。
 
-退出码 1 表示停下：下一个任务没有 `serves` 链接、`serves` 指向未知验收、有验收标准无人覆盖，
-或者没有可运行的任务。没有验收链接的任务不是工作，是尚未命名的漂移。
+退出码 1 表示停下：下一个任务没有 `serves` 链接、`serves` 指向未知验收、有验收标准无人覆盖、
+没有可运行的任务，或者到了里程碑审计的时间。没有验收链接的任务不是工作，是尚未命名的漂移。
+
+守卫也会执行审计节奏：距离上一个 `review_result` 已经完成三个任务，或者 mission 已完成但最后
+一个 `task_done` 之后没有通过的审查，它都会退出 1 并指出是哪个检查点。完成 mission 且审查通过时
+它退出 0 并打印 `Current task: none`；此时剩下的唯一写入是 `cairn record --mission-done`。
 
 ## 收工前：`audit-session`
 

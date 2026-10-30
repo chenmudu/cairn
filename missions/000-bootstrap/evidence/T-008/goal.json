@@ -1,0 +1,16 @@
+{
+  "gate": {
+    "id": "goal",
+    "command": "node",
+    "args": [
+      "scripts/goal-check.mjs",
+      "missions/000-bootstrap"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "goal: ok\nmission: 000-bootstrap — Build Cairn with Cairn\nintent: Build the smallest version of Cairn that can carry its own development, and use it to build itself from the first tick. The mission is both the product and the proof: if the protocol cannot express its own delivery, the protocol is wrong.\ncurrent task: T-008 — Mission completion and audit cadence\nserves: A3, A7\ngates: test (block): node --test; goal (block): node scripts/goal-check.mjs missions/000-bootstrap\ncoverage:\n  A1: T-001\n  A2: T-002\n  A3: T-003, T-004, T-005, T-008\n  A4: T-005\n  A5: T-005, T-006, T-007\n  A6: T-002\n  A7: T-004, T-005, T-006, T-007, T-008\n  A8: T-002\nledger: 50 events, last gate_result\nnon-goals: No UI, no database, no hosted service. No harness-specific adapter in M0; the generic dispatch packet is enough. No feature that this mission does not need. No merge of the superpowers or Impeccable repositories. They are content and gate packs,",
+  "duration_ms": 51,
+  "timed_out": false
+}

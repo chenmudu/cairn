@@ -1,4 +1,4 @@
-<!-- translation of docs/self-hosting.md at the T-005 commit; the English file is authoritative -->
+<!-- translation of docs/self-hosting.md at the T-008 commit; the English file is authoritative -->
 
 # 自举——一次一个 tick
 
@@ -15,7 +15,11 @@ node src/cli.ts verify <task>               # 跑每个 gate，写证据和 gate
 # 提交工作（任务代码和证据）
 node src/cli.ts record <task> --status done # 三个条件都满足后写 task_done
 node src/cli.ts reconcile                   # ledger、git、证据三者一致
+node src/cli.ts record --mission-done       # 所有任务完成，每条验收都有证据
 ```
+
+最后一行只有在最后一个 `task_done` 之后存在通过的 `review_result` 时才写 `mission_done`；有未完成
+任务、未覆盖验收、缺失证据或审查失败时它会拒绝。
 
 中间的执行步骤故意不做规定。子代理、模型或 shell 脚本都可以干活；它们返回的报告由
 `docs/adapter.md` 定义。控制器负责 `verify` 和 `record`，所以适配器无法给自己发证书。

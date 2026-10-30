@@ -15,6 +15,7 @@ import {
 } from './plan.ts';
 import { checkEvidence, verifyTask } from './verify.ts';
 import { reconcileMission } from './reconcile.ts';
+import { completeMission } from './complete.ts';
 
 const DEFAULT_MISSION = 'missions/000-bootstrap';
 const USAGE = `usage:
@@ -23,6 +24,7 @@ const USAGE = `usage:
   cairn verify <task> [--mission <dir>]
   cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--mission <dir>]
+  cairn record --mission-done [--mission <dir>]
 `;
 
 function main(argv: string[]): number {
@@ -74,6 +76,10 @@ function main(argv: string[]): number {
   }
 
   if (command === 'record') {
+    if (rest.includes('--mission-done')) {
+      if (rest.length !== 1) return usage('record --mission-done takes no task');
+      return recordMission(missionDir);
+    }
     const taskId = rest[0];
     const status = takeOption(rest, '--status');
     if (!taskId || status !== 'done' || rest.length > 1) {
@@ -147,6 +153,21 @@ function record(missionDir: string, taskId: string): number {
       commits: [head],
       gates,
     },
+  });
+  process.stdout.write(`${JSON.stringify(completed, null, 2)}\n`);
+  return 0;
+}
+
+function recordMission(missionDir: string): number {
+  const report = completeMission(missionDir);
+  if (!report.ok) return refuse(report.errors[0]);
+  const doc = loadMission(missionDir);
+  const completed = appendEvent(doc.missionDir, {
+    ts: nextTimestamp(doc.events),
+    event: 'mission_done',
+    actor: 'cairn',
+    mission: doc.mission.id,
+    data: { acceptance: report.acceptance },
   });
   process.stdout.write(`${JSON.stringify(completed, null, 2)}\n`);
   return 0;

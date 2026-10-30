@@ -20,8 +20,13 @@ It reads `mission.md`, `plan.md`, and `ledger.jsonl`, then prints:
 - the acceptance coverage map (`A# → task ids`).
 
 Exit 1 means stop: the next task has no `serves` link, a `serves` id is unknown, an acceptance
-criterion is uncovered, or no task is runnable. A task without an acceptance link is not work;
-it is drift that has not been named yet.
+criterion is uncovered, no task is runnable, or a milestone audit is due. A task without an
+acceptance link is not work; it is drift that has not been named yet.
+
+The guard also enforces the audit cadence. Three completed tasks since the last `review_result`,
+or a complete mission without a passing review after the last `task_done`, makes it exit 1 and
+names the checkpoint. A complete mission with that review exits 0 and prints
+`Current task: none`; `cairn record --mission-done` is then the only write left.
 
 ## After a task: `audit-session`
 

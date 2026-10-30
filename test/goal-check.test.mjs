@@ -77,13 +77,41 @@ const TWO = `  - id: F1
     check: second
 `;
 
-function makeMission(t, { mission = missionOf(TWO), plan = planOf(taskYaml('T-001')) } = {}) {
+const ONE = `  - id: F1
+    check: first
+`;
+
+const doneEvent = (task, ts) =>
+  JSON.stringify({
+    ts,
+    event: 'task_done',
+    mission: 'temp-mission',
+    task,
+    actor: 'test',
+    data: {
+      base: 'a'.repeat(40),
+      head: 'b'.repeat(40),
+      commits: ['b'.repeat(40)],
+      gates: [{ id: 'gate', exit_code: 0, evidence: 'evidence/x.json' }],
+    },
+  });
+
+const reviewEvent = (ts, verdict = 'pass') =>
+  JSON.stringify({
+    ts,
+    event: 'review_result',
+    mission: 'temp-mission',
+    actor: 'test',
+    data: { reviewer: 'test', verdict, findings: [] },
+  });
+
+function makeMission(t, { mission = missionOf(TWO), plan = planOf(taskYaml('T-001')), ledger = '' } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'cairn-goal-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   writeFileSync(join(dir, 'mission.md'), mission);
   writeFileSync(join(dir, 'policy.md'), policy);
   writeFileSync(join(dir, 'plan.md'), plan);
-  writeFileSync(join(dir, 'ledger.jsonl'), '');
+  writeFileSync(join(dir, 'ledger.jsonl'), ledger);
   return dir;
 }
 
@@ -107,6 +135,66 @@ test('names a runnable task with its serves link and gates', (t) => {
   assert.equal(report.currentTask.id, 'T-001');
   assert.deepEqual(report.currentTask.serves, ['F1']);
   assert.ok(report.currentTask.gates.length > 0, 'next task must declare gates');
+});
+
+test('rejects a new task when three tasks completed since the last review', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(ONE),
+    plan: planOf(
+      taskYaml('T-001', { serves: '[F1]' }),
+      taskYaml('T-002', { deps: '[T-001]', serves: '[F1]' }),
+      taskYaml('T-003', { deps: '[T-002]', serves: '[F1]' }),
+      taskYaml('T-004', { deps: '[T-003]', serves: '[F1]' }),
+    ),
+    ledger: [
+      doneEvent('T-001', '2026-10-31T00:00:00.000Z'),
+      doneEvent('T-002', '2026-10-31T00:00:01.000Z'),
+      doneEvent('T-003', '2026-10-31T00:00:02.000Z'),
+    ].join('\n') + '\n',
+  });
+  const report = checkGoal(dir);
+  assert.equal(report.ok, false);
+  assert.match(report.errors.join('\n'), /milestone audit due/);
+});
+
+test('a review_result resets the audit cadence', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(ONE),
+    plan: planOf(
+      taskYaml('T-001', { serves: '[F1]' }),
+      taskYaml('T-002', { deps: '[T-001]', serves: '[F1]' }),
+      taskYaml('T-003', { deps: '[T-002]', serves: '[F1]' }),
+      taskYaml('T-004', { deps: '[T-003]', serves: '[F1]' }),
+    ),
+    ledger: [
+      doneEvent('T-001', '2026-10-31T00:00:00.000Z'),
+      doneEvent('T-002', '2026-10-31T00:00:01.000Z'),
+      reviewEvent('2026-10-31T00:00:02.000Z'),
+      doneEvent('T-003', '2026-10-31T00:00:03.000Z'),
+    ].join('\n') + '\n',
+  });
+  const report = checkGoal(dir);
+  assert.equal(report.ok, true, report.errors.join('\n'));
+  assert.equal(report.currentTask.id, 'T-004');
+});
+
+test('a complete mission needs a passing review after the last task', (t) => {
+  const plan = planOf(taskYaml('T-001', { serves: '[F1]' }));
+  const failing = makeMission(t, {
+    mission: missionOf(ONE),
+    plan,
+    ledger: `${doneEvent('T-001', '2026-10-31T00:00:00.000Z')}\n${reviewEvent('2026-10-31T00:00:01.000Z', 'fail')}\n`,
+  });
+  assert.match(checkGoal(failing).errors.join('\n'), /mission-end audit due/);
+
+  const passing = makeMission(t, {
+    mission: missionOf(ONE),
+    plan,
+    ledger: `${doneEvent('T-001', '2026-10-31T00:00:00.000Z')}\n${reviewEvent('2026-10-31T00:00:01.000Z')}\n`,
+  });
+  const report = checkGoal(passing);
+  assert.equal(report.ok, true, report.errors.join('\n'));
+  assert.equal(report.complete, true);
 });
 
 test('rejects a task without a serves link', (t) => {

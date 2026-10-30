@@ -13,7 +13,12 @@ node src/cli.ts verify <task>               # run every gate; write evidence and
 # commit the work (the task's code plus its evidence)
 node src/cli.ts record <task> --status done # all three conditions, then task_done
 node src/cli.ts reconcile                   # ledger, git, and evidence agree
+node src/cli.ts record --mission-done       # every task done, every criterion evidenced
 ```
+
+The last line appends `mission_done` only after a passing `review_result` newer than the last
+`task_done`; an open task, an uncovered criterion, missing evidence, or a failing review makes it
+refuse.
 
 The adapter step in the middle is deliberately unspecified. A subagent, a model, or a shell
 script can do the work; `docs/adapter.md` defines the report it returns. The controller runs

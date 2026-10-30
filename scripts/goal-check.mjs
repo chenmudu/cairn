@@ -68,6 +68,34 @@ export function checkGoal(missionDir = DEFAULT_MISSION) {
   const incomplete = tasks.filter((task) => !done.has(task.id));
   const runnable = incomplete.filter((task) => depsOf(task).every((dep) => done.has(dep)));
   const next = runnable[0] ?? null;
+  const complete = incomplete.length === 0;
+
+  const lastReview = events.filter((event) => event.event === 'review_result').at(-1);
+  const doneSinceReview = events.filter(
+    (event) =>
+      event.event === 'task_done' &&
+      (!lastReview || Date.parse(event.ts) > Date.parse(lastReview.ts)),
+  ).length;
+  if (doneSinceReview >= 3) {
+    errors.push(
+      `milestone audit due: ${doneSinceReview} tasks completed since ${lastReview ? lastReview.ts : 'mission start'}`,
+    );
+  }
+
+  if (complete) {
+    const lastDone = events.filter((event) => event.event === 'task_done').at(-1);
+    const passing = [...events]
+      .reverse()
+      .find(
+        (event) =>
+          event.event === 'review_result' &&
+          event.data &&
+          event.data.verdict === 'pass',
+      );
+    if (!passing || (lastDone && Date.parse(passing.ts) <= Date.parse(lastDone.ts))) {
+      errors.push('mission-end audit due: no passing review_result after the last task_done');
+    }
+  }
 
   if (!next && incomplete.length > 0) {
     errors.push(
@@ -106,7 +134,7 @@ export function checkGoal(missionDir = DEFAULT_MISSION) {
     nonGoals: bullets(section(body, 'Non-goals')),
     currentTask,
     coverage,
-    complete: incomplete.length === 0,
+    complete,
     blocked: !next && incomplete.length > 0 ? incomplete.map((task) => task.id) : [],
     ledger: { total: events.length, last: events.at(-1) ?? null },
   };
