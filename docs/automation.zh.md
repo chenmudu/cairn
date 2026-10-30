@@ -36,7 +36,10 @@ node scripts/audit-session.mjs --strict     # verdict 为 drift 时退出 1
 node scripts/audit-session.mjs --out report.md
 ```
 
-它读取 ZCode `model-io-*.jsonl` 中消息最全的一次请求，报告四类信号：
+它读取 ZCode `model-io-*.jsonl` 中最新的一次请求，报告四类信号。它不读消息最多的请求：
+压缩后旧快照更大，审计旧快照会漏掉之后的工作。没有更晚的人类回合时，压缩摘要作为后续工作的
+锚点；摘要之后还有人类回合时则跳过摘要，避免把重放的历史再判一次。mission 的 `evidence/`
+下的写入是运行时产物，不算漂移。
 
 | 信号 | 含义 |
 |---|---|

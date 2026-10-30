@@ -35,18 +35,18 @@ const WRITE_TOOLS = new Set(['Write', 'Edit']);
 const CLAIM =
   /(已完成|已经完成|已改完|已提交|全部通过|全过|12\/12|任务完成|T-\d+\s*完成|闸门[^\n。]{0,6}(?:通过|绿灯))/i;
 const GATE =
-  /(validate-mission|--test|typecheck|goal-check|reconcile|node\s+--test|pnpm\s+typecheck)/i;
+  /(validate-mission|--test|typecheck|goal-check|reconcile|node\s+--test|pnpm\s+typecheck|(?:src\/cli\.ts|cairn)\s+verify|check-method|check-bilingual|check-workflow|check-example)/i;
 const ALIGN = /(定位|偏离|走偏|理解|目标|做什么|？？)/;
 const CONFIRM = /(需要你|请你|回一句|要不要|等你|确认后|由你|你来决定|你确认)/;
 
 export function auditTranscript(file, options = {}) {
   const planFiles = Array.isArray(options.planFiles) ? options.planFiles : [];
   const repoRoot = options.repoRoot ? resolve(options.repoRoot) : null;
-  const { records, messages } = readFullest(file, options.maxLineBytes);
+  const { records, messages } = readLatest(file, options.maxLineBytes);
   const turns = buildTurns(messages);
 
   const alignmentCorrections = turns
-    .filter((turn) => ALIGN.test(turn.user))
+    .filter((turn) => !turn.synthetic && ALIGN.test(turn.user))
     .map((turn) => ({
       turn: turn.index,
       message: turn.messageIndex,
@@ -71,7 +71,7 @@ export function auditTranscript(file, options = {}) {
       const raw = tool.input?.file_path ?? tool.input?.path;
       if (typeof raw !== 'string' || raw === '') continue;
       const path = toRepoRelative(raw, repoRoot);
-      if (!path || matchesPlan(path, planFiles)) continue;
+      if (!path || matchesPlan(path, planFiles) || isMissionEvidence(path)) continue;
       const key = path.toLowerCase();
       if (writes.has(key)) continue;
       writes.set(key, { turn: turn.index, message: turn.messageIndex, path });
@@ -166,13 +166,17 @@ const MAX_LINE_BYTES = 64 * 1024 * 1024;
  * Stream the transcript line by line. A whole-file read dies on a transcript
  * larger than the V8 string limit; a bounded buffer keeps memory flat and a
  * single over-limit line fails with a clear error instead of a crash.
+ *
+ * Keep the last request, not the largest one. Compaction shortens the context,
+ * so the largest request after a compaction is a pre-compaction snapshot; it
+ * cannot see the turns that followed.
  */
-function readFullest(file, maxLineBytes = MAX_LINE_BYTES) {
+function readLatest(file, maxLineBytes = MAX_LINE_BYTES) {
   const fd = openSync(file, 'r');
   const buffer = Buffer.allocUnsafe(1024 * 1024);
   const decoder = new StringDecoder('utf8');
   let carry = '';
-  let best = null;
+  let latest = null;
   let records = 0;
 
   const consume = (line) => {
@@ -188,8 +192,7 @@ function readFullest(file, maxLineBytes = MAX_LINE_BYTES) {
     }
     records += 1;
     const messages = record?.request?.body?.messages;
-    if (!Array.isArray(messages)) return;
-    if (!best || messages.length > best.messages.length) best = { messages };
+    if (Array.isArray(messages)) latest = { messages };
   };
 
   try {
@@ -213,8 +216,8 @@ function readFullest(file, maxLineBytes = MAX_LINE_BYTES) {
     closeSync(fd);
   }
 
-  if (!best) throw new Error(`${file}: no request.body.messages found`);
-  return { records, messages: best.messages };
+  if (!latest) throw new Error(`${file}: no request.body.messages found`);
+  return { records, messages: latest.messages };
 }
 
 function buildTurns(messages) {
@@ -229,7 +232,23 @@ function buildTurns(messages) {
       const text = stripReminders(collectText(message.content));
       if (text !== '') {
         if (isCompactionSummary(text)) {
-          current = null;
+          // A summary followed by a later real user message is replayed
+          // history: the later turn anchors the audit and the summary is
+          // skipped. With no later user message, the summary is the only
+          // anchor for the work that follows, so it opens a synthetic turn.
+          if (hasLaterUserTurn(messages, index)) {
+            current = null;
+            continue;
+          }
+          current = {
+            index: turns.length,
+            messageIndex: index,
+            user: text,
+            assistant: '',
+            tools: [],
+            synthetic: true,
+          };
+          turns.push(current);
           continue;
         }
         current = {
@@ -294,6 +313,15 @@ function isCompactionSummary(text) {
   );
 }
 
+function hasLaterUserTurn(messages, startIndex) {
+  for (let index = startIndex + 1; index < messages.length; index++) {
+    const message = messages[index];
+    if (!message || message.role !== 'user' || isToolResult(message)) continue;
+    if (stripReminders(collectText(message.content)) !== '') return true;
+  }
+  return false;
+}
+
 /**
  * A completion mention is only a claim when it is not quoted and not part of
  * "T-001 完成后…" prose. The heuristic is deliberately conservative; the point
@@ -338,6 +366,15 @@ function matchesPlan(path, planFiles) {
     const declared = entry.replace(/\\/g, '/').toLowerCase();
     return declared.endsWith('/') ? lower.startsWith(declared) : lower === declared;
   });
+}
+
+/**
+ * Evidence is runtime-owned: cairn verify and cairn review write under
+ * .cairn/missions/<id>/evidence/, and the plan cannot enumerate the generated
+ * filenames. The runtime's own output is not drift.
+ */
+function isMissionEvidence(path) {
+  return /(^|\/)\.cairn\/missions\/[^/]+\/evidence\//.test(path);
 }
 
 function hasAmendment(ledgerFile) {

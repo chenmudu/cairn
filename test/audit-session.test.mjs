@@ -13,6 +13,17 @@ function writeTranscript(t, messages) {
   return file;
 }
 
+function writeTranscriptRecords(t, records) {
+  const dir = mkdtempSync(join(tmpdir(), 'cairn-audit-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const file = join(dir, 'model-io-test.jsonl');
+  writeFileSync(
+    file,
+    records.map((messages) => JSON.stringify({ request: { body: { messages } } })).join('\n') + '\n',
+  );
+  return file;
+}
+
 const USER = (text) => ({ role: 'user', content: text });
 const ASSISTANT = (blocks) => ({ role: 'assistant', content: blocks });
 const TEXT = (text) => ({ type: 'text', text });
@@ -160,6 +171,68 @@ test('does not audit writes replayed inside a compaction summary', (t) => {
   assert.equal(report.signals.claimsWithoutGate.length, 0);
   assert.equal(report.signals.unplannedWrites.length, 0);
   assert.equal(report.verdict, 'clean');
+});
+
+test('audits work anchored by a summary when no later user turn exists', (t) => {
+  const summary = [
+    'This session is being continued from a previous conversation that ran out of context.',
+    'Primary Request and Intent: 目标是完成 T7。',
+  ].join('\n');
+  const file = writeTranscript(t, [
+    USER(summary),
+    ASSISTANT([TOOL('Write', { file_path: 'D:/repo/src/new.ts' })]),
+    RESULT('ok'),
+  ]);
+
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo' });
+
+  assert.equal(report.turns, 1);
+  assert.equal(report.signals.alignmentCorrections.length, 0);
+  assert.deepEqual(
+    report.signals.unplannedWrites.map((item) => item.path),
+    ['src/new.ts'],
+  );
+});
+
+test('audits the latest request, not a larger pre-compaction snapshot', (t) => {
+  const stale = [
+    USER('定位又错了，这个项目是做什么的？'),
+    ASSISTANT([TOOL('Write', { file_path: 'D:/repo/src/old.ts' })]),
+    RESULT('ok'),
+    ASSISTANT([TEXT('继续')]),
+    RESULT('ok'),
+  ];
+  const latest = [
+    USER('继续'),
+    ASSISTANT([TOOL('Write', { file_path: 'D:/repo/src/new.ts' })]),
+    RESULT('ok'),
+  ];
+  const file = writeTranscriptRecords(t, [stale, latest]);
+
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo' });
+
+  assert.equal(report.messages, 3);
+  assert.equal(report.turns, 1);
+  assert.deepEqual(
+    report.signals.unplannedWrites.map((item) => item.path),
+    ['src/new.ts'],
+  );
+  assert.equal(report.signals.alignmentCorrections.length, 0);
+});
+
+test('ignores runtime evidence writes under the mission directory', (t) => {
+  const file = writeTranscript(t, [
+    USER('继续'),
+    ASSISTANT([
+      TOOL('Write', {
+        file_path: 'D:/repo/.cairn/missions/001/evidence/T8/review.json',
+      }),
+    ]),
+  ]);
+
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo' });
+
+  assert.equal(report.signals.unplannedWrites.length, 0);
 });
 
 test('recognizes a mission_amended event as an amendment', (t) => {

@@ -37,7 +37,12 @@ node scripts/audit-session.mjs --strict     # exit 1 on a drift verdict
 node scripts/audit-session.mjs --out report.md
 ```
 
-It reads the fullest request in a ZCode `model-io-*.jsonl` transcript and reports four signals:
+It reads the latest request in a ZCode `model-io-*.jsonl` transcript and reports four signals.
+It does not read the largest request: after a compaction the older snapshot is larger, and
+auditing it would miss the work that followed. A compaction summary anchors the work that
+follows when no later user turn exists; a summary followed by a later user turn is skipped so
+replayed history is not judged twice. Writes under the mission's `evidence/` are runtime output
+and are not drift.
 
 | Signal | What it means |
 |---|---|
