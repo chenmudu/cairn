@@ -110,6 +110,14 @@ tasks:
       - scripts/check-method.mjs
       - test/method.test.mjs
       - docs/i18n.md
+      - AGENTS.md
+      - docs/decisions/0002-packs-and-runtime-boundary.md
+      - docs/decisions/0002-packs-and-runtime-boundary.zh.md
+      - docs/decisions/0004-absorb-the-coordination.md
+      - docs/decisions/0004-absorb-the-coordination.zh.md
+      - .zcode/skills/cairn-guard/SKILL.md
+      - .zcode/skills/cairn-guard/SKILL.zh.md
+      - .cairn/missions/001-method-pack/plan.zh.md
       - .cairn/missions/000-bootstrap/inbox/0001-plan-defects.zh.md
       - .cairn/missions/000-bootstrap/inbox/0003-mission-end-audit.zh.md
       - .cairn/missions/000-bootstrap/inbox/0004-mission-1-follow-ups.zh.md
@@ -333,8 +341,9 @@ improvise a softer interpretation.
 
 Inputs: `docs/decisions/0002-packs-and-runtime-boundary.md` and
 `docs/decisions/0004-absorb-the-coordination.md`; superpowers 7.0.1 from
-`CAIRN_SUPERPOWERS_DIR` or the harness cache; Impeccable 4.8.0 commit `df3a4abe7` from
-`CAIRN_IMPECCABLE_DIR` or the checkout path.
+`CAIRN_SUPERPOWERS_DIR` or the harness plugin cache; Impeccable skill 4.8.0 and engine
+0.1.18 from `CAIRN_IMPECCABLE_DIR` (default `~/.zcode/skills/impeccable`), then
+`$CAIRN_IMPECCABLE_SRC/.claude/skills/impeccable`; source commit `df3a4abe7`.
 
 Outputs:
 
@@ -350,7 +359,9 @@ Outputs:
 - `method/README.md` explains how to run with both packs, one pack, and neither.
 - `scripts/check-method.mjs` implements `--playbook` (structure, pins, status, no empty
   cells), `--packs` (advisory detection), and `--products` (resolve every `exists` row;
-  report `planned:T#` as pending; `--strict` fails on pending).
+  report `planned:T#` as pending; `--strict` fails on pending). `--packs` reports the installed
+  Impeccable as `present` (skill 4.8.0, engine 0.1.18, 62 rules) and superpowers as present or
+  absent; it never downloads an engine.
 - `test/method.test.mjs` covers a valid matrix, a missing floor, an empty fallback, a
   `not-applicable` without reason, and a pending row under `--strict`.
 - `scripts/check-bilingual.mjs` scans `.cairn/missions/*/inbox/*.md`; the three Mission #0
@@ -362,7 +373,9 @@ Outputs:
 Encode these source facts, not a summary from memory: SP `task-start` writes no ledger;
 `progress.md` records completion lines only; its workspace is git-ignored. Impeccable
 `detect` on markdown returns `[]` and is `not-applicable`; `critique` asks the user;
-`audit` is web-only.
+`audit` is web-only. The installed skill is `~/.zcode/skills/impeccable`; its
+`scripts/VERSION` is `0.1.18`; the engine at `~/.impeccable/bin/0.1.18/impeccable.exe` reports
+`0.1.18+engine`; `--list-rules` ends with `62 rules`.
 
 Done when: `node scripts/check-method.mjs --playbook` exits 0; `node --test` exits 0;
 `node scripts/check-bilingual.mjs` exits 0.
@@ -372,8 +385,8 @@ Done when: `node scripts/check-method.mjs --playbook` exits 0; `node --test` exi
 - Standards for docs, code, and workflow; templates for mission, task, review, ADR, and
   handoff; every pair bilingual.
 - The Impeccable contribution is criteria-based, not the detector: cite
-  `skill/reference/{critique,audit,polish,harden}.md` at 4.8.0+df3a4ab and mark UI-only
-  dimensions `not-applicable` for docs and code.
+  `reference/{critique,audit,polish,harden}.md` from the installed skill at 4.8.0 (source
+  `df3a4ab`) and mark UI-only dimensions `not-applicable` for docs and code.
 - `check-method --standards` verifies each pair exists and each standard names its
   source and pin.
 
@@ -387,14 +400,21 @@ Done when: `node scripts/check-method.mjs --playbook` exits 0; `node --test` exi
 ### T6 — worked example
 
 - A real small tick with ledger, evidence, and a `packs` record. If Impeccable is
-  `not-applicable`, the example records the criteria-based review and the reason; it does
-  not claim a detector run.
+  `not-applicable`, the example records `present, not-applicable` with the reason and the
+  criteria-based review; it does not claim a detector run.
 - `check-example` verifies the ledger, evidence, and pack records.
 
 ### T7 — runtime gaps
 
 - `src/packs.ts` detects both packs: environment overrides first, then known roots; statuses
-  `present`, `absent`, `mismatch`, `not-invocable`; versions and pins.
+  `present`, `absent`, `mismatch`, `not-invocable`; versions and pins. Known Impeccable roots:
+  `CAIRN_IMPECCABLE_DIR`, `~/.zcode/skills/impeccable`, then
+  `$CAIRN_IMPECCABLE_SRC/.claude/skills/impeccable`; engine: `CAIRN_IMPECCABLE_BIN`,
+  `~/.impeccable/bin/<version>/impeccable.exe`. Known superpowers roots:
+  `CAIRN_SUPERPOWERS_DIR`, then the harness plugin cache. `present` requires a readable
+  version; `mismatch` is a version other than the pin; `not-invocable` is a path without a
+  runnable engine or skill. Never invoke the skill launcher when the engine is missing and
+  never download.
 - Packet `packs` block: `{capability, pack, version, mode, instruction, fallback}`.
 - Report `packs` field: `{capability, pack, version, mode, evidence}`; `not-applicable`
   requires a reason.
@@ -408,8 +428,10 @@ Done when: `node scripts/check-method.mjs --playbook` exits 0; `node --test` exi
 - `node scripts/check-method.mjs --products --strict` exits 0: every floor file or gate
   exists; every pack reference resolves at its pin or is `not-applicable` with a reason;
   every fallback is executable; no row is still `planned`.
-- Run once with both packs present and once with `CAIRN_SUPERPOWERS_DIR` and
-  `CAIRN_IMPECCABLE_DIR` pointing at nonexistent paths; both runs pass.
+- Run once with both packs present (installed Impeccable skill, harness superpowers cache) and
+  once with `CAIRN_SUPERPOWERS_DIR`, `CAIRN_IMPECCABLE_DIR`, and `CAIRN_IMPECCABLE_BIN`
+  pointing at nonexistent paths; both runs pass. The absent run must not invoke a launcher or
+  download.
 - A fresh reviewer names the goal, layout, next task, and one-tick flow.
 
 ## Known deps

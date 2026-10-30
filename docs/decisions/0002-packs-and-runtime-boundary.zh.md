@@ -1,4 +1,4 @@
-<!-- translation of docs/decisions/0002-packs-and-runtime-boundary.md at the T2 commit; the English file is authoritative -->
+<!-- translation of docs/decisions/0002-packs-and-runtime-boundary.md at the T3 amendment; the English file is authoritative -->
 
 # 0002 — 消费这两个包，不合并它们
 
@@ -32,8 +32,9 @@
 0004 细化了上面的一句话。包可以保留适配器本地日志（例如
 `.superpowers/sdd/<plan>/progress.md`），但日志永远不是事实源：完成只来自 Cairn 台账事件，
 `cairn reconcile` 比较日志和台账，影响完成的持久状态表达为台账事件。不合并、适配器边界和
-单一台账规则不变。“Impeccable 没有作为 skill 安装”记录的是当时的状态；0004 允许检测和激活
-外部 pin 的 checkout，不是把它 vendor 进仓库。
+单一台账规则不变。“Impeccable 没有作为 skill 安装”记录的是 T-001 时的状态。2026-10-31 它被
+安装到用户级（`~/.zcode/skills/impeccable`，skill 4.8.0，engine 0.1.18），按引用检测；仍然没有
+vendor 进这个仓库。
 
 ## 来自 T-001 的证据
 
@@ -45,8 +46,8 @@
   让第二套记账系统落地。
 - `test-driven-development` 要求持久测试。这产生了 `test/validate-mission.test.mjs`，它在
   `T-001` 声明的文件清单之外；它在台账里被记录为 ruling，而不是静默加入。
-- Impeccable 没有作为 skill 安装。它的标准按引用作为审查标准；只有整体采用时才会 vendor 成
-  skill。
+- Impeccable 在 T-001 时没有作为 skill 安装。它的标准按引用作为审查标准。2026-10-31 它被安装
+  到用户级（见 0004），仍然是外部内容；只有整体采用时才会 vendor 成 skill。
 
 ## 后果
 

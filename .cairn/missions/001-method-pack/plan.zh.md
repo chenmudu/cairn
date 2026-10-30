@@ -50,9 +50,13 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
 - 阶段覆盖 `frame`、`plan`、`execute`、`review`、`close`、`state`、`design-check`、
   `handoff`、`unattended`。
 - `check-method` 支持 `--playbook`、`--packs`、`--products`；`--strict` 时 `planned` 失败。
+  `--packs` 把已安装的 Impeccable 报为 `present`（skill 4.8.0，engine 0.1.18，62 条规则），
+  superpowers 报 present 或 absent；永不下载引擎。
 - 源码事实：SP 的 `task-start` 不写账，`progress.md` 只记完成行且是 git-ignored；Imp 的
   `detect` 对 markdown 返回 `[]`，是 `not-applicable`，不是干净；`critique` 会问用户；
-  `audit` 只适用 web。
+  `audit` 只适用 web。已安装的技能在 `~/.zcode/skills/impeccable`，`scripts/VERSION` 是
+  `0.1.18`；引擎 `~/.impeccable/bin/0.1.18/impeccable.exe` 报 `0.1.18+engine`；
+  `--list-rules` 以 `62 rules` 结束。
 - 第一个 superpowers 使用是 TDD；JSON 块顶层的 `packs_used` 记录
   `superpowers:test-driven-development@7.0.1`，以测试路径为证据。
 - 完成判据：`--playbook`、`node --test`、`check-bilingual` 全部退出 0。
@@ -60,8 +64,8 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
 ### T4 — 标准与模板
 
 - docs、code、workflow 标准；mission、task、review、ADR、handoff 模板；全部双语。
-- Impeccable 只贡献标准（`critique`/`audit`/`polish`/`harden` 的 4.8.0+df3a4ab）；UI 专用
-  维度标 `not-applicable`，不冒充 detector。
+- Impeccable 只贡献标准（已安装技能 `reference/{critique,audit,polish,harden}.md`，4.8.0，
+  源码 `df3a4ab`）；UI 专用维度标 `not-applicable`，不冒充 detector。
 - `check-method --standards` 验证成对和来源/pin。
 
 ### T5 — 操作手册
@@ -71,14 +75,18 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
 
 ### T6 — 样例
 
-- 真实小 tick，带台账、证据和 `packs` 记录；Impeccable 不适用时记录标准审查和原因，不冒充
-  detector。
+- 真实小 tick，带台账、证据和 `packs` 记录；Impeccable 不适用时记录 `present,
+  not-applicable`、原因和标准审查，不冒充 detector。
 - `check-example` 验证台账、证据和包记录。
 
 ### T7 — 运行时
 
 - `src/packs.ts` 检测两个包：环境变量优先，然后已知根；状态 `present`、`absent`、
-  `mismatch`、`not-invocable`。
+  `mismatch`、`not-invocable`。Impeccable 根：`CAIRN_IMPECCABLE_DIR`、
+  `~/.zcode/skills/impeccable`、`$CAIRN_IMPECCABLE_SRC/.claude/skills/impeccable`；引擎：
+  `CAIRN_IMPECCABLE_BIN`、`~/.impeccable/bin/<version>/impeccable.exe`。superpowers 根：
+  `CAIRN_SUPERPOWERS_DIR`、harness 插件缓存。`present` 要求版本可读；`mismatch` 是版本
+  不符；`not-invocable` 是有路径但没有可运行引擎或技能。引擎缺失时不调启动器，永不下载。
 - packet 的 `packs` 块字段：`capability`、`pack`、`version`、`mode`、`instruction`、
   `fallback`；report 的 `packs` 字段：`capability`、`pack`、`version`、`mode`、`evidence`。
 - packet/report schema 变更走协议修订，`approved_by: human`。
@@ -89,7 +97,9 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
 
 - `node scripts/check-method.mjs --products --strict` 退出 0：每个 floor 文件或闸门存在；
   每个包引用在 pin 上可解析，或 `not-applicable` 带原因；每个回退可执行；没有 `planned`。
-- 两包都在、两包都不在（环境变量指向不存在路径）各跑一次，都通过。
+- 两包都在（已安装的 Impeccable 技能、harness 的 superpowers 缓存）和两包都不在
+  （`CAIRN_SUPERPOWERS_DIR`、`CAIRN_IMPECCABLE_DIR`、`CAIRN_IMPECCABLE_BIN` 指向不存在
+  的路径）各跑一次，都通过；缺失的那次不调启动器、不下载。
 - 全新审查者说出目标、布局、下一任务、单 tick 流程。
 
 ## 自观测

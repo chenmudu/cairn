@@ -23,6 +23,19 @@
 - Documentation is bilingual: English is canonical for machine-checked contracts; Chinese
   companions are listed in `docs/i18n.md` and never override the canonical file.
 
+## Evidence discipline
+
+- Every factual claim about the repository, a pack, a tool, or a run cites a file, command
+  output, or commit. If it is not verified, write `unverified`; do not fill the gap with a
+  plausible answer.
+- Before declaring a pack or tool absent, present, or working, check the actual path and run
+  its version or smoke command. Record the path, version, and result. A skill listing, a
+  README, or a previous session is not proof.
+- An empty or `not-applicable` tool result is not a pass. Record the reason and use the
+  declared fallback.
+- If a required check cannot run, record the failure and the substitute evidence. Never report
+  an unrun check as passed. When the guard itself is wrong, fix the guard.
+
 ## Work rules
 
 - One tick advances at most one task.

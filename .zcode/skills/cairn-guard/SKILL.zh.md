@@ -1,4 +1,4 @@
-<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the T2 commit; the English file is authoritative -->
+<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the T3 amendment; the English file is authoritative -->
 
 ---
 name: cairn-guard
@@ -31,4 +31,9 @@ description: 在 Cairn 仓库的每个任务开始和结束时使用。运行目
   和台账。
 - 人类决定是 escalation；没有人类的决定是 ruling。记录下来。
 - 如果写入落在任务声明的文件之外，记录 ruling 或修订计划。
+- 声明包缺失、存在或可用之前，检查真实路径并跑版本命令。记录路径、版本和命令结果。技能列表
+  和记忆不是证据。
+- 空结果或 `not-applicable` 不是通过。记录原因和回退。
+- 必需检查跑不了时，记录失败和替代证据。永不把没跑的检查报告为通过；guard 本身错了就修
+  guard。
 - 会话启动 hook 会从仓库打印同样的锚点。把它当作提醒，而不是运行检查的替代品。

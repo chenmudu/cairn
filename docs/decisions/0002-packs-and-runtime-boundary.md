@@ -36,8 +36,9 @@ Two constraints shaped the answer:
 comes only from Cairn ledger events, `cairn reconcile` compares the journal with the ledger,
 and durable state that affects completion is expressed as ledger events. The no-merge rule,
 the adapter boundary, and the one-ledger rule stand unchanged. The line "Impeccable is not
-installed as a skill" records the state at the time; 0004 permits detection and activation of
-an external pinned checkout, not vendoring it into the repository.
+installed as a skill" records the state at T-001. On 2026-10-31 Impeccable was installed at
+user scope (`~/.zcode/skills/impeccable`, skill 4.8.0, engine 0.1.18) and is detected by
+reference; it is still not vendored into this repository.
 
 ## Evidence from T-001
 
@@ -51,8 +52,9 @@ Executing T-001 with superpowers surfaced the exact boundary this decision descr
 - `test-driven-development` required a durable test. That produced
   `test/validate-mission.test.mjs`, which is outside `T-001`'s declared file list; it is
   recorded as a ruling in the ledger rather than added silently.
-- Impeccable is not installed as a skill. Its standards are used as review criteria by
-  reference; it becomes a vendored skill only if adopted wholesale.
+- Impeccable was not installed as a skill at T-001. Its standards were used as review criteria
+  by reference. It is installed at user scope on 2026-10-31 (see 0004) and remains external;
+  it becomes a vendored skill only if adopted wholesale.
 
 ## Consequences
 

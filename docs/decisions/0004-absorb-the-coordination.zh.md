@@ -1,4 +1,4 @@
-<!-- translation of docs/decisions/0004-absorb-the-coordination.md at the decision commit; the English file is authoritative -->
+<!-- translation of docs/decisions/0004-absorb-the-coordination.md at the T3 amendment; the English file is authoritative -->
 
 # 0004 — 吸收协调层，不吸收包
 
@@ -40,9 +40,16 @@ detector、浏览器 critique、live 模式。
   `not-applicable`，不是干净。
 - **Impeccable 4.8.0** 的 `init` 和 `document` 基于访谈且面向 UI：写 `PRODUCT.md` 和
   `DESIGN.md`；无人值守时不能用它们凭空发明产品或视觉事实。
+- **已安装的 Impeccable（2026-10-31）**：ZCode 用户技能在 `~/.zcode/skills/impeccable`
+  （`SKILL.md` 的 `version: 4.8.0`，41 份 reference，`scripts/VERSION` 为 `0.1.18`），从
+  `D:\project\github\Impeccable\.claude\skills\impeccable` 的 `df3a4abe7` 复制。引擎在
+  `~/.impeccable/bin/0.1.18/impeccable.exe`，报告 `0.1.18+engine`，`--list-rules` 以
+  `62 rules` 结束。技能是用户级、可隐式调用；没有 hook，也没有全局安装。升级时重新复制技能
+  目录，不用 `npx impeccable update`。
 
 登记表把这些能力标成 `human-in-loop` 或 `not-applicable`，而不是假装跑过。看起来干净的空
-结果不是证据。
+结果不是证据。Impeccable 的 pin 同时写技能版本（4.8.0）和引擎（0.1.18）；源码 commit 是
+`df3a4abe7`。
 
 ## 决定
 
@@ -102,9 +109,11 @@ Cairn 是包与工作之间的协调层。
 - **superpowers**：packet 写明 `superpowers:test-driven-development` @ 7.0.1 和 skill 路径。
   适配器调用 skill 或读它；输出是测试和闸门证据。安装根目录从 `CAIRN_SUPERPOWERS_DIR` 开始找，
   然后是 harness 插件缓存。
-- **Impeccable**：packet 写明从 pin 的 checkout 运行 `impeccable detect --json`，命令是
-  `node cli/bin/cli.js detect --json`。运行时绝不用 `npx`：它访问网络，违反 policy。Detector
-  JSON 成为证据。
+- **Impeccable**：packet 优先用安装在 `~/.zcode/skills/impeccable` 的 ZCode 用户技能，引擎在
+  `~/.impeccable/bin/0.1.18/impeccable.exe`。Detector 跑 `impeccable detect --json`。pin 的
+  checkout 仍然可用：`node cli/bin/cli.js detect --json`。运行时绝不用 `npx`：它访问网络，
+  违反 policy。技能启动器可能下载缺失的引擎；检测先查缓存引擎，缺了就报 `not-invocable`，
+  不访问网络。Detector JSON 成为证据。
 - **回退**：每条注入指令都带回退命令或清单，所以包缺失时得到的是计划好的路径，不是即兴发挥。
 
 检测路径是配置，不是硬编码的机器路径。两个包都不在的仓库仍然要通过所有闸门；检测报告缺失，

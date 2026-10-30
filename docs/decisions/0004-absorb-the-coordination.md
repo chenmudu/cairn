@@ -44,9 +44,17 @@ These are read from the pinned source, not inferred:
 - **Impeccable 4.8.0** `init` and `document` are interview-based and UI-specific: they write
   `PRODUCT.md` and `DESIGN.md`; they must not be used to invent product or visual truth in an
   unattended run.
+- **Installed Impeccable (2026-10-31).** The ZCode user skill is
+  `~/.zcode/skills/impeccable` (`SKILL.md` `version: 4.8.0`, 41 references, `scripts/VERSION`
+  `0.1.18`), copied from `D:\project\github\Impeccable\.claude\skills\impeccable` at
+  `df3a4abe7`. The engine is `~/.impeccable/bin/0.1.18/impeccable.exe`; it reports
+  `0.1.18+engine`, and `--list-rules` ends with `62 rules`. The skill is user-scope and
+  implicitly invocable; there is no hook and no global install. Upgrade by re-copying the
+  skill directory, not `npx impeccable update`.
 
 The registry marks these capabilities `human-in-loop` or `not-applicable` rather than
-pretending they ran. A clean-looking empty result is not evidence.
+pretending they ran. A clean-looking empty result is not evidence. Impeccable pins name the
+skill version (4.8.0) and the engine (0.1.18); the source commit is `df3a4abe7`.
 
 ## Decision
 
@@ -115,9 +123,13 @@ Concrete activation:
 - **superpowers**: the packet names `superpowers:test-driven-development` at 7.0.1 and its
   skill path. The adapter invokes the skill or reads it; the output is tests and gate evidence.
   The installed root is discovered from `CAIRN_SUPERPOWERS_DIR`, then the harness plugin cache.
-- **Impeccable**: the packet names `impeccable detect --json` from the pinned checkout,
-  invoked as `node cli/bin/cli.js detect --json`. Never `npx` at runtime: it reaches the
-  network and violates policy. The detector JSON becomes evidence.
+- **Impeccable**: the packet prefers the installed ZCode user skill at
+  `~/.zcode/skills/impeccable`, whose engine is `~/.impeccable/bin/0.1.18/impeccable.exe`.
+  The detector runs as `impeccable detect --json`. The pinned checkout remains available as
+  `node cli/bin/cli.js detect --json`. Never `npx` at runtime: it reaches the network and
+  violates policy. The skill launcher can download a missing engine; detection checks the
+  cached engine first and reports `not-invocable` instead of reaching the network. The
+  detector JSON becomes evidence.
 - **Fallback**: every injected instruction carries the fallback command or checklist, so an
   absent pack produces a planned path instead of improvisation.
 

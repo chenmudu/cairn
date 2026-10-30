@@ -29,5 +29,10 @@ guard exists so the agent does not need the human to restate the goal.
   `.cairn/missions/<id>/mission.md`, and the ledger.
 - A human decision is an escalation; a decision made without one is a ruling. Record it.
 - If a write falls outside the task's declared files, record a ruling or amend the plan.
+- Before claiming a pack is absent, present, or working, check its actual path and version.
+  Record the path, version, and command result. The skill list and memory are not proof.
+- Empty or `not-applicable` output is not a pass. Record the reason and the fallback.
+- If a required check cannot run, record the failure and the substitute evidence. Never report
+  an unrun check as passed; fix the guard when the guard is what failed.
 - The session start hook prints the same anchor from the repository. Treat it as a reminder,
   not as a substitute for running the check.
