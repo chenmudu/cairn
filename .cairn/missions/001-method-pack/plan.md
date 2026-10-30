@@ -226,6 +226,8 @@ tasks:
       - src/cli.ts
       - test/review.test.ts
       - test/packs.test.ts
+      - scripts/audit-session.mjs
+      - test/audit-session.test.mjs
       - templates/dispatch.md
       - docs/adapter.md
       - docs/adapter.zh.md
@@ -297,8 +299,9 @@ method pack, and the method pack lands before the worked example.
 - **T6** runs the guide on a real, small tick and records the ledger and evidence. The example
   is the proof that the guide is executable.
 - **T7** adds `cairn review` and records the `task_started` decision. It also adds pack
-  detection and packet injection, including the protocol amendment for the `packs` block.
-  Protocol invariant 3 stays a separate human decision; it is not silently rewritten here.
+  detection and packet injection, including the protocol amendment for the `packs` block, and
+  fixes `audit-session`'s whole-file read so it can audit a long transcript. Protocol
+  invariant 3 stays a separate human decision; it is not silently rewritten here.
 - **T8** is the cold-start review and `mission_done`. A fresh session must explain the method
   from the repository alone, verify the pack mesh, and pass with both packs absent before the
   mission closes.

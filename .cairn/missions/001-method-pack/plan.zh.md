@@ -35,6 +35,11 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
 - **T7** 检测两个包，并把对应能力注入 dispatch packet；`packs` 块是协议修订。
 - **T8** 从冷启动验证磨合，包括两个包都不在的情况。
 
+## 自观测
+
+T7 修 `audit-session` 的读取：当前整文件加载在 684MB transcript 上超过 V8 字符串上限。改为
+流式逐行读取并加测试；在修好前，完成声明只依赖闸门、validate 和 reconcile，不声称审计通过。
+
 ## 已知依赖
 
 T1 的协议修订和 T7 的不变量 3 决策都需要 `approved_by: human`。计划不把 agent 自己的批准当作
