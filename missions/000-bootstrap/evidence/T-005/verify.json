@@ -1,0 +1,28 @@
+{
+  "task": "T-005",
+  "passed": true,
+  "gates": [
+    {
+      "exit_code": 0,
+      "output": "✔ reports alignment corrections, gate-less claims, unplanned writes, and confirmation asks (3.283ms)\n✔ does not flag a claim in a turn that ran a gate (1.0824ms)\n✔ ignores writes outside the repository (1.2369ms)\n✔ does not count the injected system reminder as a human correction (0.9181ms)\n✔ status --json reports the stable state and every coverage link (81.6191ms)\n✔ next prints a packet for the task status reports (152.5638ms)\n✔ record refuses a task with no gate evidence and does not write (71.9573ms)\n✔ verify and record complete a task with no manual ledger write (369.732ms)\n✔ record refuses an unknown task (69.694ms)\n✔ usage exits 2 (67.0247ms)\n✔ runGate records a passing exit code and its output (50.3319ms)\n✔ runGate records a failing exit code and stderr (44.3178ms)\n✔ runGate runs in the requested cwd (44.6798ms)\n✔ verifyTask runs every gate, writes evidence, and passes when blocks pass (110.9557ms)\n✔ verifyTask fails when a blocking gate fails (60.2766ms)\n✔ checkEvidence requires every blocking gate, not just one (103.6763ms)\n✔ checkEvidence rejects a gate whose evidence file is gone (57.4925ms)\n✔ verifyTask refuses an unknown task (1.9436ms)\n✔ --expect-invalid passes on the missing-gate fixture and fails on a valid mission (75.2489ms)\n✔ accepts the repository mission and names a task with a serves link (5.0399ms)\n✔ rejects a task without a serves link (2.8848ms)\n✔ rejects an acceptance criterion no task serves (2.6395ms)\n✔ rejects a serves id that is not in the mission (1.7103ms)\n✔ brief output carries the task, serves, and gate (45.2836ms)\n✔ the SessionStart hook emits additionalContext (75.597ms)\n✔ test\\helpers.mjs (41.9861ms)\n✔ reads the real ledger (1.0588ms)\n✔ appends one line per event and fsyncs (3.6299ms)\n✔ rejects a non-monotonic timestamp (1.8979ms)\n✔ accepts mission_amended with old and new hashes (2.114ms)\n✔ nextTimestamp is strictly after the last event (0.5758ms)\n✔ renderDispatch turns a packet into a complete dispatch brief (1.0354ms)\n✔ the real T-004 packet carries its gates, files, and acceptance link (21.9902ms)\n✔ nextTask follows dependencies and the ledger (5.1939ms)\n✔ a task is not done because plan.md says so (3.4552ms)\n✔ the real mission covers every acceptance criterion (1.8734ms)\n✔ buildPacket carries the task, serves, gates, constraints, and base (18.6695ms)\n✔ serveErrors is empty on the real mission (1.1612ms)\n✔ coverage maps each acceptance id to its serving tasks (2.1578ms)\n✔ reconcile explains the crash window after verify and before record (156.0866ms)\n✔ reconcile reports a gate result whose evidence is gone (159.3946ms)\n✔ reconcile reports a task_done whose head is not a commit (138.5523ms)\n✔ reconcile reports one commit claimed by two tasks (208.7991ms)\n✔ accepts the repository mission (5.7576ms)\n✔ accepts a minimal valid mission (2.3103ms)\n✔ rejects the fixture whose task has no gate (0.8594ms)\n✔ rejects duplicate task ids (1.8394ms)\n✔ rejects an unresolvable dependency (1.8755ms)\n✔ rejects a task whose gates are advisory only (2.1412ms)\n✔ rejects an unknown ledger event (2.171ms)\n✔ rejects a task_done without a passing blocking gate (2.2098ms)\n✔ rejects a gate_result whose evidence file is missing (2.1362ms)\n✔ accepts a gate_result whose evidence file exists (2.7527ms)\n✔ rejects an evidence path that escapes the mission directory (2.6141ms)\n✔ accepts mission_amended with old and new hashes (1.8314ms)\n✔ rejects mission_amended without an approver (1.3788ms)\n✔ rejects YAML it does not understand instead of guessing (1.5854ms)\nℹ tests 57\nℹ suites 0\nℹ pass 57\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 881.3567",
+      "duration_ms": 928,
+      "timed_out": false,
+      "id": "test",
+      "severity": "block",
+      "command": "node --test",
+      "cwd": "D:\\project\\github\\cairn",
+      "evidence": "evidence/T-005/test.json"
+    },
+    {
+      "exit_code": 0,
+      "output": "ok: missions/000-bootstrap",
+      "duration_ms": 50,
+      "timed_out": false,
+      "id": "reconcile",
+      "severity": "block",
+      "command": "node scripts/validate-mission.mjs missions/000-bootstrap",
+      "cwd": "D:\\project\\github\\cairn",
+      "evidence": "evidence/T-005/reconcile.json"
+    }
+  ]
+}

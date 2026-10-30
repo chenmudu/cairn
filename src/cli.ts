@@ -14,12 +14,14 @@ import {
   type StatusReport,
 } from './plan.ts';
 import { checkEvidence, verifyTask } from './verify.ts';
+import { reconcileMission } from './reconcile.ts';
 
 const DEFAULT_MISSION = 'missions/000-bootstrap';
 const USAGE = `usage:
   cairn status [--json] [--mission <dir>]
   cairn next [--mission <dir>]
   cairn verify <task> [--mission <dir>]
+  cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--mission <dir>]
 `;
 
@@ -62,6 +64,13 @@ function main(argv: string[]): number {
     } catch (error) {
       return refuse(error instanceof Error ? error.message : String(error));
     }
+  }
+
+  if (command === 'reconcile') {
+    if (rest.length > 0) return usage(`unexpected argument ${rest[0]}`);
+    const report = reconcileMission(missionDir);
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return report.ok ? 0 : 3;
   }
 
   if (command === 'record') {

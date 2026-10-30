@@ -114,13 +114,19 @@ export function checkEvidence(
       errors.push(`${task.id}: gate ${gate.id} has no evidence path`);
       continue;
     }
-    const path = resolve(missionDir, evidence);
-    if (!isInside(missionDir, path) || !existsSync(path) || !statSync(path).isFile()) {
+    if (!isEvidenceFile(missionDir, evidence)) {
       errors.push(`${task.id}: evidence missing: ${evidence}`);
     }
   }
 
   return errors;
+}
+
+/** A recorded evidence path must stay inside the mission and name a real file. */
+export function isEvidenceFile(missionDir: string, value: unknown): boolean {
+  if (typeof value !== 'string' || value === '') return false;
+  const path = resolve(missionDir, value);
+  return isInside(missionDir, path) && existsSync(path) && statSync(path).isFile();
 }
 
 function evidenceName(id: string): string {

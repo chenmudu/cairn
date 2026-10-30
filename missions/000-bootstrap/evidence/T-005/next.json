@@ -1,0 +1,192 @@
+{
+  "mission": {
+    "id": "000-bootstrap",
+    "title": "Build Cairn with Cairn"
+  },
+  "task": {
+    "id": "T-005",
+    "title": "Self-host the first tick",
+    "files": [
+      "docs/self-hosting.md",
+      "docs/self-hosting.zh.md",
+      "docs/i18n.md",
+      "src/reconcile.ts",
+      "src/verify.ts",
+      "src/cli.ts",
+      "test/reconcile.test.ts",
+      "missions/000-bootstrap/ledger.jsonl"
+    ],
+    "interfaces": {
+      "consumes": [
+        "cairn next",
+        "cairn verify",
+        "cairn record",
+        "cairn reconcile"
+      ],
+      "produces": [
+        "a task delivered with no manual ledger edit",
+        "a passing milestone audit recorded as review_result",
+        "a crash window that cairn reconcile explains"
+      ]
+    },
+    "serves": [
+      "A3",
+      "A4",
+      "A5",
+      "A7"
+    ]
+  },
+  "policy": {
+    "budgets": {
+      "max_attempts_per_task": "3",
+      "max_fix_rounds": "2",
+      "max_wall_time_per_tick_minutes": "120",
+      "max_tokens_per_tick": null,
+      "max_completed_tasks_between_audits": "3"
+    },
+    "allowed_commands": [
+      "node",
+      "pnpm",
+      "git",
+      "tsc"
+    ],
+    "forbidden_commands": [
+      "npm publish",
+      "git push",
+      "git reset --hard",
+      "rm -rf"
+    ],
+    "stop_conditions": [
+      "irreversible_or_destructive",
+      "security_sensitive",
+      "write_outside_repo",
+      "plan_unrecoverable",
+      "budget_exhausted",
+      "goal_drift_suspected",
+      "acceptance_unreachable",
+      "gate_weakened_without_amendment"
+    ]
+  },
+  "constraints": [
+    "Git is the only durable store. Any index or cache must be rebuildable from the ledger and",
+    "`ledger.jsonl` is append-only and has a single writer: `cairn record`. Adapters return",
+    "A task is done only with a commit, a blocking gate at exit 0, and a `task_done` event.",
+    "Every task must be expressible in `plan.md` before it starts. If it is not, amend the plan",
+    "The first tick is manual. Each manual step is replaced by a command as that command lands."
+  ],
+  "gates": [
+    {
+      "id": "test",
+      "command": "node",
+      "args": [
+        "--test"
+      ],
+      "severity": "block"
+    },
+    {
+      "id": "reconcile",
+      "command": "node",
+      "args": [
+        "scripts/validate-mission.mjs",
+        "missions/000-bootstrap"
+      ],
+      "severity": "block"
+    }
+  ],
+  "ledger_tail": [
+    {
+      "ts": "2026-10-30T20:35:08.304Z",
+      "event": "task_done",
+      "task": "T-004",
+      "actor": "cairn",
+      "data": {
+        "base": "d2a3e013f52b084ede8744dd6960e1c7340d19b7",
+        "head": "507275cccc884bd2c9dcbef2237e17de6c4d3448",
+        "commits": [
+          "507275cccc884bd2c9dcbef2237e17de6c4d3448"
+        ],
+        "gates": [
+          {
+            "id": "typecheck",
+            "exit_code": 0,
+            "evidence": "evidence/T-004/typecheck.json"
+          },
+          {
+            "id": "packet",
+            "exit_code": 0,
+            "evidence": "evidence/T-004/packet.json"
+          }
+        ]
+      },
+      "mission": "000-bootstrap"
+    },
+    {
+      "ts": "2026-10-30T20:35:47.836Z",
+      "event": "mission_amended",
+      "actor": "zcode",
+      "mission": "000-bootstrap",
+      "data": {
+        "old": {
+          "plan.md": "sha256:a6a3d23effb1843a5867e74bc3fcfb331077e909a2b4c66f5cd4feef869a2d8a"
+        },
+        "new": {
+          "plan.md": "sha256:5d4041b2dc60d3e0b3fa76feb6bbaed4e29d9f3beddbecb728673c6469c45df1"
+        },
+        "acceptance": [
+          "A3",
+          "A4",
+          "A5",
+          "A7"
+        ],
+        "why": "A4 names a state that reconcile explains, but cairn reconcile does not exist; T-005 also needs a test gate for it, and docs/self-hosting.md needs a Chinese companion and an i18n row under the bilingual policy.",
+        "approved_by": "cairn"
+      }
+    },
+    {
+      "ts": "2026-10-30T20:36:55.939Z",
+      "event": "gate_result",
+      "task": "T-005",
+      "actor": "cairn",
+      "mission": "000-bootstrap",
+      "data": {
+        "gate": "test",
+        "command": "node --test",
+        "exit_code": 0,
+        "evidence": "evidence/T-005/test.json"
+      }
+    },
+    {
+      "ts": "2026-10-30T20:36:55.990Z",
+      "event": "gate_result",
+      "task": "T-005",
+      "actor": "cairn",
+      "mission": "000-bootstrap",
+      "data": {
+        "gate": "reconcile",
+        "command": "node scripts/validate-mission.mjs missions/000-bootstrap",
+        "exit_code": 0,
+        "evidence": "evidence/T-005/reconcile.json"
+      }
+    },
+    {
+      "ts": "2026-10-30T20:37:06.735Z",
+      "event": "mission_amended",
+      "actor": "zcode",
+      "mission": "000-bootstrap",
+      "data": {
+        "old": {
+          "plan.md": "sha256:5d4041b2dc60d3e0b3fa76feb6bbaed4e29d9f3beddbecb728673c6469c45df1"
+        },
+        "new": {
+          "plan.md": "sha256:31611107a0d676573df190525dc255c49681622834a83ccb9575d95c7993ad5b"
+        },
+        "acceptance": [
+          "A4"
+        ],
+        "why": "Reconcile checks evidence paths that verify already knows how to validate. Exporting isEvidenceFile from src/verify.ts avoids a second, drifting copy of the path-safety rule. T-005 files omitted src/verify.ts.",
+        "approved_by": "cairn"
+      }
+    }
+  ],
+  "base": "fe7508d63e9280b946985e87f16c58455a86c244"
+}

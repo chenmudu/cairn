@@ -1,0 +1,16 @@
+{
+  "gate": {
+    "id": "reconcile",
+    "command": "node",
+    "args": [
+      "scripts/validate-mission.mjs",
+      "missions/000-bootstrap"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "ok: missions/000-bootstrap",
+  "duration_ms": 50,
+  "timed_out": false
+}
