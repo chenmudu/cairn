@@ -1,0 +1,28 @@
+{
+  "gate": "validate",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "scripts/validate-mission.mjs",
+    "missions/000-bootstrap"
+  ],
+  "exit_code": 0,
+  "duration_ms": 38,
+  "tail": "ok: missions/000-bootstrap\n",
+  "checks": [
+    {
+      "name": "invalid-fixture",
+      "command": "node scripts/validate-mission.mjs test/fixtures/missing-gate",
+      "exit_code": 1,
+      "duration_ms": 37,
+      "tail": "invalid: test/fixtures/missing-gate\n  plan.md T-001: has no severity: block gate\n"
+    },
+    {
+      "name": "contract-tests",
+      "command": "node --test test/validate-mission.test.mjs",
+      "exit_code": 0,
+      "duration_ms": 111,
+      "tail": "✔ accepts the repository mission (3.1383ms)\n✔ accepts a minimal valid mission (1.7728ms)\n✔ rejects the fixture whose task has no gate (0.9654ms)\n✔ rejects duplicate task ids (1.3477ms)\n✔ rejects an unresolvable dependency (1.4507ms)\n✔ rejects a task whose gates are advisory only (1.5274ms)\n✔ rejects an unknown ledger event (1.3478ms)\n✔ rejects a task_done without a passing blocking gate (1.5099ms)\n✔ rejects a gate_result whose evidence file is missing (1.3889ms)\n✔ accepts a gate_result whose evidence file exists (2.0072ms)\n✔ rejects an evidence path that escapes the mission directory (1.7341ms)\n✔ rejects YAML it does not understand instead of guessing (1.5455ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 75.1922\n"
+    }
+  ]
+}
