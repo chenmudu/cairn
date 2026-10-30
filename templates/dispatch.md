@@ -41,6 +41,13 @@ a gate without recorded evidence does not count.
 
 {{gates}}
 
+## Packs
+
+The packet chose these capabilities from the declared files. A pack is context, not completion;
+record what you used, what did not apply, or what was absent with its floor.
+
+{{packs}}
+
 ## Recent ledger
 
 {{ledger_tail}}
@@ -54,7 +61,13 @@ Return one JSON object:
   "status": "DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED",
   "commits": ["<sha>"],
   "gates": [{ "id": "...", "exit_code": 0, "evidence": "..." }],
-  "review": { "verdict": "pass | fail", "findings": [] },
+  "review": {
+    "verdict": "pass | fail",
+    "findings": [],
+    "packs": [
+      { "capability": "...", "pack": "superpowers", "version": "...", "mode": "use | human-in-loop | not-applicable | absent", "reason": "...", "evidence": "..." }
+    ]
+  },
   "rulings": [{ "decision": "...", "why": "...", "cost_if_wrong": "..." }],
   "escalations": [{ "question": "...", "options": [], "default": "..." }]
 }

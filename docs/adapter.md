@@ -21,9 +21,24 @@ them can mark its own work complete.
   "constraints": ["..."],
   "gates": [{ "id": "typecheck", "command": "pnpm", "args": ["typecheck"] }],
   "ledger_tail": ["...last 5 events..."],
-  "base": "abc1234"
+  "base": "abc1234",
+  "packs": [
+    {
+      "capability": "test-first",
+      "pack": "superpowers",
+      "version": "7.0.1",
+      "mode": "use",
+      "instruction": "superpowers:test-driven-development",
+      "fallback": { "text": "...", "product": { "kind": "gate", "ref": "test" } }
+    }
+  ]
 }
 ```
+
+`packs` carries the two capability decisions selected from the task's files. It is context,
+not completion: an adapter may use the pack, fall back, or record `not-applicable`; the gate
+still decides. `cairn next` emits exactly two entries (superpowers and Impeccable), and an
+absent pack is `mode: absent` with its fallback.
 
 `renderDispatch(packet)` in `src/packet.ts` turns the same packet into a markdown brief using
 `templates/dispatch.md`. The packet is the contract; the brief is a convenience for a model.
@@ -52,7 +67,19 @@ policy's attempt budget bounds the loop.
   "status": "DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED",
   "commits": ["<sha>"],
   "gates": [{ "id": "...", "exit_code": 0, "evidence": "..." }],
-  "review": { "verdict": "pass | fail", "findings": [] },
+  "review": {
+    "verdict": "pass | fail",
+    "findings": [],
+    "packs": [
+      {
+        "capability": "test-first",
+        "pack": "superpowers",
+        "version": "7.0.1",
+        "mode": "use",
+        "evidence": "test/example.test.mjs, RED then GREEN"
+      }
+    ]
+  },
   "rulings": [{ "decision": "...", "why": "...", "cost_if_wrong": "..." }],
   "escalations": [{ "question": "...", "options": [], "default": "..." }]
 }
@@ -63,7 +90,9 @@ policy's attempt budget bounds the loop.
   `BLOCKED` when a stop condition or an external dependency stops the branch.
 - `commits`: the SHAs the adapter created; empty if it did not commit.
 - `gates`: optional local runs. The controller's `cairn verify` is the authority.
-- `review`: a fresh review verdict when the harness can run one.
+- `review`: a fresh review verdict when the harness can run one. Its `packs` list is non-empty
+  and follows the protocol's pack record rules: `not-applicable` names a reason, `absent`
+  names the floor.
 - `rulings`: decisions made without a human, each with why and `cost_if_wrong`.
 - `escalations`: questions for a human, with options and a default. Only the asking branch
   waits.

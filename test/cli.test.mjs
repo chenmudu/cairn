@@ -77,6 +77,8 @@ test('next prints a packet for the task status reports', () => {
   assert.ok(packet.task.serves.length > 0);
   assert.ok(packet.gates.length > 0);
   assert.match(packet.base, /^[0-9a-f]{40}$/);
+  assert.equal(packet.packs.length, 2);
+  assert.ok(packet.packs.every((pack) => typeof pack.mode === 'string'));
 });
 
 test('record refuses a task with no gate evidence and does not write', (t) => {
@@ -163,7 +165,28 @@ test('review writes a review_result from a JSON file', (t) => {
   const file = join(dir, 'review.json');
   writeFileSync(
     file,
-    JSON.stringify({ reviewer: 'fresh context', verdict: 'pass', findings: ['ok'] }),
+    JSON.stringify({
+      reviewer: 'fresh context',
+      verdict: 'pass',
+      findings: ['ok'],
+      packs: [
+        {
+          capability: 'test-first',
+          pack: 'superpowers',
+          version: '7.0.1',
+          mode: 'use',
+          evidence: 'test/cli.test.mjs',
+        },
+        {
+          capability: 'design-review',
+          pack: 'impeccable',
+          version: '4.8.0+df3a4ab',
+          mode: 'not-applicable',
+          reason: 'no UI surface',
+          evidence: 'README.md review',
+        },
+      ],
+    }),
   );
   const result = run('review', '--file', file, '--mission', dir);
   assert.equal(result.status, 0, result.stderr);

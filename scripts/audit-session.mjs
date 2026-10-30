@@ -228,6 +228,10 @@ function buildTurns(messages) {
     if (message.role === 'user' && !isResult) {
       const text = stripReminders(collectText(message.content));
       if (text !== '') {
+        if (isCompactionSummary(text)) {
+          current = null;
+          continue;
+        }
         current = {
           index: turns.length,
           messageIndex: index,
@@ -276,6 +280,18 @@ function isToolResult(message) {
  */
 function stripReminders(text) {
   return text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/gi, '').trim();
+}
+
+/**
+ * Compaction replaces prior messages with a synthetic summary that replays the
+ * earlier conversation, including its tool calls. That text is not a human
+ * turn: the replayed writes already happened and were judged by the turns that
+ * made them. Skipping the summary keeps old history out of the audit.
+ */
+function isCompactionSummary(text) {
+  return /This session is being continued from a previous conversation that ran out of context|本次会话从一段超出上下文的对话继续/i.test(
+    text,
+  );
 }
 
 /**

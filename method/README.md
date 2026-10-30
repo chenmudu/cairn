@@ -33,8 +33,8 @@ node scripts/check-method.mjs --products --strict
   `not-invocable`. It is advisory and never blocks a gate. It does not download an engine.
 - `--products` resolves each `exists` row's floor product and each fallback. A `planned:T#`
   row is reported as pending.
-- `--strict` fails on a pending row. T8 runs it before `mission_done`; T3 runs the playbook
-  gate only, because `cairn review` is still planned.
+- `--strict` fails on a pending row. T8 runs it before `mission_done`; every playbook row is
+  now `exists`.
 
 ## Run with zero packs
 

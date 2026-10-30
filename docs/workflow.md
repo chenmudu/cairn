@@ -32,9 +32,11 @@ same change.
    node scripts/goal-check.mjs
    ```
 
-2. **Packet.** Read the task, files, gates, constraints, base commit, and packs.
+2. **Start and packet.** Record the base, then read the task, files, gates, constraints, packs,
+   and base commit.
 
    ```sh
+   node src/cli.ts start <task>
    node src/cli.ts next
    ```
 
@@ -156,8 +158,13 @@ A task is done only when all three are true:
 - every blocking gate exits 0 with evidence;
 - `task_done` is in the ledger.
 
-A green gate proves the step, not the goal. At mission end, run the milestone audit, record a
-passing `review_result`, and only then `cairn record --mission-done`.
+A green gate proves the step, not the goal. At mission end, run the milestone audit, write the
+verdict to a JSON file with `reviewer`, `verdict`, `findings`, and `packs`, record it, and only
+then `cairn record --mission-done`.
+
+```sh
+node src/cli.ts review --file review.json --mission .cairn/missions/<id>
+```
 
 ## Plan status is a hint
 

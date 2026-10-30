@@ -43,6 +43,13 @@ Base 提交：`{{base}}`。从那里开始，不要重写历史。
 
 {{gates}}
 
+## 包
+
+packet 根据声明的文件选择了这些能力。包是上下文，不是完成；记录用了什么、什么不适用，或什么
+缺失及所用的地板。
+
+{{packs}}
+
 ## 最近的台账
 
 {{ledger_tail}}
@@ -56,7 +63,13 @@ Base 提交：`{{base}}`。从那里开始，不要重写历史。
   "status": "DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED",
   "commits": ["<sha>"],
   "gates": [{ "id": "...", "exit_code": 0, "evidence": "..." }],
-  "review": { "verdict": "pass | fail", "findings": [] },
+  "review": {
+    "verdict": "pass | fail",
+    "findings": [],
+    "packs": [
+      { "capability": "...", "pack": "superpowers", "version": "...", "mode": "use | human-in-loop | not-applicable | absent", "reason": "...", "evidence": "..." }
+    ]
+  },
   "rulings": [{ "decision": "...", "why": "...", "cost_if_wrong": "..." }],
   "escalations": [{ "question": "...", "options": [], "default": "..." }]
 }

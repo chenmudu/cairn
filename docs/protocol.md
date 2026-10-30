@@ -52,8 +52,9 @@ generated, never edited.
 1. **One active task per worktree.** Parallelism happens across worktrees, never inside one.
 2. **Done means three things agree.** A task is done only when a commit exists, a blocking
    gate recorded exit 0, and a `task_done` event exists in the ledger.
-3. **The ledger and the code land in the same commit.** A commit without its ledger event is
-   not progress; a ledger event without its commit is not progress.
+3. **A task is one commit transaction.** The work commit carries the code, evidence, and
+   `gate_result`; `task_done` lands in the immediately following ledger commit. A work commit
+   without `task_done` is not progress; a `task_done` without its work commit is not progress.
 4. **Implementer claims are not evidence.** Only a gate the runtime ran, or a command whose
    exit code and output were recorded, counts.
 5. **The model has two runtime decisions.** A ruling (decide, record, continue) or an
@@ -107,7 +108,7 @@ Every line is one JSON object:
 | `mission_amended` | `old`, `new` (path → sha256), `acceptance`, `why`, `approved_by` | Target artifacts changed on purpose. |
 | `task_started` | `base` (commit) | A tick selected this task. |
 | `gate_result` | `gate`, `command`, `exit_code`, `evidence` | One gate ran. |
-| `review_result` | `reviewer`, `verdict`, `findings` | A fresh reviewer judged the task. |
+| `review_result` | `reviewer`, `verdict`, `findings`, `packs` | A fresh reviewer judged the task. |
 | `ruling` | `decision`, `why`, `cost_if_wrong` | A decision made without a human. |
 | `task_done` | `base`, `head`, `commits`, `gates` | The task met all three conditions. |
 | `task_parked` | `reason`, `inbox` | The task waits for a human. |
@@ -153,7 +154,9 @@ Rules:
 | `cairn status [--json]` | 0 | Render mission state from the ledger. |
 | `cairn reconcile` | 0 clean / 3 drift | Compare ledger, git, and evidence; repair the cache. |
 | `cairn next` | 0 work / 2 none / 3 blocked | Print the next dispatch packet. |
+| `cairn start <task>` | 0 / 2 refused | Append `task_started` with the current HEAD as `base`; refuse a task that is done, parked, or already started. |
 | `cairn verify <task>` | 0 pass / 2 fail | Run the task's gates; write evidence and `gate_result` events. |
+| `cairn review --file <json>` | 0 / 2 refused | Validate `reviewer`, `verdict`, `findings`, and `packs`, then append `review_result`. |
 | `cairn record <task> --status done` | 0 / 2 refused | Append `task_done` only if the three conditions hold. |
 | `cairn answer <task> --text ...` | 0 | Resolve an escalation and resume the branch. |
 | `cairn export` | 0 | Render a human-readable report. |
@@ -170,9 +173,36 @@ Rules:
   "constraints": ["..."],
   "gates": [{ "id": "typecheck", "command": "pnpm", "args": ["typecheck"] }],
   "ledger_tail": ["...last 5 events..."],
-  "base": "abc1234"
+  "base": "abc1234",
+  "packs": [
+    {
+      "capability": "test-first",
+      "pack": "superpowers",
+      "version": "7.0.1",
+      "mode": "use",
+      "instruction": "superpowers:test-driven-development",
+      "fallback": {
+        "text": "write the test first, then the implementation, then run the gate",
+        "product": { "kind": "gate", "ref": "test" }
+      }
+    }
+  ]
 }
 ```
+
+`packs` is deterministic context, never a completion signal. Every packet carries two entries:
+
+- **superpowers**: `test-first` when a declared file ends in `.ts`, `.tsx`, `.js`, `.mjs`,
+  `.cjs`, `.jsx`, `.py`, `.rs`, `.go`, `.java`, `.rb`, or `.sh`; otherwise `verify-before-close`
+  (`superpowers:verification-before-completion`).
+- **Impeccable**: `design-check` when a declared file ends in `.html`, `.htm`, `.css`, `.scss`,
+  `.sass`, `.less`, `.tsx`, `.jsx`, `.vue`, `.svelte`, `.astro`, or `.svg`; otherwise
+  `design-review` with `mode: not-applicable` and a reason.
+
+`mode` is one of `use`, `human-in-loop`, `not-applicable`, `absent`. `version` is the detected
+version, or the pin when the pack is absent. Detection returns `absent`, `mismatch`, or
+`not-invocable`; all three make the packet entry `absent` and the fallback is the instruction.
+`reason` is required for `not-applicable`.
 
 ## Adapter contract
 
@@ -184,7 +214,27 @@ topology. It must return:
   "status": "DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED",
   "commits": ["..."],
   "gates": [{ "id": "...", "exit_code": 0, "evidence": "..." }],
-  "review": { "verdict": "pass | fail", "findings": [] },
+  "review": {
+    "verdict": "pass | fail",
+    "findings": [],
+    "packs": [
+      {
+        "capability": "test-first",
+        "pack": "superpowers",
+        "version": "7.0.1",
+        "mode": "use",
+        "evidence": "test/example.test.mjs, RED then GREEN"
+      },
+      {
+        "capability": "design-review",
+        "pack": "impeccable",
+        "version": "4.8.0+df3a4ab",
+        "mode": "not-applicable",
+        "reason": "no markup or URL target",
+        "evidence": "README.md criteria-based review"
+      }
+    ]
+  },
   "rulings": [{ "decision": "...", "why": "...", "cost_if_wrong": "..." }],
   "escalations": [{ "question": "...", "options": [], "default": "..." }]
 }
@@ -192,6 +242,12 @@ topology. It must return:
 
 The adapter never marks a task done. The controller calls `cairn verify` and `cairn record`.
 That split is what keeps the ledger trustworthy.
+
+The review `packs` list is non-empty on every `review_result`. Each entry has non-empty
+`capability`, `pack`, `version`, `mode`, and `evidence`; `pack` is `superpowers` or
+`impeccable`; `mode` uses the same four values as the packet. `not-applicable` requires a
+reason. `absent` requires evidence naming the floor that ran (a gate id, command, or path). A
+pack report is input; gate evidence is proof, and a review never turns a red gate green.
 
 ## Bootstrap
 

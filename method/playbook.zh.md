@@ -19,7 +19,7 @@ Impeccable 已安装，但这个仓库没有 UI 表面，所以它的设计检�
 | frame | README 定位 + mission 的意图、非目标、验收；`goal-check` | `brainstorming` @ 7.0.1，人在环 | `init`/`document`，not-applicable（无 UI） | Cairn 拥有 `mission.md` | exists |
 | plan | 带 serves、文件、闸门的 `plan.md`；`goal-check` 覆盖图 | `writing-plans` @ 7.0.1 | `document`，not-applicable（无 UI） | Cairn 计划是权威 | exists |
 | execute | 提交 + 阻塞闸门 + `task_done`；`cairn verify` | `test-driven-development` @ 7.0.1 | `detect`，not-applicable（markdown 返回 `[]`） | RED→GREEN 进入 `gate_result` | exists |
-| review | 全新上下文审查者 + `review_result`；`cairn review` | `requesting-code-review` @ 7.0.1 | `critique`/`audit`，not-applicable（只适用 web，会问用户） | findings → `review_result` | planned:T7 |
+| review | 全新上下文审查者 + 带 packs 的 `review_result`；`cairn review` | `requesting-code-review` @ 7.0.1 | `critique`/`audit`，not-applicable（只适用 web，会问用户） | findings → `review_result` | exists |
 | close | `cairn record`、`mission_done`、`audit-session` | `verification-before-completion` @ 7.0.1 | `polish`/`harden`，not-applicable（无 UI） | 绿色闸门 ≠ 目标 | exists |
 | state | `ledger.jsonl` 是唯一事实 | `executing-plans` @ 7.0.1 | 无，not-applicable | 日志是临时状态；台账赢 | exists |
 | design-check | 仓库内清单；UI 维度 not-applicable | 无，not-applicable | `detect`，not-applicable（无 markup/URL） | 空 `[]` 不是干净 | exists |

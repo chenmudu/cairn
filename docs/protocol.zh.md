@@ -50,7 +50,8 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 1. **一个 worktree 只有一个活动任务。** 并行发生在 worktree 之间，绝不发生在同一个 worktree 内。
 2. **完成意味着三件事一致。** 只有当提交存在、阻塞闸门记录为退出 0、台账里存在 `task_done`
    事件时，任务才算完成。
-3. **台账和代码落在同一个提交。** 没有台账事件的提交不是进度；没有提交的台账事件也不是进度。
+3. **一个任务是一次提交事务。** 工作提交携带代码、证据和 `gate_result`；`task_done` 落在紧随其后的
+   台账提交里。没有 `task_done` 的工作提交不是进度；没有工作提交的 `task_done` 也不是进度。
 4. **实现者的声明不是证据。** 只有运行时跑过的闸门，或者记录了退出码和输出的命令，才算数。
 5. **模型只有两个运行时决定。** 裁决（决定、记录、继续）或升级（停住这个分支，其余继续）。预算
    约束两者。
@@ -97,7 +98,7 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 | `mission_amended` | `old`、`new`（path → sha256）、`acceptance`、`why`、`approved_by` | 目标产物被有意修改。 |
 | `task_started` | `base`（提交） | 某个 tick 选择了这个任务。 |
 | `gate_result` | `gate`、`command`、`exit_code`、`evidence` | 某个闸门跑过。 |
-| `review_result` | `reviewer`、`verdict`、`findings` | 全新评审者判断了任务。 |
+| `review_result` | `reviewer`、`verdict`、`findings`、`packs` | 全新评审者判断了任务。 |
 | `ruling` | `decision`、`why`、`cost_if_wrong` | 没有人类参与的决定。 |
 | `task_done` | `base`、`head`、`commits`、`gates` | 任务满足全部三个条件。 |
 | `task_parked` | `reason`、`inbox` | 任务等待人类。 |
@@ -140,7 +141,9 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 | `cairn status [--json]` | 0 | 从台账渲染 mission 状态。 |
 | `cairn reconcile` | 0 干净 / 3 漂移 | 比较台账、git 和证据；修复缓存。 |
 | `cairn next` | 0 有工作 / 2 无 / 3 阻塞 | 打印下一个 dispatch packet。 |
+| `cairn start <task>` | 0 / 2 拒绝 | 以当前 HEAD 为 `base` 追加 `task_started`；拒绝已完成、已暂停或已开始的任务。 |
 | `cairn verify <task>` | 0 通过 / 2 失败 | 跑任务的闸门；写证据和 `gate_result` 事件。 |
+| `cairn review --file <json>` | 0 / 2 拒绝 | 校验 `reviewer`、`verdict`、`findings`、`packs`，然后追加 `review_result`。 |
 | `cairn record <task> --status done` | 0 / 2 拒绝 | 只有三个条件都成立才追加 `task_done`。 |
 | `cairn answer <task> --text ...` | 0 | 解决一个升级并恢复分支。 |
 | `cairn export` | 0 | 渲染人类可读报告。 |
@@ -157,9 +160,35 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
   "constraints": ["..."],
   "gates": [{ "id": "typecheck", "command": "pnpm", "args": ["typecheck"] }],
   "ledger_tail": ["...last 5 events..."],
-  "base": "abc1234"
+  "base": "abc1234",
+  "packs": [
+    {
+      "capability": "test-first",
+      "pack": "superpowers",
+      "version": "7.0.1",
+      "mode": "use",
+      "instruction": "superpowers:test-driven-development",
+      "fallback": {
+        "text": "write the test first, then the implementation, then run the gate",
+        "product": { "kind": "gate", "ref": "test" }
+      }
+    }
+  ]
 }
 ```
+
+`packs` 是确定性上下文，永远不是完成信号。每个 packet 恰好两个条目：
+
+- **superpowers**：任一声明文件以 `.ts`、`.tsx`、`.js`、`.mjs`、`.cjs`、`.jsx`、`.py`、
+  `.rs`、`.go`、`.java`、`.rb` 或 `.sh` 结尾时用 `test-first`；否则用 `verify-before-close`
+  （`superpowers:verification-before-completion`）。
+- **Impeccable**：任一声明文件以 `.html`、`.htm`、`.css`、`.scss`、`.sass`、`.less`、
+  `.tsx`、`.jsx`、`.vue`、`.svelte`、`.astro` 或 `.svg` 结尾时用 `design-check`；否则用
+  `design-review`，`mode: not-applicable` 并给出原因。
+
+`mode` 只能是 `use`、`human-in-loop`、`not-applicable`、`absent`。`version` 是检测到的版本；
+包缺失时用 pin。检测结果为 `absent`、`mismatch` 或 `not-invocable` 时，packet 条目都是
+`absent`，`fallback` 就是指令。`not-applicable` 必须写 `reason`。
 
 ## 适配器契约
 
@@ -170,7 +199,27 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
   "status": "DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED",
   "commits": ["..."],
   "gates": [{ "id": "...", "exit_code": 0, "evidence": "..." }],
-  "review": { "verdict": "pass | fail", "findings": [] },
+  "review": {
+    "verdict": "pass | fail",
+    "findings": [],
+    "packs": [
+      {
+        "capability": "test-first",
+        "pack": "superpowers",
+        "version": "7.0.1",
+        "mode": "use",
+        "evidence": "test/example.test.mjs, RED then GREEN"
+      },
+      {
+        "capability": "design-review",
+        "pack": "impeccable",
+        "version": "4.8.0+df3a4ab",
+        "mode": "not-applicable",
+        "reason": "no markup or URL target",
+        "evidence": "README.md criteria-based review"
+      }
+    ]
+  },
   "rulings": [{ "decision": "...", "why": "...", "cost_if_wrong": "..." }],
   "escalations": [{ "question": "...", "options": [], "default": "..." }]
 }
@@ -178,6 +227,11 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 
 适配器永远不把任务标记为完成。控制器调用 `cairn verify` 和 `cairn record`。这个分工是台账可信的
 原因。
+
+每个 `review_result` 的 `packs` 都是非空列表。每个条目有非空的 `capability`、`pack`、
+`version`、`mode`、`evidence`；`pack` 只能是 `superpowers` 或 `impeccable`；`mode` 使用与
+packet 相同的四个值。`not-applicable` 必须有原因。`absent` 的 `evidence` 必须指明跑过的地板
+（gate id、命令或路径）。包报告是输入；闸门证据才是证明，审查不能把红闸门变绿。
 
 ## 自举
 

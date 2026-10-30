@@ -130,6 +130,38 @@ test('keeps the human text after an injected reminder', (t) => {
   assert.equal(report.signals.alignmentCorrections.length, 1);
 });
 
+test('does not audit writes replayed inside a compaction summary', (t) => {
+  const summary = [
+    'This session is being continued from a previous conversation that ran out of context.',
+    'The summary below covers the earlier portion of the conversation.',
+    'Primary Request and Intent: 目标是用自举验证 Cairn。',
+    'The last diagnostic output showed 11 unplanned writes; 已完成 repair。',
+  ].join('\n');
+  const file = writeTranscript(t, [
+    USER(summary),
+    ASSISTANT([
+      TEXT('继续。'),
+      TOOL('Write', { file_path: 'D:/repo/src/gates.ts' }),
+      TOOL('Write', { file_path: 'D:/repo/README.md' }),
+    ]),
+    RESULT('ok'),
+    USER('1. approve 0005 2. audit-session 仍把摘要里重放的历史写入报成 unplanned writes'),
+    ASSISTANT([TOOL('Write', { file_path: 'D:/repo/src/packs.ts' })]),
+    RESULT('ok'),
+  ]);
+
+  const report = auditTranscript(file, {
+    planFiles: ['src/packs.ts'],
+    repoRoot: 'D:/repo',
+  });
+
+  assert.equal(report.turns, 1);
+  assert.equal(report.signals.alignmentCorrections.length, 0);
+  assert.equal(report.signals.claimsWithoutGate.length, 0);
+  assert.equal(report.signals.unplannedWrites.length, 0);
+  assert.equal(report.verdict, 'clean');
+});
+
 test('recognizes a mission_amended event as an amendment', (t) => {
   const file = writeTranscript(t, [USER('继续'), ASSISTANT([TEXT('ok')])]);
   const dir = mkdtempSync(join(tmpdir(), 'cairn-audit-'));

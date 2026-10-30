@@ -245,6 +245,8 @@ tasks:
       - test/method.test.mjs
       - method/playbook.md
       - method/playbook.zh.md
+      - method/README.md
+      - method/README.zh.md
       - method/examples/0001-docs-tick/policy.md
       - method/examples/0001-docs-tick/product.zh.md
       - method/examples/0001-docs-tick/README.md
@@ -332,8 +334,8 @@ method pack, and the method pack lands before the worked example.
   is the proof that the guide is executable.
 - **T7** adds `cairn review` and records the `task_started` decision. It also adds pack
   detection and packet injection, including the protocol amendment for the `packs` block, and
-  fixes `audit-session`'s whole-file read so it can audit a long transcript. Protocol
-  invariant 3 stays a separate human decision; it is not silently rewritten here.
+  fixes `audit-session`'s whole-file read so it can audit a long transcript. Invariant 3 was a
+  separate human decision; 0005 approved it, and this tick records the protocol amendment.
 - **T8** is the cold-start review and `mission_done`. A fresh session must explain the method
   from the repository alone, verify the pack mesh, and pass with both packs absent before the
   mission closes.

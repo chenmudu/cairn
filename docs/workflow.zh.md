@@ -29,9 +29,10 @@
    node scripts/goal-check.mjs
    ```
 
-2. **Packet。** 读任务、文件、闸门、约束、base 提交和 packs。
+2. **Start 与 packet。** 记录 base，然后读任务、文件、闸门、约束、packs 和 base 提交。
 
    ```sh
+   node src/cli.ts start <task>
    node src/cli.ts next
    ```
 
@@ -142,8 +143,12 @@ node scripts/check-method.mjs --packs
 - 每个阻塞闸门退出 0 并有证据；
 - 台账里有 `task_done`。
 
-绿色闸门证明这一步，不是 mission。mission 结束时跑里程碑审计，记录通过的 `review_result`，
-然后才 `cairn record --mission-done`。
+绿色闸门证明这一步，不是 mission。mission 结束时跑里程碑审计，把结论写进包含 `reviewer`、
+`verdict`、`findings`、`packs` 的 JSON 文件并记录，然后才 `cairn record --mission-done`。
+
+```sh
+node src/cli.ts review --file review.json --mission .cairn/missions/<id>
+```
 
 ## 计划状态只是提示
 

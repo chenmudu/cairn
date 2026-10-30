@@ -15,6 +15,7 @@ import {
   type StatusReport,
 } from './plan.ts';
 import { recordReview } from './review.ts';
+import { withPacks } from './packet.ts';
 import { checkEvidence, verifyTask } from './verify.ts';
 import { reconcileMission } from './reconcile.ts';
 import { completeMission } from './complete.ts';
@@ -73,7 +74,7 @@ function main(argv: string[]): number {
       process.stderr.write(incomplete ? 'blocked: no runnable task\n' : 'none: every task is done\n');
       return incomplete ? 3 : 2;
     }
-    process.stdout.write(`${JSON.stringify(buildPacket(missionDir, task.id), null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify(withPacks(buildPacket(missionDir, task.id)), null, 2)}\n`);
     return 0;
   }
 

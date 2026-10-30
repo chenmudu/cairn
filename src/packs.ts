@@ -5,6 +5,7 @@ import { basename, join, resolve } from 'node:path';
 export const SUPERPOWERS_PIN = '7.0.1';
 export const IMPECCABLE_SKILL_PIN = '4.8.0';
 export const IMPECCABLE_ENGINE_PIN = '0.1.18';
+export const IMPECCABLE_PIN = '4.8.0+df3a4ab';
 
 export type PackStatus = 'present' | 'absent' | 'mismatch' | 'not-invocable';
 
@@ -109,7 +110,7 @@ function detectImpeccable(
     return {
       status: 'absent',
       path: candidates[0] ?? null,
-      pin: IMPECCABLE_SKILL_PIN,
+      pin: IMPECCABLE_PIN,
       skill_version: null,
       engine_version: null,
       engine: null,
@@ -141,7 +142,7 @@ function detectImpeccable(
   return {
     status,
     path,
-    pin: IMPECCABLE_SKILL_PIN,
+    pin: IMPECCABLE_PIN,
     skill_version: skillVersion,
     engine_version: engineVersion,
     engine,

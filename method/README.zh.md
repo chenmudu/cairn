@@ -30,8 +30,8 @@ node scripts/check-method.mjs --products --strict
 - `--packs` 检测两个包，报告 `present`、`absent`、`mismatch` 或 `not-invocable`。它是
   advisory，永不阻塞闸门，也不下载引擎。
 - `--products` 解析每个 `exists` 行的地板产物和每个回退。`planned:T#` 行报告为 pending。
-- `--strict` 在 pending 行上失败。T8 在 `mission_done` 前跑它；T3 只跑 playbook 闸门，
-  因为 `cairn review` 还在 T7。
+- `--strict` 在 pending 行上失败。T8 在 `mission_done` 前跑它；现在每个 playbook 行都是
+  `exists`。
 
 ## 零包运行
 

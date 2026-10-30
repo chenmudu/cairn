@@ -22,9 +22,23 @@
   "constraints": ["..."],
   "gates": [{ "id": "typecheck", "command": "pnpm", "args": ["typecheck"] }],
   "ledger_tail": ["...最近 5 个事件..."],
-  "base": "abc1234"
+  "base": "abc1234",
+  "packs": [
+    {
+      "capability": "test-first",
+      "pack": "superpowers",
+      "version": "7.0.1",
+      "mode": "use",
+      "instruction": "superpowers:test-driven-development",
+      "fallback": { "text": "...", "product": { "kind": "gate", "ref": "test" } }
+    }
+  ]
 }
 ```
+
+`packs` 是从任务文件选出的两个能力决定。它是上下文，不是完成：适配器可以用包、回退，或记录
+`not-applicable`；仍然由闸门裁决。`cairn next` 恰好输出两个条目（superpowers 和 Impeccable），
+包缺失时是 `mode: absent` 并带 fallback。
 
 `src/packet.ts` 的 `renderDispatch(packet)` 用 `templates/dispatch.md` 把同一个 packet 渲染成
 markdown 简报。packet 是契约；简报只是给模型看的便利形式。模板拥有说明文字和报告结构，packet
@@ -48,7 +62,19 @@ markdown 简报。packet 是契约；简报只是给模型看的便利形式。�
   "status": "DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED",
   "commits": ["<sha>"],
   "gates": [{ "id": "...", "exit_code": 0, "evidence": "..." }],
-  "review": { "verdict": "pass | fail", "findings": [] },
+  "review": {
+    "verdict": "pass | fail",
+    "findings": [],
+    "packs": [
+      {
+        "capability": "test-first",
+        "pack": "superpowers",
+        "version": "7.0.1",
+        "mode": "use",
+        "evidence": "test/example.test.mjs, RED then GREEN"
+      }
+    ]
+  },
   "rulings": [{ "decision": "...", "why": "...", "cost_if_wrong": "..." }],
   "escalations": [{ "question": "...", "options": [], "default": "..." }]
 }
@@ -58,7 +84,8 @@ markdown 简报。packet 是契约；简报只是给模型看的便利形式。�
   `NEEDS_CONTEXT` 表示 packet 缺少信息；`BLOCKED` 表示 stop condition 或外部依赖阻断了分支。
 - `commits`：适配器创建的提交 SHA；没有提交就为空。
 - `gates`：可选的本地运行结果。权威结果来自控制器的 `cairn verify`。
-- `review`：harness 能跑独立审查时的结论。
+- `review`：harness 能跑独立审查时的结论。它的 `packs` 列表非空，并遵守协议的包记录规则：
+  `not-applicable` 写原因，`absent` 写地板。
 - `rulings`：没有人类参与时做出的决定，每个都要有 why 和 `cost_if_wrong`。
 - `escalations`：给人类的问题，带选项和默认值。只有提问的那个分支等待。
 

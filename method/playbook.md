@@ -125,12 +125,12 @@ Impeccable is installed, but this repository has no UI surface, so its design ch
           }
         }
       },
-      "seam": "RED to GREEN evidence lands in gate_result; superpowers task-start writes no ledger; Cairn records task_started (T7).",
+      "seam": "RED to GREEN evidence lands in gate_result; superpowers task-start writes no ledger; Cairn records task_started.",
       "status": "exists"
     },
     {
       "phase": "review",
-      "floor": "A fresh-context reviewer uses the checklist and records review_result; cairn review lands in T7.",
+      "floor": "A fresh-context reviewer uses the checklist and records review_result with packs; cairn review validates the record.",
       "product": {
         "kind": "command",
         "ref": "cairn review"
@@ -161,7 +161,7 @@ Impeccable is installed, but this repository has no UI surface, so its design ch
         }
       },
       "seam": "Findings map to review_result; a pack report is input, gate evidence is proof.",
-      "status": "planned:T7"
+      "status": "exists"
     },
     {
       "phase": "close",
@@ -351,7 +351,7 @@ Impeccable is installed, but this repository has no UI surface, so its design ch
 | frame | README positioning + mission intent, non-goals, acceptance; `goal-check` | `brainstorming` @ 7.0.1, human-in-loop | `init`/`document`, not-applicable (no UI) | Cairn owns `mission.md` | exists |
 | plan | `plan.md` with serves, files, gates; `goal-check` coverage | `writing-plans` @ 7.0.1 | `document`, not-applicable (no UI) | Cairn plan is authoritative | exists |
 | execute | commit + blocking gate + `task_done`; `cairn verify` | `test-driven-development` @ 7.0.1 | `detect`, not-applicable (markdown returns `[]`) | RED→GREEN in `gate_result` | exists |
-| review | fresh-context reviewer + `review_result`; `cairn review` | `requesting-code-review` @ 7.0.1 | `critique`/`audit`, not-applicable (web-only, asks the user) | findings → `review_result` | planned:T7 |
+| review | fresh-context reviewer + `review_result` with packs; `cairn review` | `requesting-code-review` @ 7.0.1 | `critique`/`audit`, not-applicable (web-only, asks the user) | findings → `review_result` | exists |
 | close | `cairn record`, `mission_done`, `audit-session` | `verification-before-completion` @ 7.0.1 | `polish`/`harden`, not-applicable (no UI) | green gate ≠ goal | exists |
 | state | `ledger.jsonl` is the only truth | `executing-plans` @ 7.0.1 | none, not-applicable | journal is scratch; ledger wins | exists |
 | design-check | in-repo checklist; UI dimensions not-applicable | none, not-applicable | `detect`, not-applicable (no markup/URL) | empty `[]` is not clean | exists |
