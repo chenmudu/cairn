@@ -4,6 +4,9 @@ Status: waiting for human approval. Mission #1 stays closed. This file records a
 audit and the plan for Mission #2; it makes no runtime change and adds no Mission #1 ledger
 event.
 
+Scope: mission escalation. It closes Mission #1's post-close audit and plans Mission #2; it is
+not a project-wide ADR.
+
 Date: 2026-10-31. Audited commit: `700f68c`.
 
 Audit inputs: an independent audit report, a local re-run of the deterministic gates, and a
