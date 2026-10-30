@@ -26,7 +26,7 @@ Cairn 是运行与证据层：它让 mission 跨会话延续，从仓库证明�
 - milestone 审计确认工作仍然服务目标，而不只是服务计划。
 
 状态：pre-alpha。Mission #0 已完成；`mission_done` 事件和验收证据都在台账里。Mission #1（方法包）
-正在 `.cairn/missions/001-method-pack/` 下进行。
+已完成；`mission_done` 事件和验收证据在 `.cairn/missions/001-method-pack/`。
 
 ## 模型
 

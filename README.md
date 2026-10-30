@@ -29,8 +29,8 @@ Success is not "the gates are green". Success is:
 - a milestone audit confirms the work still serves the goal, not just the plan.
 
 Status: pre-alpha. Mission #0 is complete; its `mission_done` event and acceptance evidence are
-in the ledger. Mission #1 (the method pack) is in progress under
-`.cairn/missions/001-method-pack/`.
+in the ledger. Mission #1 (the method pack) is complete; its `mission_done` event and acceptance
+evidence are in `.cairn/missions/001-method-pack/`.
 
 ## Model
 
