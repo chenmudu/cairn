@@ -70,5 +70,6 @@ is a repeatable, auditable way of building products, not a runtime for its own s
 
 ## Current action
 
-`T-002` in [`plan.md`](plan.md). Read [`inbox/`](inbox/) first; the plan was amended after
-`T-001` to add `serves` links and drift controls.
+The ledger is the source of truth for the next task: run `node scripts/goal-check.mjs` or
+`node src/cli.ts status`. Read [`inbox/`](inbox/) first; the plan was amended after `T-001`
+to add `serves` links and drift controls.

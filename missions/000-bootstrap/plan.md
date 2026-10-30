@@ -60,8 +60,10 @@ tasks:
     files:
       - src/gates.ts
       - src/verify.ts
+      - src/cli.ts
       - scripts/validate-mission.mjs
       - test/gates.test.ts
+      - test/cli.test.mjs
     interfaces:
       consumes:
         - "readLedger(missionDir)"
