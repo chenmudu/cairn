@@ -1,0 +1,15 @@
+{
+  "gate": {
+    "id": "workflow",
+    "command": "node",
+    "args": [
+      "scripts/check-workflow.mjs"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "workflow: ok",
+  "duration_ms": 46,
+  "timed_out": false
+}

@@ -61,14 +61,16 @@ the two source repositories.
 ## Start here
 
 1. Read [`docs/protocol.md`](docs/protocol.md).
-2. Read [`missions/001-method-pack/`](.cairn/missions/001-method-pack/).
-3. The ledger is the status: [`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl).
-4. Run the current gate:
+2. Read [`docs/workflow.md`](docs/workflow.md) for the one-tick operator flow: roles, steps,
+   human checkpoints, and failure paths.
+3. Read [`missions/001-method-pack/`](.cairn/missions/001-method-pack/).
+4. The ledger is the status: [`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl).
+5. Run the current gate:
    `node scripts/validate-mission.mjs .cairn/missions/001-method-pack`.
-5. Run `node scripts/goal-check.mjs` before starting work. It names the next task, the
+6. Run `node scripts/goal-check.mjs` before starting work. It names the next task, the
    acceptance criterion it serves, and the gates. The SessionStart hook runs the same check and
    injects it into a new or compacted session.
-6. Run `node scripts/audit-session.mjs` before claiming completion. It reads the actual
+7. Run `node scripts/audit-session.mjs` before claiming completion. It reads the actual
    transcript and reports drift signals; a claim without a gate in the same turn is one.
 
 The repository is designed to be self-contained: a new session should resume from the files

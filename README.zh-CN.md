@@ -56,12 +56,14 @@ Cairn 位于 harness 与两个包之间：
 ## 从这里开始
 
 1. 读 [`docs/protocol.md`](docs/protocol.md)。
-2. 读 [`missions/001-method-pack/`](.cairn/missions/001-method-pack/)。
-3. 台账就是状态：[`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl)。
-4. 跑当前闸门：`node scripts/validate-mission.mjs .cairn/missions/001-method-pack`。
-5. 开工前跑 `node scripts/goal-check.mjs`。它会指出下一个任务、该任务服务的验收标准，以及闸门。
+2. 读 [`docs/workflow.md`](docs/workflow.md) 的单 tick 操作流程：角色、步骤、人类检查点和失败
+   路径。
+3. 读 [`missions/001-method-pack/`](.cairn/missions/001-method-pack/)。
+4. 台账就是状态：[`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl)。
+5. 跑当前闸门：`node scripts/validate-mission.mjs .cairn/missions/001-method-pack`。
+6. 开工前跑 `node scripts/goal-check.mjs`。它会指出下一个任务、该任务服务的验收标准，以及闸门。
    SessionStart hook 会跑同一个检查，并把锚点注入新会话或压缩后的会话。
-6. 声称完成前跑 `node scripts/audit-session.mjs`。它读取真实会话记录并报告漂移信号；同一轮里
+7. 声称完成前跑 `node scripts/audit-session.mjs`。它读取真实会话记录并报告漂移信号；同一轮里
    没有跑闸门的完成声明就是其中之一。
 
 仓库被设计成自包含的：新会话应当只凭文件就能接上。这个性质在每个 milestone 被测试，而不是被假设。
