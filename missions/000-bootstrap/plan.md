@@ -201,6 +201,39 @@ tasks:
         command: node
         args: ["--test"]
         severity: block
+  - id: T-008
+    title: Mission completion and audit cadence
+    deps: [T-007]
+    risk: medium
+    status: todo
+    serves: [A3, A7]
+    files:
+      - src/complete.ts
+      - src/cli.ts
+      - scripts/goal-check.mjs
+      - test/complete.test.ts
+      - test/goal-check.test.mjs
+      - docs/automation.md
+      - docs/automation.zh.md
+      - docs/i18n.md
+      - missions/000-bootstrap/ledger.jsonl
+    interfaces:
+      consumes:
+        - "loadMission(missionDir)"
+        - "checkEvidence(missionDir, task, events)"
+      produces:
+        - "completeMission(missionDir): CompleteReport"
+        - "cairn record --mission-done"
+        - "goal-check audit cadence enforcement"
+    gates:
+      - id: test
+        command: node
+        args: ["--test"]
+        severity: block
+      - id: goal
+        command: node
+        args: ["scripts/goal-check.mjs", "missions/000-bootstrap"]
+        severity: block
 ---
 
 # Plan — Mission #0
@@ -352,6 +385,24 @@ half-translated.
 **Done when:** the goal check names the next task and its `serves` link; the audit reproduces
 this session's drift signals from the transcript; and a fresh session receives the anchor from
 the hook or the skill without the previous conversation.
+
+## T-008 — Mission completion and audit cadence
+
+**Goal:** Close the gap the end-of-mission audit found: the protocol defines `mission_done`
+but no command writes it, and the guard does not enforce the three-task audit cadence.
+
+**Deliverable:** `src/complete.ts` and `cairn record --mission-done`. The command refuses
+unless every task is done, every acceptance criterion has a done serving task with evidence,
+and the latest `review_result` is `pass` after the last `task_done`. `goal-check` fails when
+three tasks have completed since the last `review_result`, and when the mission is complete
+without a passing review after the last task. Update `docs/automation.md` and its Chinese
+companion.
+
+**Gate:** `node --test` and `node scripts/goal-check.mjs missions/000-bootstrap`.
+
+**Done when:** a temp mission closes with `mission_done`, the command refuses an open task, an
+uncovered criterion, missing evidence, and a fail review; and goal-check reports the cadence
+error on a fixture with three done tasks and no review.
 
 ## Review Focus
 
