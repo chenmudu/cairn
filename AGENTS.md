@@ -8,6 +8,20 @@
 4. `missions/000-bootstrap/plan.md` — the current task and its gate.
 5. `missions/000-bootstrap/inbox/` — decisions waiting for a human.
 
+## Self-observation
+
+- Before starting a task: `node scripts/goal-check.mjs`. It prints the mission intent, the next
+  task, its `serves` link, the gates, and the coverage map. Exit 1 means stop and fix the plan.
+- Before claiming done: run the gates, then `node scripts/audit-session.mjs`. It reads the
+  actual transcript and reports alignment corrections, completion claims with no gate, writes
+  outside the plan, and confirmation requests.
+- The project skill `.zcode/skills/cairn-guard/` encodes the same checks. The SessionStart hook
+  runs `goal-check --brief` and injects the anchor into every new or compacted session.
+- Do not ask the human to restate the goal or positioning. Read `README.md`,
+  `missions/000-bootstrap/mission.md`, and the ledger. If the guard is wrong, fix the guard.
+- Documentation is bilingual: English is canonical for machine-checked contracts; Chinese
+  companions are listed in `docs/i18n.md` and never override the canonical file.
+
 ## Work rules
 
 - One tick advances at most one task.
@@ -39,11 +53,14 @@ Record the result as `review_result`; a fail parks the mission.
 
 Until `cairn record` exists (end of `T-002`), the human is the only writer of
 `ledger.jsonl`. A human may delegate one write to an adapter explicitly; the delegation is
-recorded as a ruling and the events carry the adapter's name as `actor`. `T-001` and the
-goal-integrity amendment were written by `zcode` under such a delegation. Hand-written events
-are marked `"actor":"human"`. Once `cairn record` lands, no manual append is allowed.
+recorded as a ruling and the events carry the adapter's name as `actor`. `T-001`, the
+goal-integrity amendment, and the `T-006` plan amendment were written by `zcode` under such a
+delegation. Hand-written events are marked `"actor":"human"`. Once `cairn record` lands, no
+manual append is allowed.
 
 ## Current step
 
-`T-002` in `missions/000-bootstrap/plan.md`. Read `missions/000-bootstrap/inbox/` before
-starting; the plan was amended to add `serves` links and drift controls.
+Run `node scripts/goal-check.mjs` before starting. It derives the next task from the ledger and
+the plan, so this file does not go stale. `T-006` is the guard itself; after it, `T-002`.
+Read `missions/000-bootstrap/inbox/` before starting; the plan was amended to add `serves`
+links, drift controls, and the guard.

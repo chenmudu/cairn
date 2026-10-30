@@ -1,0 +1,1 @@
+{"request":{"body":{"messages":[{"role":"user","content":"定位是什么？你理解吗"},{"role":"assistant","content":[{"type":"text","text":"已完成。"},{"type":"tool_use","name":"Write","input":{"file_path":"README.md"}}]}]}}}

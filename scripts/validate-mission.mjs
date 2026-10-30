@@ -53,17 +53,36 @@ const POLICY_FIELDS = [
 ];
 const PLAN_FIELDS = ['schema', 'mission', 'tasks'];
 
-export function validateMission(dir) {
+/**
+ * Read the three frontmatter documents and the ledger without judging them.
+ * The goal guard uses this so there is one parser, not two.
+ */
+export function readMission(dir) {
   const errors = [];
   const missionDir = resolve(dir);
 
   if (!existsSync(missionDir) || !statSync(missionDir).isDirectory()) {
-    return { ok: false, errors: [`${dir}: not a directory`] };
+    return {
+      missionDir,
+      mission: null,
+      policy: null,
+      plan: null,
+      events: [],
+      errors: [`${dir}: not a directory`],
+    };
   }
 
   const mission = readFrontmatter(missionDir, 'mission.md', errors);
   const policy = readFrontmatter(missionDir, 'policy.md', errors);
   const plan = readFrontmatter(missionDir, 'plan.md', errors);
+  const events = readLedger(missionDir, mission, errors);
+  return { missionDir, mission, policy, plan, events, errors };
+}
+
+export function validateMission(dir) {
+  const { mission, policy, plan, events, errors } = readMission(dir);
+  const missionDir = resolve(dir);
+  if (!mission && !policy && !plan) return { ok: false, errors };
 
   requireFields(mission, 'mission.md', MISSION_FIELDS, errors);
   requireFields(policy, 'policy.md', POLICY_FIELDS, errors);
@@ -166,7 +185,6 @@ export function validateMission(dir) {
     }
   }
 
-  const events = readLedger(missionDir, mission, errors);
   for (const event of events) {
     if (event.event === 'task_done') checkTaskDone(event, tasks, errors);
     if (event.event === 'gate_result') checkGateResult(missionDir, event, errors);

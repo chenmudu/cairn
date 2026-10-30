@@ -1,0 +1,12 @@
+{
+  "gate": "validate",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "scripts/validate-mission.mjs",
+    "missions/000-bootstrap"
+  ],
+  "exit_code": 0,
+  "duration_ms": 34,
+  "tail": "ok: missions/000-bootstrap\n"
+}

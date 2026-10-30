@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "enabled": true,
+    "timeoutMs": 15000,
+    "events": {
+      "SessionStart": [
+        {
+          "matcher": "startup|clear|compact",
+          "hooks": [
+            {
+              "type": "process",
+              "command": "node",
+              "args": [".zcode/hooks/session-start.mjs"],
+              "timeoutMs": 15000
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

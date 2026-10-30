@@ -1,0 +1,11 @@
+{
+  "gate": "test",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "--test"
+  ],
+  "exit_code": 0,
+  "duration_ms": 207,
+  "tail": "✔ rejects a serves id that is not in the mission (2.0086ms)\n✔ brief output carries the task, serves, and gate (38.5469ms)\n✔ the SessionStart hook emits additionalContext (67.414ms)\n✔ accepts the repository mission (2.8682ms)\n✔ accepts a minimal valid mission (2.2988ms)\n✔ rejects the fixture whose task has no gate (0.6678ms)\n✔ rejects duplicate task ids (1.5833ms)\n✔ rejects an unresolvable dependency (1.3982ms)\n✔ rejects a task whose gates are advisory only (1.6389ms)\n✔ rejects an unknown ledger event (1.4319ms)\n✔ rejects a task_done without a passing blocking gate (1.6861ms)\n✔ rejects a gate_result whose evidence file is missing (1.3907ms)\n✔ accepts a gate_result whose evidence file exists (1.8686ms)\n✔ rejects an evidence path that escapes the mission directory (1.4134ms)\n✔ rejects YAML it does not understand instead of guessing (1.4916ms)\nℹ tests 22\nℹ suites 0\nℹ pass 22\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 173.4827\n"
+}

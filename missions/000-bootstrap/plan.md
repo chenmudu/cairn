@@ -24,7 +24,7 @@ tasks:
         severity: block
   - id: T-002
     title: Ledger and CLI skeleton
-    deps: [T-001]
+    deps: [T-001, T-006]
     risk: medium
     status: todo
     serves: [A2, A6, A8]
@@ -124,6 +124,48 @@ tasks:
         command: node
         args: ["scripts/validate-mission.mjs", "missions/000-bootstrap"]
         severity: block
+  - id: T-006
+    title: Goal guard and session audit
+    deps: [T-001]
+    risk: low
+    status: todo
+    serves: [A5, A7]
+    files:
+      - scripts/goal-check.mjs
+      - scripts/audit-session.mjs
+      - scripts/validate-mission.mjs
+      - test/goal-check.test.mjs
+      - test/audit-session.test.mjs
+      - test/fixtures/transcript.jsonl
+      - docs/automation.md
+      - docs/automation.zh.md
+      - docs/i18n.md
+      - docs/drift-control.zh.md
+      - README.md
+      - README.zh-CN.md
+      - docs/protocol.zh.md
+      - AGENTS.md
+      - .zcode/skills/cairn-guard/SKILL.md
+      - .zcode/hooks/session-start.mjs
+      - .zcode/config.json
+      - package.json
+    interfaces:
+      produces:
+        - "checkGoal(missionDir): GoalReport"
+        - "auditTranscript(file, options): DriftReport"
+    gates:
+      - id: test
+        command: node
+        args: ["--test"]
+        severity: block
+      - id: goal
+        command: node
+        args: ["scripts/goal-check.mjs", "missions/000-bootstrap"]
+        severity: block
+      - id: validate
+        command: node
+        args: ["scripts/validate-mission.mjs", "missions/000-bootstrap"]
+        severity: block
 ---
 
 # Plan — Mission #0
@@ -131,6 +173,10 @@ tasks:
 Amended 2026-10-31: every task declares `serves`; `T-002` adds acceptance coverage and
 `mission_amended`; `T-003` uses `--expect-invalid`; `T-005` includes the milestone audit. The
 amendment is recorded in the ledger as a ruling with old and new hashes.
+
+Amended 2026-10-31 (second): `T-006` adds the goal guard and session audit ahead of `T-002`;
+`T-002` now depends on it. Task `status` here is advisory: the ledger's `task_done` event is
+the authority on state (`T-002` derives state from the ledger, not from this file).
 
 A task is the smallest unit that carries its own gate, commit, and acceptance link. Do them in
 order; each one's interface block is what the next task may rely on.
@@ -236,6 +282,41 @@ fresh agent executes from the packet, `cairn verify` runs the gate, `cairn recor
 `task_done` for T-005; `cairn status` shows the mission complete; the cold-start test passes (a
 fresh session names the next task, gate, and reason from the repository alone); and the audit
 verdict is `pass`.
+
+## T-006 — Goal guard and session audit
+
+**Goal:** Make goal alignment and drift observable by commands, not by the human's memory.
+
+**Deliverable:** two zero-dependency scripts and one shared reader:
+
+- `scripts/goal-check.mjs` reads mission, plan, and ledger, then prints the mission intent,
+  the next task, its `serves` link, the acceptance check, the gates, the non-goals, and the
+  acceptance coverage map. It exits 1 when the next task has no valid `serves` or when an
+  acceptance criterion is uncovered. `--brief` is the SessionStart form; `--json` is for tools.
+- `scripts/audit-session.mjs` reads a ZCode `model-io-*.jsonl` transcript and reports:
+  alignment corrections from the human, completion claims with no gate in the same turn,
+  writes outside the plan's declared files, and confirmation requests. It is diagnostic, not
+  a gate; `--strict` makes critical signals exit 1.
+- `scripts/validate-mission.mjs` exports `readMission(dir)` so the validator and the guard use
+  one parser instead of two.
+
+Wire the guard into the harness without making the harness a dependency:
+`.zcode/skills/cairn-guard/SKILL.md` tells the agent when to run the scripts, and a
+`SessionStart` hook prints `goal-check --brief` as additional context. Another harness can run
+the same scripts; the hook is an adapter, not the contract.
+
+The same task adds the bilingual documentation contract in `docs/i18n.md`: English stays
+canonical for machine-checked contracts; Chinese companions name the commit they translate,
+are not hash-frozen, and never override the canonical file. README, protocol, drift control,
+and this plan's orientation get companions now; the rest is tracked as pending, not silently
+half-translated.
+
+**Gate:** `node --test`, `node scripts/goal-check.mjs missions/000-bootstrap`, and
+`node scripts/validate-mission.mjs missions/000-bootstrap`.
+
+**Done when:** the goal check names the next task and its `serves` link; the audit reproduces
+this session's drift signals from the transcript; and a fresh session receives the anchor from
+the hook or the skill without the previous conversation.
 
 ## Review Focus
 
