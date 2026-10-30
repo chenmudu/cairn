@@ -1,8 +1,8 @@
 # Decision 0005 — the packs block in the packet and the review report
 
-Status: waiting for human approval. `docs/protocol.md` is unchanged.
+Status: approved by the human on 2026-10-31. The protocol amendments are recorded in the ledger.
 Date: 2026-10-31
-Current protocol hash: `sha256:35115bd851eb2435778380d84bb2a6a46b57915c802add1b5ef656b551a0bcba`.
+Current protocol hash: `sha256:f9498f31a3328b311f1a643a4ad4bbfb5b3b0a1ed268e9a8b3a490603475e439`.
 Serves: B7; the plan amendment that declares these T7 files was approved by Cairn under
 `approved_by: cairn`.
 

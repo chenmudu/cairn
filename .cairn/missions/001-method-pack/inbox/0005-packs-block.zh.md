@@ -1,10 +1,10 @@
-<!-- translation of .cairn/missions/001-method-pack/inbox/0005-packs-block.md at the T7 amendment; the English file is authoritative -->
+<!-- translation of .cairn/missions/001-method-pack/inbox/0005-packs-block.md at the decision-routing loop; the English file is authoritative -->
 
 # 决策 0005 — packet 与 review report 里的 packs 块
 
-状态：等待人类批准。`docs/protocol.md` 尚未修改。
+状态：人类已于 2026-10-31 批准。协议修订已记录在台账。
 日期：2026-10-31
-当前协议哈希：`sha256:35115bd851eb2435778380d84bb2a6a46b57915c802add1b5ef656b551a0bcba`。
+当前协议哈希：`sha256:f9498f31a3328b311f1a643a4ad4bbfb5b3b0a1ed268e9a8b3a490603475e439`。
 服务：B7；声明这些 T7 文件的计划修订已由 Cairn 以 `approved_by: cairn` 批准。
 
 ## 为什么这是人类决定
