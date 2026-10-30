@@ -262,6 +262,27 @@ D4/D5 问题。目标纠正是真实的：第一版计划没有写清 harness �
 ——直到人类点名。这些约束现在写进了 `docs/automation.md` 和 `docs/drift-control.md`，下一个
 会话读到它们，而不是重新发现。确认请求是仓库要求的范围闸门，不是漂移。
 
+### 目标哈希自审
+
+`scripts/check-targets.mjs` 落在 `84ed257`，带 `test/check-targets.test.mjs` 的八个测试。
+全部闸门退出 0（167 个测试），CI 把检查作为独立步骤运行。它存在的原因：执行地图自审发现第 1
+行声称目标冻结，但没有任何脚本做过哈希——校验器从不重算哈希链。
+
+- 检查从 `mission_created` 和每个 `mission_amended` 重建四个目标的期望哈希，再对工作树哈希。
+  台账 key 有两种形式——裸文件名（`plan.md`）和仓库相对路径
+  （`.cairn/missions/<id>/plan.md`）；比较前都归一化。混合形式正是朴素比较报假 DIFF 的原因。
+- 它只作用于活动 mission。Mission #0 的哈希描述它关闭时的树；`docs/protocol.md` 在 Mission #1
+  期间改过，所以用今天的树重查 Mission #0 必然报不匹配。已关闭 mission 不重查。
+- 这次改动的审计 verdict：`drift`，一个计划外写入——`docs/drift-control.zh.md`。英文文件和其余
+  部分落在 `aa6490d`，companion 的 header 更新在后。还是同一个 D4/D5 缺口：人类授权的关闭后
+  工作没有 plan 声明它，也没有运行时命令记录授权。零目标纠正、零无闸门声明、零确认请求。
+
+**Mission #2 的阻塞点。** `cairn init` 生成 `mission.md`、`plan.md`、`policy.md` 和空的
+`ledger.jsonl`；它不追加 `mission_created`。在临时仓库验证：`init` 退出 0，台账 0 行，
+`check-targets` 退出 1，报 `no mission_created event`。今天创建的 mission 没有冻结目标，D5
+依赖的哈希链从空开始。D5 的 init writer 是修复。在 D5 落地前，启动 Mission #2 要么先做 D5，
+要么由人类明确授权手工追加冻结事件——不能伪造一个看起来像脚手架的 `mission_created`。
+
 ## 批准
 
 - `approve 0006` — 接受 D1–D7 和顺序。

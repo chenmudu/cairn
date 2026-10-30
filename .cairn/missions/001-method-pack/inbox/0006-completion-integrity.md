@@ -307,6 +307,35 @@ human named them. Those constraints are now in `docs/automation.md` and
 `docs/drift-control.md`, so the next session reads them instead of rediscovering them. The
 confirmation request was the scope gate the repository requires, not drift.
 
+### The target-check audit
+
+`scripts/check-targets.mjs` landed in `84ed257` with eight tests in
+`test/check-targets.test.mjs`. All gates exit 0 (167 tests) and CI runs the check as its own
+step. It exists because the enforcement-map audit found row 1 claiming target freeze with no
+script that hashed anything: the validator never recomputed the chain.
+
+- The check rebuilds the expected hash for the four targets from `mission_created` plus every
+  `mission_amended`, then hashes the working tree. Ledger keys appear in two forms — a bare
+  name (`plan.md`) and a repo-relative path (`.cairn/missions/<id>/plan.md`); both are
+  normalized before comparison. The mixed form is what made a naive comparison report false
+  diffs.
+- It is scoped to the active mission. Mission #0's hashes describe the tree it closed on;
+  `docs/protocol.md` changed during Mission #1, so rechecking Mission #0 against today's tree
+  reports a mismatch by design. Closed missions are not rechecked.
+- Audit verdict for this change: `drift`, one unplanned write — `docs/drift-control.zh.md`.
+  The English file and the rest landed in `aa6490d`; the companion header update came after.
+  It is the same D4/D5 gap: post-close work authorized by the human has no plan that declares
+  it and no runtime command that records the authorization. Zero alignment corrections, zero
+  claims without a gate, zero confirmation requests.
+
+**Blocker for Mission #2.** `cairn init` scaffolds `mission.md`, `plan.md`, `policy.md`, and
+an empty `ledger.jsonl`; it appends no `mission_created`. Verified in a temp repository: `init`
+exits 0, the ledger has 0 lines, and `check-targets` exits 1 with `no mission_created event`.
+A mission created today has no frozen targets, so the chain D5 relies on starts empty. D5's
+init writer is the fix. Until D5 lands, starting Mission #2 requires either D5 first or an
+explicit human authorization for a manual freeze append — not a scaffold event invented to
+look like one.
+
 ## Approval
 
 - `approve 0006` — accept D1–D7 and the sequence.
