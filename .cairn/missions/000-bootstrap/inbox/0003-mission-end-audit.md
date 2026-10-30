@@ -2,6 +2,7 @@
 
 - Status: resolved — option A, then a fresh audit passed
 - Raised: 2026-10-31
+- Legacy: true
 - Blocks: `mission_done` (no longer)
 - Verdict: `fail` (`review_result` in `ledger.jsonl`, 2026-10-30T20:43:08.058Z);
   re-audit `pass` (`review_result`, 2026-10-30T20:52:40.670Z)

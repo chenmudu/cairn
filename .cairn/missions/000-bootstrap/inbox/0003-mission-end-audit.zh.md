@@ -4,6 +4,7 @@
 
 - 状态：已解决——选项 A，随后一次全新审计通过
 - 提出：2026-10-31
+- Legacy: true
 - 阻塞：`mission_done`（已不再阻塞）
 - 结论：`fail`（`ledger.jsonl` 中的 `review_result`，2026-10-30T20:43:08.058Z）；重新审计
   `pass`（`review_result`，2026-10-30T20:52:40.670Z）

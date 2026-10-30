@@ -2,6 +2,7 @@
 
 - Status: open (planning input, not a blocker)
 - Raised: 2026-10-31
+- Legacy: true
 - Source: the passing end-of-mission review (`review_result`, 2026-10-30T20:52:40.670Z) and the
   failed first audit (`review_result`, 2026-10-30T20:43:08.058Z)
 

@@ -18,9 +18,10 @@ It reads `mission.md`, `plan.md`, and `ledger.jsonl`, then prints:
 - the acceptance criterion the task serves, with its check;
 - the task's gates;
 - the acceptance coverage map (`A# → task ids`);
-- the decision routing rule: an ADR is a numbered, project-wide decision in `docs/decisions/`;
-  a mission escalation closes or blocks one mission acceptance and needs a human answer, so it
-  lives in `.cairn/missions/<id>/inbox/`.
+- the decision routing rule from `docs/decision-routing.md`: an ADR is a numbered, project-wide
+  decision in `docs/decisions/`; a mission escalation closes or blocks one mission acceptance
+  and needs a human answer, so it lives in `.cairn/missions/<id>/inbox/`.
+  `scripts/check-decisions.mjs` enforces the rule.
 
 Exit 1 means stop: the next task has no `serves` link, a `serves` id is unknown, an acceptance
 criterion is uncovered, no task is runnable, or a milestone audit is due. A task without an
@@ -65,13 +66,17 @@ planned write from an unplanned one. The default is the active mission from
 
 ## Wiring
 
-- **Skill** — `.zcode/skills/cairn-guard/SKILL.md` tells the agent to run the guard before work
-  and the audit before claiming done.
+- **Skill** — `.zcode/skills/cairn-guard/SKILL.md` tells the agent to run the guard before work,
+  the decision check before and after writing a decision, and the audit before claiming done.
 - **Hook** — `.zcode/config.json` runs `.zcode/hooks/session-start.mjs` on `startup`, `clear`,
-  and `compact`. The hook prints `goal-check --brief` as `additionalContext`, so a fresh
-  session starts with the anchor from the repository. Workspace hooks may require trust in
-  ZCode; the scripts work without the hook in any harness.
-- **Agents** — `AGENTS.md` states the same rule. The hook is an adapter, not the contract.
+  and `compact`. The hook prints `goal-check --brief` as `additionalContext`; the brief reads
+  the routing rule from `docs/decision-routing.md`, so a fresh session starts with the anchor
+  from the repository. Workspace hooks may require trust in ZCode; the scripts work without the
+  hook in any harness.
+- **Script** — `scripts/check-decisions.mjs` validates both homes, rejects stray numbered
+  decisions, and is a CI step. The rule source is the routing document; the script does not
+  keep a second copy.
+- **Agents** — `AGENTS.md` points to the same check. The hook is an adapter, not the contract.
 
 Disable the hook by removing the `SessionStart` entry from `.zcode/config.json`; the commands
 remain available.

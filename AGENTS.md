@@ -49,6 +49,9 @@
 - Implementer claims are not evidence. Run the gate.
 - A green gate proves the step, not the goal. Report against `README.md`, not only exit codes.
 - Every decision made without a human is a ruling; every blocking question is an escalation.
+- Decision records: project-wide ADRs live in `docs/decisions/`; mission decisions live in
+  `.cairn/missions/<id>/inbox/`. Run `node scripts/check-decisions.mjs` before and after
+  writing one. The SessionStart hook injects the same routing rule.
 - If the plan cannot express the work, amend the plan first, and record the amendment.
 - Target artifacts (`mission.md`, `policy.md`, `plan.md`, `docs/protocol.md`) change only by
   amendment with old and new hashes. See `docs/drift-control.md`.

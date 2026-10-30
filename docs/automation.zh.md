@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md after the decision-routing anchor; the English file is authoritative -->
+<!-- translation of docs/automation.md at the decision-routing loop; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -19,8 +19,9 @@ node scripts/goal-check.mjs --json          # 机器可读
 - 该任务服务的验收标准及其检查方式；
 - 该任务的闸门；
 - 验收覆盖表（`A# → 任务 id`）；
-- 决策路由规则：ADR 是 `docs/decisions/` 里的编号项目级决策；mission escalation 是关闭或
-  阻塞某个 mission 验收、需要人类回答的决策，放在 `.cairn/missions/<id>/inbox/`。
+- 来自 `docs/decision-routing.md` 的决策路由规则：ADR 是 `docs/decisions/` 里的编号项目级
+  决策；mission escalation 是关闭或阻塞某个 mission 验收、需要人类回答的决策，放在
+  `.cairn/missions/<id>/inbox/`。`scripts/check-decisions.mjs` 执行这条规则。
 
 退出码 1 表示停下：下一个任务没有 `serves` 链接、`serves` 指向未知验收、有验收标准无人覆盖、
 没有可运行的任务，或者到了里程碑审计的时间。没有验收链接的任务不是工作，是尚未命名的漂移。
@@ -59,12 +60,15 @@ verdict 为 `drift` 表示存在无闸门声明或计划外写入；只有目标
 
 ## 接线
 
-- **Skill**——`.zcode/skills/cairn-guard/SKILL.md` 要求 agent 开工前跑守卫、声称完成前跑审计。
+- **Skill**——`.zcode/skills/cairn-guard/SKILL.md` 要求 agent 开工前跑守卫、写决策前后跑决策
+  检查、声称完成前跑审计。
 - **Hook**——`.zcode/config.json` 在 `startup`、`clear`、`compact` 时运行
-  `.zcode/hooks/session-start.mjs`，把 `goal-check --brief` 作为 `additionalContext` 注入，
-  新会话因此从仓库里的锚点开始。ZCode 的工作区 hook 可能需要信任；脚本在任何 harness 里都能
-  单独运行。
-- **Agent 指令**——`AGENTS.md` 写明同一规则。hook 是适配器，不是契约。
+  `.zcode/hooks/session-start.mjs`，把 `goal-check --brief` 作为 `additionalContext` 注入；
+  brief 从 `docs/decision-routing.md` 读取路由规则，新会话因此从仓库里的锚点开始。ZCode 的
+  工作区 hook 可能需要信任；脚本在任何 harness 里都能单独运行。
+- **脚本**——`scripts/check-decisions.mjs` 校验两个家、拒绝放错位置的编号决策，并作为 CI
+  步骤。规则源是路由文档；脚本不保留第二份规则。
+- **Agent 指令**——`AGENTS.md` 指向同一个检查。hook 是适配器，不是契约。
 
 要停用 hook，从 `.zcode/config.json` 删除 `SessionStart` 条目即可；命令仍然可用。
 

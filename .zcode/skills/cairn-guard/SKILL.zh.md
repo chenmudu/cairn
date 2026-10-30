@@ -1,4 +1,4 @@
-<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the T3 amendment; the English file is authoritative -->
+<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the decision-routing commit; the English file is authoritative -->
 
 ---
 name: cairn-guard
@@ -16,6 +16,13 @@ description: 在 Cairn 仓库的每个任务开始和结束时使用。运行目
 2. 用一句话说出：当前任务、它的 `serves` 链接、验收检查。
 3. 如果任务不在 `plan.md`、没有 `serves`，或检查失败，停下先修订计划。不要开始计划表达不了的
    工作。
+
+## 写决策之前
+
+1. 运行 `node scripts/check-decisions.mjs`。
+2. 说出 scope 和路径：项目级 ADR 放 `docs/decisions/`；mission escalation 放
+   `.cairn/missions/<id>/inbox/`。
+3. 写完后再次运行检查。路径错、字段缺失或缺少中文 companion 都是失败。
 
 ## 声明完成之前
 

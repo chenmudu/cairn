@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readMission } from './validate-mission.mjs';
+import { routingLines } from './check-decisions.mjs';
 import { resolveMission } from '../src/paths.ts';
 
 export function checkGoal(missionDir = resolveMission()) {
@@ -160,8 +161,11 @@ export function formatBrief(report) {
   lines.push(`Coverage: ${covered}/${Object.keys(report.coverage).length} acceptance criteria covered`);
   lines.push(`Non-goals: ${report.nonGoals.join(' ')}`);
   lines.push(`Ledger: ${report.ledger.total} events, last ${report.ledger.last?.event ?? 'none'}`);
-  lines.push('Decision routing: ADR = numbered, project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.');
-  lines.push('Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.');
+  try {
+    lines.push(...routingLines());
+  } catch (error) {
+    lines.push(`Decision routing: FAILED — ${error.message}`);
+  }
   lines.push('Before claiming done: run the gates, then node scripts/audit-session.mjs.');
   return lines.join('\n');
 }

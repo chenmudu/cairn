@@ -2,6 +2,7 @@
 
 - Status: open (item 3), resolved (items 1, 2, 4)
 - Updated: 2026-10-31
+- Legacy: true
 
 ## 1. T-003's fixture gate polarity — resolved
 

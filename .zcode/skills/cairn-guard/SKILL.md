@@ -15,6 +15,14 @@ guard exists so the agent does not need the human to restate the goal.
 3. If the task is not in `plan.md`, has no `serves`, or the check fails, stop and amend the
    plan first. Do not start work that the plan cannot express.
 
+## Before writing a decision
+
+1. Run `node scripts/check-decisions.mjs`.
+2. State the scope and path: a project-wide ADR goes to `docs/decisions/`; a mission escalation
+   goes to `.cairn/missions/<id>/inbox/`.
+3. Write the decision, then run the check again. A wrong path, a missing field, or a missing
+   Chinese companion is a failure.
+
 ## Before claiming completion
 
 1. Run every `severity: block` gate in the task. Paste the commands and exit codes.

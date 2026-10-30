@@ -356,20 +356,25 @@ function fail(errors, file, message) {
   errors.push(`${file}: ${message}`);
 }
 
+/**
+ * Parse one document's YAML frontmatter. Throws on missing or unsupported
+ * YAML; callers decide whether that is a validation error or a hard failure.
+ */
+export function parseFrontmatter(text) {
+  const normalized = text.replace(/^\uFEFF/, '');
+  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(normalized);
+  if (!match) throw new Error('missing or unterminated YAML frontmatter');
+  return parseYaml(match[1], 1);
+}
+
 function readFrontmatter(missionDir, name, errors) {
   const file = join(missionDir, name);
   if (!existsSync(file) || !statSync(file).isFile()) {
     fail(errors, name, 'missing');
     return null;
   }
-  const text = readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
-  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text);
-  if (!match) {
-    fail(errors, name, 'missing or unterminated YAML frontmatter');
-    return null;
-  }
   try {
-    return parseYaml(match[1], 1);
+    return parseFrontmatter(readFileSync(file, 'utf8'));
   } catch (error) {
     fail(errors, name, error.message);
     return null;
