@@ -58,7 +58,8 @@
   (hook/skill/AGENTS) makes a rule known; only the check makes it binding.
 - If the plan cannot express the work, amend the plan first, and record the amendment.
 - Target artifacts (`mission.md`, `policy.md`, `plan.md`, `docs/protocol.md`) change only by
-  amendment with old and new hashes. See `docs/drift-control.md`.
+  amendment with old and new hashes. Run `node scripts/check-targets.mjs` after the amendment.
+  See `docs/drift-control.md`.
 - No push, publish, history rewrite, or destructive command without a human, except routine
   pushes of `main` to `origin` after each commit (human-authorized 2026-10-31). Never force
   push, rewrite history, or push another branch without a human.

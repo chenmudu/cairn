@@ -1,4 +1,4 @@
-<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the enforcement loop; the English file is authoritative -->
+<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the target-check commit; the English file is authoritative -->
 
 ---
 name: cairn-guard
@@ -50,6 +50,8 @@ description: 在 Cairn 仓库的每个任务开始和结束时使用。运行目
 - 空结果或 `not-applicable` 不是通过。记录原因和回退。
 - 必需检查跑不了时，记录失败和替代证据。永不把没跑的检查报告为通过；guard 本身错了就修
   guard。
+- 通过修订改变目标产物后，运行 `node scripts/check-targets.mjs`。哈希不匹配是漂移，不是
+  格式问题。
 - 保持分层：`SKILL.md` 是 SOP，参考材料放 `docs/`，可执行检查放 `scripts/`（共享）或
   skill 自己的 `scripts/`（私有）。不要把脚本或长文档粘进 SOP。
 - 会话启动 hook 会从仓库打印同样的锚点。把它当作提醒，而不是运行检查的替代品。

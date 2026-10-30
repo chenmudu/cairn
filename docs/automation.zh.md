@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md at the enforcement loop; the English file is authoritative -->
+<!-- translation of docs/automation.md at the target-check commit; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -92,8 +92,11 @@ Skill 是目录。`SKILL.md` 是 SOP；参考材料放 `docs/` 或 skill 的 `re
   brief 从 `docs/decision-routing.md` 读取路由规则，新会话因此从仓库里的锚点开始。ZCode 的
   工作区 hook 可能需要信任；脚本在任何 harness 里都能单独运行。
 - **脚本**——`scripts/check-decisions.mjs` 校验两个决策家并拒绝放错位置的编号决策；
-  `scripts/check-enforcement.mjs` 校验失败模式表的机器语法和中文 token 对等。两者都是 CI
+  `scripts/check-enforcement.mjs` 校验失败模式表的机器语法和中文 token 对等；
+  `scripts/check-targets.mjs` 重建活动 mission 的目标哈希链，并与工作树比较。三者都是 CI
   步骤并读取各自的规则源；都不保留第二份规则。
+  `check-targets` 只作用于活动 mission：已关闭 mission 的哈希描述它关闭时的树，不是后来的
+  工作树，所以后续 mission 移动共享协议后，不会回头重查它。
 - **Agent 指令**——`AGENTS.md` 指向同一批检查，并保持为路由器。hook 是适配器，不是契约。
 
 要停用 hook，从 `.zcode/config.json` 删除 `SessionStart` 条目即可；命令仍然可用。

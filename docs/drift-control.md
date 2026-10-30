@@ -48,7 +48,7 @@ by CI or a test; a test runs under `node --test`. No task ids, no prose.
 
 | # | Failure | Early signal | Mechanism | Enforced by |
 |---|---|---|---|---|
-| 1 | Goal silently redefined | a target hash changes with no amendment | target freeze + `mission_amended`; D5 adds hash verification | `human` |
+| 1 | Goal silently redefined | a target hash changes with no amendment | target freeze + `mission_amended`; the hash chain is recomputed | `scripts/check-targets.mjs` |
 | 2 | Task unrelated to the goal | a task with no `serves` | acceptance traceability | `scripts/validate-mission.mjs`, `scripts/goal-check.mjs` |
 | 3 | Plan grows scope | tasks not traceable to acceptance | amendment must cite acceptance | `review` |
 | 4 | Gate cannot fail | a gate that never exits non-zero | a fixture that must be rejected | `test/validate-mission.test.mjs` |

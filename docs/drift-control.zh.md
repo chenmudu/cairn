@@ -1,4 +1,4 @@
-<!-- translation of docs/drift-control.md at the enforcement-map commit; the English file is authoritative -->
+<!-- translation of docs/drift-control.md at the target-check commit; the English file is authoritative -->
 
 # 漂移控制
 
@@ -46,7 +46,7 @@
 
 | # | 失败 | 早期信号 | 机制 | 执行点 |
 |---|---|---|---|---|
-| 1 | 目标被静默改写 | 目标哈希变化但没有修订事件 | 目标冻结 + `mission_amended`；D5 加哈希验证 | `human` |
+| 1 | 目标被静默改写 | 目标哈希变化但没有修订事件 | 目标冻结 + `mission_amended`；重算哈希链 | `scripts/check-targets.mjs` |
 | 2 | 任务与目标无关 | 任务没有 `serves` | 验收可追溯 | `scripts/validate-mission.mjs`, `scripts/goal-check.mjs` |
 | 3 | 计划扩大范围 | 任务无法追溯到验收标准 | 修订必须引用验收标准 | `review` |
 | 4 | 闸门不可能失败 | 闸门永远不会退出非零 | 一个必须被拒绝的 fixture | `test/validate-mission.test.mjs` |

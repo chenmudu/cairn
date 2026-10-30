@@ -18,6 +18,7 @@
     "goal": "node scripts/goal-check.mjs",
     "check:decisions": "node scripts/check-decisions.mjs",
     "check:enforcement": "node scripts/check-enforcement.mjs",
+    "check:targets": "node scripts/check-targets.mjs",
     "audit": "node scripts/audit-session.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test",

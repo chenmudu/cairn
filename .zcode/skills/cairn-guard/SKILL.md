@@ -49,6 +49,8 @@ guard exists so the agent does not need the human to restate the goal.
 - Empty or `not-applicable` output is not a pass. Record the reason and the fallback.
 - If a required check cannot run, record the failure and the substitute evidence. Never report
   an unrun check as passed; fix the guard when the guard is what failed.
+- After changing a target artifact by amendment, run `node scripts/check-targets.mjs`. A hash
+  mismatch is drift, not a formatting issue.
 - Keep the layers separate: this `SKILL.md` is the SOP, reference material lives in `docs/`,
   executable checks in `scripts/` (shared) or the skill's `scripts/` (private). Do not paste a
   script or a long document into the SOP.

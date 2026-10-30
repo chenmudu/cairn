@@ -104,8 +104,12 @@ skill's `references/`; executable checks belong in `scripts/` when shared, or th
   hook in any harness.
 - **Script** — `scripts/check-decisions.mjs` validates both decision homes and rejects stray
   numbered decisions. `scripts/check-enforcement.mjs` validates the failure-mode map's
-  machine grammar and the Chinese token parity. Both are CI steps and read their rule source;
-  neither keeps a second copy.
+  machine grammar and the Chinese token parity. `scripts/check-targets.mjs` rebuilds the
+  active mission's target hash chain and compares it to the working tree. All three are CI
+  steps and read their rule source; none keeps a second copy.
+  `check-targets` is scoped to the active mission: a closed mission's hashes describe its
+  closing tree, not a later working tree, so it is not rechecked after a later mission moves
+  the shared protocol.
 - **Agents** — `AGENTS.md` points to the same checks and stays a router. The hook is an
   adapter, not the contract.
 
