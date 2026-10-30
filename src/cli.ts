@@ -16,9 +16,10 @@ import {
 import { checkEvidence, verifyTask } from './verify.ts';
 import { reconcileMission } from './reconcile.ts';
 import { completeMission } from './complete.ts';
+import { initMission, resolveMission } from './paths.ts';
 
-const DEFAULT_MISSION = 'missions/000-bootstrap';
 const USAGE = `usage:
+  cairn init <id> [--title <title>]
   cairn status [--json] [--mission <dir>]
   cairn next [--mission <dir>]
   cairn verify <task> [--mission <dir>]
@@ -29,11 +30,27 @@ const USAGE = `usage:
 
 function main(argv: string[]): number {
   let args = argv.slice(2);
-  const missionDir = takeOption(args, '--mission') ?? DEFAULT_MISSION;
+  const missionOption = takeOption(args, '--mission');
   const json = args.includes('--json');
   args = args.filter((arg) => arg !== '--json');
 
   const [command, ...rest] = args;
+
+  if (command === 'init') {
+    const title = takeOption(rest, '--title');
+    const id = rest[0];
+    if (!id || rest.length > 1) return usage('init needs <id>');
+    try {
+      const dir = initMission(id, { title });
+      process.stdout.write(`created ${dir}\n`);
+      return 0;
+    } catch (error) {
+      return refuse(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  const missionDir = resolveMission(missionOption);
+
   if (command === 'status') {
     if (rest.length > 0) return usage(`unexpected argument ${rest[0]}`);
     const report = statusReport(missionDir);

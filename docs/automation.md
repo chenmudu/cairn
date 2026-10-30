@@ -52,7 +52,8 @@ alignment or confirmation signals exist, and `clean` otherwise. The audit is dia
 out of the repository.
 
 `--mission <dir>` supplies the plan's declared files and the ledger, so the audit can tell a
-planned write from an unplanned one. The default is `missions/000-bootstrap`.
+planned write from an unplanned one. The default is the active mission from
+`.cairn/config.json` (`.cairn/missions/001-method-pack` in this repository).
 
 ## Wiring
 

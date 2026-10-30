@@ -27,14 +27,20 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 ## 产物
 
 ```
-missions/<mission-id>/
-  mission.md      # 意图、非目标、验收
-  policy.md       # 预算、允许的命令、停止条件
-  plan.md         # 任务、依赖、文件、接口、闸门
-  ledger.jsonl    # 只追加的事件；唯一的真相
-  evidence/       # 每个任务的闸门输出
-  inbox/          # 待处理的升级
+.cairn/
+  config.json     # 活动 mission 和布局版本
+  cache/          # 可丢弃；永不提交
+  missions/<mission-id>/
+    mission.md      # 意图、非目标、验收
+    policy.md       # 预算、允许的命令、停止条件
+    plan.md         # 任务、依赖、文件、接口、闸门
+    ledger.jsonl    # 只追加的事件；唯一的真相
+    evidence/       # 每个任务的闸门输出
+    inbox/          # 待处理的升级
 ```
+
+`.cairn/config.json` 指明活动 mission。`cairn` 优先解析 `.cairn/missions/<id>`，同时保留
+`missions/<id>` 的旧路径回退，所以迁移不会破坏已有 checkout。`.cairn/cache/` 可丢弃，永不提交。
 
 `mission.md`、`policy.md` 和 `plan.md` 用 YAML frontmatter 承载机器可读字段，用正文承载人需要读的
 部分。`ledger.jsonl` 只给机器读；markdown 视图是生成的，永远不手改。

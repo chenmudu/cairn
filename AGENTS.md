@@ -4,9 +4,10 @@
 
 1. `README.md` — the positioning and what success means. Read this before the protocol.
 2. `docs/protocol.md` — the contract.
-3. `missions/000-bootstrap/mission.md` — the goal, non-goals, and acceptance criteria.
-4. `missions/000-bootstrap/plan.md` — the current task and its gate.
-5. `missions/000-bootstrap/inbox/` — decisions waiting for a human.
+3. `.cairn/missions/001-method-pack/mission.md` — the active goal, non-goals, and acceptance.
+4. `.cairn/missions/001-method-pack/plan.md` — the current task and its gate.
+5. `.cairn/missions/001-method-pack/inbox/` — decisions waiting for a human. Mission #0 is
+   archived under `.cairn/missions/000-bootstrap/`.
 
 ## Self-observation
 
@@ -17,8 +18,8 @@
   outside the plan, and confirmation requests.
 - The project skill `.zcode/skills/cairn-guard/` encodes the same checks. The SessionStart hook
   runs `goal-check --brief` and injects the anchor into every new or compacted session.
-- Do not ask the human to restate the goal or positioning. Read `README.md`,
-  `missions/000-bootstrap/mission.md`, and the ledger. If the guard is wrong, fix the guard.
+- Do not ask the human to restate the goal or positioning. Read `README.md`, the active
+  `.cairn/missions/<id>/mission.md`, and the ledger. If the guard is wrong, fix the guard.
 - Documentation is bilingual: English is canonical for machine-checked contracts; Chinese
   companions are listed in `docs/i18n.md` and never override the canonical file.
 
@@ -27,9 +28,11 @@
 - One tick advances at most one task.
 - A task is done only when a commit exists, a blocking gate exits 0, and `task_done` is in the
   ledger.
-- A task must declare `serves: [A#]`. If it cannot name the acceptance criterion it advances,
-  do not start it.
-- Never edit `ledger.jsonl` by hand after Mission #0. Only `cairn record` writes it.
+- A task must declare `serves: [<acceptance-id>]`. If it cannot name the acceptance criterion
+  it advances, do not start it.
+- Only runtime commands write `ledger.jsonl`. `cairn record` owns task and mission events;
+  `cairn review` lands in T7. The Mission #1 `mission_created` bootstrap is a recorded ruling,
+  not a standing exception.
 - Implementer claims are not evidence. Run the gate.
 - A green gate proves the step, not the goal. Report against `README.md`, not only exit codes.
 - Every decision made without a human is a ruling; every blocking question is an escalation.
@@ -49,18 +52,15 @@ Every three completed tasks and at mission end, before starting the next task:
 
 Record the result as `review_result`; a fail parks the mission.
 
-## Bootstrap exception
+## Bootstrap exception (expired)
 
-Until `cairn verify` exists (end of `T-003`), the human is the only writer of
-`ledger.jsonl`. A human may delegate one write to an adapter explicitly; the delegation is
-recorded as a ruling and the events carry the adapter's name as `actor`. `T-001`, the
-goal-integrity amendment, the `T-006` plan amendment, and `T-002`'s completion were written by
-`zcode` under such a delegation. `T-002`'s completion still needed a manual append: `cairn
-record` requires gate evidence that only `cairn verify` (`T-003`) can produce. Hand-written
-events are marked `"actor":"human"`. Once `cairn verify` lands, no manual append is allowed.
+Mission #0's bootstrap exception ended when `cairn verify` landed. Mission #1 was created by a
+direct append under ruling `2026-10-30T21:05:25.767Z` because no `cairn init` writer existed;
+T1 adds it. After T1, missions are created by `cairn init` and events by runtime commands. No
+standing manual append is allowed.
 
 ## Current step
 
-Run `node scripts/goal-check.mjs` before starting. It derives the next task from the ledger and
-the plan, so this file does not go stale. Read `missions/000-bootstrap/inbox/` before starting;
-the plan was amended to add `serves` links, drift controls, and the guard.
+Run `node scripts/goal-check.mjs` before starting. It resolves the active mission from
+`.cairn/config.json`, derives the next task from the ledger and the plan, and does not go
+stale. Read `.cairn/missions/001-method-pack/inbox/` before starting.

@@ -193,7 +193,7 @@ test('--expect-invalid passes on the missing-gate fixture and fails on a valid m
 
   const valid = spawnSync(
     process.execPath,
-    ['scripts/validate-mission.mjs', '--expect-invalid', 'missions/000-bootstrap'],
+    ['scripts/validate-mission.mjs', '--expect-invalid', '.cairn/missions/000-bootstrap'],
     { cwd: repo, encoding: 'utf8' },
   );
   assert.equal(valid.status, 1, valid.stderr);

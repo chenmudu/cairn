@@ -1,10 +1,23 @@
-<!-- translation of docs/self-hosting.md at the T-008 commit; the English file is authoritative -->
+<!-- translation of docs/self-hosting.md at the T1 commit; the English file is authoritative -->
 
 # 自举——一次一个 tick
 
 Cairn 用它自己描述的方法构建自己。Mission #0 就是证明：bootstrap 之后的每个任务都由
 `cairn next` 选出、由 `cairn verify` 验证、由 `cairn record` 标记完成。`cairn verify` 存在之后，
 没有人再手工编辑 `ledger.jsonl` 来把任务标成完成。
+
+## 状态放在哪里
+
+运行时状态放在 `.cairn/`：
+
+- `.cairn/config.json` 指明活动 mission。
+- `.cairn/missions/<id>/` 存放 `mission.md`、`policy.md`、`plan.md`、`ledger.jsonl`、
+  `evidence/` 和 `inbox/`。
+- `.cairn/cache/` 可丢弃，永不提交。
+
+`cairn init <id> --title "<title>"` 生成新 mission 的骨架。骨架的闸门故意失败，因此在合同被编辑
+成真实任务之前，它无法被记录为完成。mission、ledger 和 evidence 都提交；clone 之后不需要原始对话
+就能继续和审计。旧的 `missions/<id>/` 路径仍然可以解析。
 
 ## 一个 tick
 

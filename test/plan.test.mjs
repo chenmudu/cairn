@@ -12,7 +12,7 @@ import {
 import { makeTempMission, taskDone } from './helpers.mjs';
 
 const repo = resolve(import.meta.dirname, '..');
-const mission = resolve(repo, 'missions', '000-bootstrap');
+const mission = resolve(repo, '.cairn', 'missions', '000-bootstrap');
 
 test('nextTask follows dependencies and the ledger', (t) => {
   const dir = makeTempMission(t);

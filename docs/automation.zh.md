@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md at the T-008 commit; the English file is authoritative -->
+<!-- translation of docs/automation.md at the T1 commit; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -50,7 +50,7 @@ verdict 为 `drift` 表示存在无闸门声明或计划外写入；只有目标
 不要提交进仓库。
 
 `--mission <dir>` 提供 plan 声明的文件列表和 ledger，让审计能区分计划内与计划外写入。
-默认是 `missions/000-bootstrap`。
+默认是 `.cairn/config.json` 里的活动 mission（本仓库是 `.cairn/missions/001-method-pack`）。
 
 ## 接线
 

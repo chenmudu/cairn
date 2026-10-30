@@ -116,7 +116,7 @@ function makeMission(t, { mission = missionOf(TWO), plan = planOf(taskYaml('T-00
 }
 
 test('accepts the repository mission and covers every acceptance criterion', () => {
-  const report = checkGoal(join(repo, 'missions', '000-bootstrap'));
+  const report = checkGoal(join(repo, '.cairn', 'missions', '000-bootstrap'));
   assert.equal(report.ok, true, report.errors.join('\n'));
   for (const [id, tasks] of Object.entries(report.coverage)) {
     assert.ok(tasks.length > 0, `acceptance ${id} must be covered`);

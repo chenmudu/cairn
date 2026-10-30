@@ -1,0 +1,18 @@
+{
+  "gate": {
+    "id": "reconcile",
+    "command": "node",
+    "args": [
+      "src/cli.ts",
+      "reconcile",
+      "--mission",
+      ".cairn/missions/000-bootstrap"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "{\n  \"ok\": true,\n  \"findings\": [],\n  \"pending\": []\n}",
+  "duration_ms": 514,
+  "timed_out": false
+}

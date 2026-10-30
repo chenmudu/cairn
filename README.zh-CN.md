@@ -24,7 +24,8 @@ Cairn 是运行与证据层：它让 mission 跨会话延续，从仓库证明�
 - 一个全新的会话，只拿到这个仓库，就能在没有先前对话的情况下继续 mission；并且
 - milestone 审计确认工作仍然服务目标，而不只是服务计划。
 
-状态：pre-alpha。Mission #0 已完成；`mission_done` 事件和验收证据都在台账里。Mission #1 尚未开始。
+状态：pre-alpha。Mission #0 已完成；`mission_done` 事件和验收证据都在台账里。Mission #1（方法包）
+正在 `.cairn/missions/001-method-pack/` 下进行。
 
 ## 模型
 
@@ -33,6 +34,7 @@ Cairn 是运行与证据层：它让 mission 跨会话延续，从仓库证明�
 - **Tick（轮次）**——一次事务；最多推进一个任务。
 - **Gate（闸门）**——确定性命令；退出码就是判决。
 - **Ledger（台账）**——只追加的 JSONL；唯一的真相。
+- **State（状态）**——`.cairn/missions/<id>/`；除 `.cairn/cache/` 外都提交。
 
 一个任务只有在三件事同时成立时才算完成：存在提交、阻塞闸门退出 0、ledger 里有 `task_done`。
 实现者的声明不是证据。
@@ -54,9 +56,9 @@ Cairn 位于 harness 与两个包之间：
 ## 从这里开始
 
 1. 读 [`docs/protocol.md`](docs/protocol.md)。
-2. 读 [`missions/000-bootstrap/`](missions/000-bootstrap/)。
-3. 台账就是状态：[`ledger.jsonl`](missions/000-bootstrap/ledger.jsonl)。
-4. 跑当前闸门：`node scripts/validate-mission.mjs missions/000-bootstrap`。
+2. 读 [`missions/001-method-pack/`](.cairn/missions/001-method-pack/)。
+3. 台账就是状态：[`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl)。
+4. 跑当前闸门：`node scripts/validate-mission.mjs .cairn/missions/001-method-pack`。
 5. 开工前跑 `node scripts/goal-check.mjs`。它会指出下一个任务、该任务服务的验收标准，以及闸门。
    SessionStart hook 会跑同一个检查，并把锚点注入新会话或压缩后的会话。
 6. 声称完成前跑 `node scripts/audit-session.mjs`。它读取真实会话记录并报告漂移信号；同一轮里

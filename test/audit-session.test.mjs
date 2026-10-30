@@ -49,8 +49,8 @@ test('reports alignment corrections, gate-less claims, unplanned writes, and con
 test('does not flag a claim in a turn that ran a gate', (t) => {
   const file = writeTranscript(t, [
     USER('继续'),
-    ASSISTANT([TOOL('Bash', { command: 'node scripts/validate-mission.mjs missions/000-bootstrap' })]),
-    RESULT('ok: missions/000-bootstrap'),
+    ASSISTANT([TOOL('Bash', { command: 'node scripts/validate-mission.mjs .cairn/missions/000-bootstrap' })]),
+    RESULT('ok: .cairn/missions/000-bootstrap'),
     ASSISTANT([TEXT('已完成，闸门 exit 0。')]),
   ]);
 

@@ -17,7 +17,7 @@ function context() {
   try {
     const brief = execFileSync(
       process.execPath,
-      ['scripts/goal-check.mjs', 'missions/000-bootstrap', '--brief'],
+      ['scripts/goal-check.mjs', '--brief'],
       { cwd: repo, encoding: 'utf8', timeout: 10000 },
     ).trim();
     return [
@@ -28,8 +28,8 @@ function context() {
   } catch (error) {
     const detail = error.stdout?.toString().trim() || error.message;
     return [
-      'Cairn goal check failed. Read README.md, missions/000-bootstrap/mission.md, and the',
-      'ledger before acting; do not guess the goal.',
+      'Cairn goal check failed. Read README.md, the active mission contract under',
+      '.cairn/missions/, and the ledger before acting; do not guess the goal.',
       '',
       detail,
     ].join('\n');

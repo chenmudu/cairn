@@ -25,8 +25,8 @@ guard exists so the agent does not need the human to restate the goal.
 
 ## Rules
 
-- Never ask the human to re-confirm the goal or positioning. Read `README.md`,
-  `missions/000-bootstrap/mission.md`, and the ledger.
+- Never ask the human to re-confirm the goal or positioning. Read `README.md`, the active
+  `.cairn/missions/<id>/mission.md`, and the ledger.
 - A human decision is an escalation; a decision made without one is a ruling. Record it.
 - If a write falls outside the task's declared files, record a ruling or amend the plan.
 - The session start hook prints the same anchor from the repository. Treat it as a reminder,

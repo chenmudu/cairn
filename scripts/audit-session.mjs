@@ -26,8 +26,7 @@ import { homedir } from 'node:os';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readMission } from './validate-mission.mjs';
-
-const DEFAULT_MISSION = 'missions/000-bootstrap';
+import { resolveMission } from '../src/paths.ts';
 const WRITE_TOOLS = new Set(['Write', 'Edit']);
 const CLAIM =
   /(已完成|已经完成|已改完|已提交|全部通过|全过|12\/12|任务完成|T-\d+\s*完成|闸门[^\n。]{0,6}(?:通过|绿灯))/i;
@@ -323,7 +322,7 @@ function findLatestTranscript() {
 function parseArgs(argv) {
   const options = {
     transcript: null,
-    mission: DEFAULT_MISSION,
+    mission: null,
     json: false,
     strict: false,
     out: null,
@@ -361,8 +360,9 @@ function main(argv) {
 
   let planFiles = [];
   let ledgerFile = null;
-  if (options.mission && existsSync(options.mission)) {
-    const loaded = readMission(options.mission);
+  const missionDir = resolveMission(options.mission ?? undefined);
+  if (existsSync(missionDir)) {
+    const loaded = readMission(missionDir);
     const tasks = Array.isArray(loaded.plan?.tasks) ? loaded.plan.tasks : [];
     planFiles = tasks.flatMap((task) =>
       Array.isArray(task?.files) ? task.files : [],

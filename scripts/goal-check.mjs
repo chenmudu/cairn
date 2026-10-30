@@ -15,11 +15,10 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readMission } from './validate-mission.mjs';
+import { resolveMission } from '../src/paths.ts';
 
-const DEFAULT_MISSION = 'missions/000-bootstrap';
-
-export function checkGoal(missionDir = DEFAULT_MISSION) {
-  const loaded = readMission(missionDir);
+export function checkGoal(missionDir = resolveMission()) {
+  const loaded = readMission(resolveMission(missionDir));
   const errors = [...loaded.errors];
   const { mission, plan, events } = loaded;
 
@@ -223,7 +222,7 @@ function main(argv) {
     process.stderr.write('usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]\n');
     return 2;
   }
-  const report = checkGoal(positional[0] ?? DEFAULT_MISSION);
+  const report = checkGoal(positional[0]);
   if (json) {
     process.stdout.write(JSON.stringify(report, null, 2) + '\n');
   } else if (brief) {

@@ -15,7 +15,7 @@ function tempLedger(t, text = '') {
 }
 
 test('reads the real ledger', () => {
-  const events = readLedger(join(repo, 'missions', '000-bootstrap'));
+  const events = readLedger(join(repo, '.cairn', 'missions', '000-bootstrap'));
   assert.ok(events.length > 0);
   assert.ok(events.some((event) => event.event === 'task_done'));
 });

@@ -8,9 +8,10 @@
     "cairn": "src/cli.ts"
   },
   "scripts": {
-    "validate": "node scripts/validate-mission.mjs missions/000-bootstrap",
-    "goal": "node scripts/goal-check.mjs missions/000-bootstrap",
-    "audit": "node scripts/audit-session.mjs --mission missions/000-bootstrap",
+    "validate": "node scripts/validate-mission.mjs .cairn/missions/001-method-pack",
+    "validate:m0": "node scripts/validate-mission.mjs .cairn/missions/000-bootstrap",
+    "goal": "node scripts/goal-check.mjs",
+    "audit": "node scripts/audit-session.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test",
     "cairn": "node src/cli.ts"

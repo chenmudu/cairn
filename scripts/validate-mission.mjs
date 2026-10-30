@@ -3,7 +3,7 @@
  * validate-mission.mjs — the T-001 gate.
  *
  * Zero-dependency validator for one Cairn mission directory. It implements the
- * checks named in missions/000-bootstrap/plan.md (T-001):
+ * checks named in .cairn/missions/000-bootstrap/plan.md (T-001):
  *
  *  1. required frontmatter fields on mission.md, policy.md, plan.md;
  *  2. task ids unique, dependencies resolvable, status in the allowed set;

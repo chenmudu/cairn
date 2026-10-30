@@ -4,6 +4,20 @@ Cairn is built by the method it describes. Mission #0 is the proof: every task a
 bootstrap was selected by `cairn next`, verified by `cairn verify`, and completed by
 `cairn record`. No one edited `ledger.jsonl` to mark a task done after `cairn verify` existed.
 
+## Where state lives
+
+Runtime state lives under `.cairn/`:
+
+- `.cairn/config.json` names the active mission.
+- `.cairn/missions/<id>/` holds `mission.md`, `policy.md`, `plan.md`, `ledger.jsonl`,
+  `evidence/`, and `inbox/`.
+- `.cairn/cache/` is disposable and never committed.
+
+`cairn init <id> --title "<title>"` scaffolds a new mission. The scaffold's gate fails on
+purpose, so it cannot be recorded as done before the contract is edited. The mission,
+ledger, and evidence are committed; a clone can therefore resume and audit without the
+original conversation. A legacy `missions/<id>/` path still resolves.
+
 ## One tick
 
 ```bash

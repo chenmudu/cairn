@@ -28,7 +28,8 @@ Success is not "the gates are green". Success is:
 - a milestone audit confirms the work still serves the goal, not just the plan.
 
 Status: pre-alpha. Mission #0 is complete; its `mission_done` event and acceptance evidence are
-in the ledger. Mission #1 has not started.
+in the ledger. Mission #1 (the method pack) is in progress under
+`.cairn/missions/001-method-pack/`.
 
 ## Model
 
@@ -37,6 +38,7 @@ in the ledger. Mission #1 has not started.
 - **Tick** — one transaction; at most one task.
 - **Gate** — a deterministic command; its exit code is the verdict.
 - **Ledger** — append-only JSONL; the only truth.
+- **State** — `.cairn/missions/<id>/`, committed except `.cairn/cache/`.
 
 A task is done only when a commit exists, a blocking gate exited 0, and `task_done` is in the
 ledger. Implementer claims are not evidence.
@@ -59,9 +61,10 @@ the two source repositories.
 ## Start here
 
 1. Read [`docs/protocol.md`](docs/protocol.md).
-2. Read [`missions/000-bootstrap/`](missions/000-bootstrap/).
-3. The ledger is the status: [`ledger.jsonl`](missions/000-bootstrap/ledger.jsonl).
-4. Run the current gate: `node scripts/validate-mission.mjs missions/000-bootstrap`.
+2. Read [`missions/001-method-pack/`](.cairn/missions/001-method-pack/).
+3. The ledger is the status: [`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl).
+4. Run the current gate:
+   `node scripts/validate-mission.mjs .cairn/missions/001-method-pack`.
 5. Run `node scripts/goal-check.mjs` before starting work. It names the next task, the
    acceptance criterion it serves, and the gates. The SessionStart hook runs the same check and
    injects it into a new or compacted session.

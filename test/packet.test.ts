@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { buildPacket, type Packet } from '../src/plan.ts';
 import { renderDispatch } from '../src/packet.ts';
 
-const mission = resolve(import.meta.dirname, '..', 'missions', '000-bootstrap');
+const mission = resolve(import.meta.dirname, '..', '.cairn', 'missions', '000-bootstrap');
 
 const packet: Packet = {
   mission: { id: 'm1', title: 'Mission one' },

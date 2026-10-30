@@ -27,14 +27,21 @@ agent's context.
 ## Artifacts
 
 ```
-missions/<mission-id>/
-  mission.md      # intent, non-goals, acceptance
-  policy.md       # budgets, allowed commands, stop conditions
-  plan.md         # tasks, dependencies, files, interfaces, gates
-  ledger.jsonl    # append-only events; the only truth
-  evidence/       # per-task gate output
-  inbox/          # pending escalations
+.cairn/
+  config.json     # active mission and layout version
+  cache/          # disposable; never committed
+  missions/<mission-id>/
+    mission.md      # intent, non-goals, acceptance
+    policy.md       # budgets, allowed commands, stop conditions
+    plan.md         # tasks, dependencies, files, interfaces, gates
+    ledger.jsonl    # append-only events; the only truth
+    evidence/       # per-task gate output
+    inbox/          # pending escalations
 ```
+
+`.cairn/config.json` names the active mission. `cairn` resolves `.cairn/missions/<id>` first
+and keeps a legacy `missions/<id>` fallback, so a migration does not break existing checkouts.
+`.cairn/cache/` is disposable and never committed.
 
 `mission.md`, `policy.md`, and `plan.md` use YAML frontmatter for machine-readable fields and
 prose for the parts a human needs to read. `ledger.jsonl` is machine-only; markdown views are

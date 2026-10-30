@@ -98,7 +98,7 @@ const eventLine = (event, task, data) =>
   }) + '\n';
 
 test('accepts the repository mission', () => {
-  const result = validateMission(join(repo, 'missions', '000-bootstrap'));
+  const result = validateMission(join(repo, '.cairn', 'missions', '000-bootstrap'));
   assert.equal(result.ok, true, result.errors.join('\n'));
   assert.deepEqual(result.errors, []);
 });
