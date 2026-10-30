@@ -183,6 +183,24 @@ tasks:
         command: node
         args: ["scripts/validate-mission.mjs", "missions/000-bootstrap"]
         severity: block
+  - id: T-007
+    title: Stabilize mission-end tests
+    deps: [T-005]
+    risk: low
+    status: todo
+    serves: [A5, A7]
+    files:
+      - test/goal-check.test.mjs
+    interfaces:
+      consumes:
+        - "checkGoal(missionDir)"
+      produces:
+        - "goal-check tests that pass with and without a current task"
+    gates:
+      - id: test
+        command: node
+        args: ["--test"]
+        severity: block
 ---
 
 # Plan — Mission #0
