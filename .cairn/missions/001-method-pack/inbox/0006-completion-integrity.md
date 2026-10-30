@@ -294,6 +294,19 @@ record, or the audit needs a declared authorization source. Until then, a post-c
 change will keep producing this verdict. The two files remain, because the rule they define is
 the fix the human asked for; deleting them would remove the check rather than the finding.
 
+### The enforcement-map audit
+
+The enforcement foundation landed in `aa6490d`. `audit-session` reported `drift`: six writes
+outside the plan (`docs/drift-control.md` and its companion, `scripts/check-enforcement.mjs`,
+`test/check-enforcement.test.mjs`, `.github/workflows/gates.yml`, `test/hook.test.mjs`), one
+alignment correction, and one confirmation request. The writes were authorized by the human
+("如果没有我们就去执行"); the plan gap is the same D4/D5 issue. The alignment correction is real:
+the first plan did not state the harness constraints — one workspace `AGENTS.md`, a `Stop` hook
+can continue three times, and a skill splits into SOP, references, and scripts — until the
+human named them. Those constraints are now in `docs/automation.md` and
+`docs/drift-control.md`, so the next session reads them instead of rediscovering them. The
+confirmation request was the scope gate the repository requires, not drift.
+
 ## Approval
 
 - `approve 0006` — accept D1–D7 and the sequence.

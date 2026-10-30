@@ -251,6 +251,17 @@ packet 和 review 的 `packs` 块；它没有把包参与变成任务属性。D3
 授权来源。在那之前，关闭后的守卫改动会持续产生这个 verdict。两个文件保留，因为其中定义的规则
 正是人类要求的修复；删掉文件只会删掉检查，不会删掉发现。
 
+### 执行地图自审
+
+执行地基落在 `aa6490d`。`audit-session` 报告 `drift`：六个计划外写入
+（`docs/drift-control.md` 及其中文 companion、`scripts/check-enforcement.mjs`、
+`test/check-enforcement.test.mjs`、`.github/workflows/gates.yml`、`test/hook.test.mjs`）、
+一次目标纠正、一次确认请求。写入得到了人类授权（“如果没有我们就去执行”）；计划缺口是同一个
+D4/D5 问题。目标纠正是真实的：第一版计划没有写清 harness 约束——只有一个 workspace
+`AGENTS.md`，`Stop` hook 最多可以 continuation 三次，skill 拆成 SOP、references、scripts
+——直到人类点名。这些约束现在写进了 `docs/automation.md` 和 `docs/drift-control.md`，下一个
+会话读到它们，而不是重新发现。确认请求是仓库要求的范围闸门，不是漂移。
+
 ## 批准
 
 - `approve 0006` — 接受 D1–D7 和顺序。
