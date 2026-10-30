@@ -51,16 +51,16 @@ Record the result as `review_result`; a fail parks the mission.
 
 ## Bootstrap exception
 
-Until `cairn record` exists (end of `T-002`), the human is the only writer of
+Until `cairn verify` exists (end of `T-003`), the human is the only writer of
 `ledger.jsonl`. A human may delegate one write to an adapter explicitly; the delegation is
 recorded as a ruling and the events carry the adapter's name as `actor`. `T-001`, the
-goal-integrity amendment, and the `T-006` plan amendment were written by `zcode` under such a
-delegation. Hand-written events are marked `"actor":"human"`. Once `cairn record` lands, no
-manual append is allowed.
+goal-integrity amendment, the `T-006` plan amendment, and `T-002`'s completion were written by
+`zcode` under such a delegation. `T-002`'s completion still needed a manual append: `cairn
+record` requires gate evidence that only `cairn verify` (`T-003`) can produce. Hand-written
+events are marked `"actor":"human"`. Once `cairn verify` lands, no manual append is allowed.
 
 ## Current step
 
 Run `node scripts/goal-check.mjs` before starting. It derives the next task from the ledger and
-the plan, so this file does not go stale. `T-006` is the guard itself; after it, `T-002`.
-Read `missions/000-bootstrap/inbox/` before starting; the plan was amended to add `serves`
-links, drift controls, and the guard.
+the plan, so this file does not go stale. Read `missions/000-bootstrap/inbox/` before starting;
+the plan was amended to add `serves` links, drift controls, and the guard.
