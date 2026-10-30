@@ -27,7 +27,8 @@ Success is not "the gates are green". Success is:
   conversation; and
 - a milestone audit confirms the work still serves the goal, not just the plan.
 
-Status: pre-alpha. Mission #0 is in progress.
+Status: pre-alpha. Mission #0 is complete; its `mission_done` event and acceptance evidence are
+in the ledger. Mission #1 has not started.
 
 ## Model
 

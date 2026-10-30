@@ -1,4 +1,4 @@
-<!-- translation of README.md at the T-006 commit; the English file is authoritative -->
+<!-- translation of README.md at the Mission #0 close; the English file is authoritative -->
 
 # Cairn
 
@@ -24,7 +24,7 @@ Cairn 是运行与证据层：它让 mission 跨会话延续，从仓库证明�
 - 一个全新的会话，只拿到这个仓库，就能在没有先前对话的情况下继续 mission；并且
 - milestone 审计确认工作仍然服务目标，而不只是服务计划。
 
-状态：pre-alpha。Mission #0 进行中。
+状态：pre-alpha。Mission #0 已完成；`mission_done` 事件和验收证据都在台账里。Mission #1 尚未开始。
 
 ## 模型
 

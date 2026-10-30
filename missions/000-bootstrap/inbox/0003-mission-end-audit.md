@@ -1,9 +1,10 @@
 # 0003 — End-of-mission audit failed: decision needed
 
-- Status: open
+- Status: resolved — option A, then a fresh audit passed
 - Raised: 2026-10-31
-- Blocks: `mission_done`
-- Verdict: `fail` (`review_result` in `ledger.jsonl`, 2026-10-30T20:43:08.058Z)
+- Blocks: `mission_done` (no longer)
+- Verdict: `fail` (`review_result` in `ledger.jsonl`, 2026-10-30T20:43:08.058Z);
+  re-audit `pass` (`review_result`, 2026-10-30T20:52:40.670Z)
 
 ## What passed
 
@@ -67,3 +68,21 @@ A. It turns the audit findings into product behavior (a real `mission_done` writ
 enforced audit cadence) instead of exceptions, and it keeps the ledger honest about the late
 T-005 evidence. It needs one explicit ruling because the historical checkpoint cannot be
 re-audited retroactively.
+
+## Resolution
+
+Option A was chosen. T-008 added `cairn record --mission-done`, the cadence guard in
+`goal-check`, and the documentation fixes; it passed its gates and was recorded. A fresh
+reviewer then passed T-005 and the mission: A1–A6 and A8 are proven, A7's skipped mid-mission
+checkpoint is accepted by ruling (`2026-10-30T20:45:39.492Z`) and is non-blocking, and inbox
+items were non-blocking.
+
+The two passing reviews were appended under the remediation ruling
+(`2026-10-30T20:52:40.667Z`) because no `cairn review` writer exists. `cairn record
+--mission-done` then appended `mission_done` at `2026-10-30T20:53:53.283Z` with the acceptance
+evidence map. Final `node --test` (68/68), `goal-check`, `reconcile`, and the validator all exit
+0.
+
+The remaining findings — no `review_result` or `task_started` writer, protocol invariant 3, the
+`.zcode` non-goal wording, the `reconcile` gate name, plan status freshness, and the unattended
+loop — are recorded in `0004-mission-1-follow-ups.md`.
