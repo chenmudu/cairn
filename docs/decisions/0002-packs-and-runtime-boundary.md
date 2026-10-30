@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-31
+- Refined in part by: 0004 (adapter-local journals; the one-ledger rule is unchanged)
 
 ## Context
 
@@ -27,6 +28,16 @@ Two constraints shaped the answer:
    Adapters execute tasks and return reports; they never write the ledger (`T-004`).
 4. **One ledger.** A pack may not bring its own progress file. If a skill wants durable state,
    it is expressed as ledger events, or it is not used.
+
+## Status note (2026-10-31)
+
+0004 refines one sentence above. A pack may keep an adapter-local journal (for example
+`.superpowers/sdd/<plan>/progress.md`), but the journal is never a source of truth: completion
+comes only from Cairn ledger events, `cairn reconcile` compares the journal with the ledger,
+and durable state that affects completion is expressed as ledger events. The no-merge rule,
+the adapter boundary, and the one-ledger rule stand unchanged. The line "Impeccable is not
+installed as a skill" records the state at the time; 0004 permits detection and activation of
+an external pinned checkout, not vendoring it into the repository.
 
 ## Evidence from T-001
 

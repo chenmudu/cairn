@@ -129,6 +129,19 @@ Impeccable's detector and critique are better than a hand-written checklist, whe
 - Without Impeccable, the in-repo standards apply. If a UI acceptance criterion explicitly
   requires the detector, absence is an escalation, not a checklist pass.
 
+## Relationship to 0002
+
+0002 and 0004 agree on ownership: no merge, no vendoring, one ledger, adapter reports never
+write the ledger. They differ on one sentence. 0002 said a pack may not bring its own progress
+file. 0004 refines that: a pack may keep an adapter-local journal, but the journal is not a
+source of truth. Completion comes only from Cairn events; `cairn reconcile` compares the two;
+durable state that affects completion is expressed as ledger events. The journal is disposable
+working state, not a second bookkeeping system.
+
+The refinement is deliberate. Forbidding the journal does not remove it; it pushes the
+coordination problem into the model, which is exactly what this decision rejects. Allowing it
+with reconciliation keeps one source of truth and makes divergence visible.
+
 ## Consequences
 
 - `method/playbook.md` maps every phase to three columns: Cairn floor, pack enrichment, and
