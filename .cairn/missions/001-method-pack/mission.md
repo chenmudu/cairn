@@ -18,6 +18,8 @@ acceptance:
     check: a fresh-context reviewer names the goal, the .cairn layout, the next task, and the one-tick flow from the repository alone; the review_result is pass
   - id: B6
     check: node --test passes; Mission #0 ledger and evidence still validate and reconcile after migration; no blocking gate is weakened
+  - id: B7
+    check: both packs are meshed with Cairn; check-method --packs reports availability; cairn next injects the relevant capability; task evidence records used or absent with the floor fallback; at least one tick records superpowers in execution and one records Impeccable in review, each with its pin and evidence; every gate still passes with both packs absent
 ---
 
 # Make the method real
@@ -31,6 +33,9 @@ runtime mechanics.
 
 The method is the project. Cairn is its first artifact. This mission produces the method pack
 and uses it to build itself, so the next person can start from the repository alone.
+
+The packs are part of the method, not decoration: Cairn detects them, uses them where they are
+better, and keeps a simple floor when they are absent.
 
 ## Non-goals
 
@@ -67,6 +72,8 @@ and uses it to build itself, so the next person can start from the repository al
   task, and the one-tick flow.
 - B6: the migration does not weaken the runtime: the existing tests pass and Mission #0 still
   validates and reconciles.
+- B7: both packs are meshed: detection, injection, recorded use or fallback, real use in at
+  least one tick each, and every gate still passes with both absent.
 
 ## Current action
 

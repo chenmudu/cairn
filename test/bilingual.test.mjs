@@ -52,10 +52,29 @@ test('accepts a complete pair set and ignores docs/i18n.md', (t) => {
   write(root, '.cairn/missions/001/plan.zh.md', '<!-- translation of plan.md -->\n');
   write(root, '.cairn/missions/001/policy.md');
   write(root, '.cairn/missions/001/policy.zh.md', '<!-- translation of policy.md -->\n');
+  write(root, '.cairn/missions/001/inbox/0001.md');
+  write(root, '.cairn/missions/001/inbox/0001.zh.md', '<!-- translation of 0001.md -->\n');
   write(root, '.zcode/skills/demo/SKILL.md');
   write(root, '.zcode/skills/demo/SKILL.zh.md', '<!-- translation of SKILL.md -->\n');
 
   assert.equal(checkBilingual(root).ok, true);
+});
+
+test('reports an inbox decision without a Chinese companion', (t) => {
+  const root = makeRoot(t);
+  write(root, 'README.md');
+  write(root, 'README.zh-CN.md', '<!-- translation of README.md -->\n');
+  write(root, '.cairn/missions/001/mission.md');
+  write(root, '.cairn/missions/001/mission.zh.md', '<!-- translation of mission.md -->\n');
+  write(root, '.cairn/missions/001/plan.md');
+  write(root, '.cairn/missions/001/plan.zh.md', '<!-- translation of plan.md -->\n');
+  write(root, '.cairn/missions/001/policy.md');
+  write(root, '.cairn/missions/001/policy.zh.md', '<!-- translation of policy.md -->\n');
+  write(root, '.cairn/missions/001/inbox/0001.md');
+
+  const report = checkBilingual(root);
+  assert.equal(report.ok, false);
+  assert.deepEqual(report.missing, ['.cairn/missions/001/inbox/0001.md']);
 });
 
 test('rejects a companion without a translation header', (t) => {

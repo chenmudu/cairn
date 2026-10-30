@@ -1,4 +1,4 @@
-<!-- translation of .cairn/missions/001-method-pack/mission.md at the T2 commit; the English file is authoritative -->
+<!-- translation of .cairn/missions/001-method-pack/mission.md at the T3 amendment; the English file is authoritative -->
 
 # 让方法真正落地
 
@@ -23,6 +23,9 @@
   `review_result` 为 pass。
 - **B6**：`node --test` 通过；迁移后 Mission #0 的台账和证据仍然 validate、reconcile；没有阻塞
   闸门被削弱。
+- **B7**：两个包与 Cairn 磨合完成；`check-method --packs` 报告可用性；`cairn next` 注入对应
+  能力；任务证据记录 used 或 absent 加 floor 回退；至少一个 tick 记录 superpowers 用于执行，
+  一个 tick 记录 Impeccable 用于审查，各自带 pin 和证据；两个包都不在时所有闸门仍然通过。
 
 ## 意图
 
@@ -31,6 +34,9 @@ Mission #0 证明了运行时能承载自己的交付。它没有交付方法本
 
 方法是项目本身。Cairn 是它的第一个产物。这个 mission 产出方法包，并用它构建自己，让下一个人只凭
 仓库就能开始。
+
+包是方法的一部分，不是装饰：Cairn 检测它们，在它们更好时使用它们，在它们缺失时保留简单的
+地板。
 
 ## 非目标
 
@@ -59,6 +65,8 @@ Mission #0 证明了运行时能承载自己的交付。它没有交付方法本
 - **B4**：新人只读操作手册就能跑一个 tick；一个记录在案的样例证明手册可执行。
 - **B5**：全新会话只凭仓库说出目标、布局、下一个任务和单 tick 流程。
 - **B6**：迁移不削弱运行时：既有测试通过，Mission #0 仍然 validate、reconcile。
+- **B7**：两个包磨合完成：检测、注入、记录使用或回退，至少各有一个真实 tick 使用，两个包
+  都不在时所有闸门仍然通过。
 
 ## 当前动作
 

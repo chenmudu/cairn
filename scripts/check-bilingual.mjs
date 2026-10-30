@@ -15,7 +15,7 @@ import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const EXEMPT = new Set(['docs/i18n.md']);
-const SKIP_DIRS = new Set(['node_modules', '.git', 'evidence', 'inbox']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'evidence']);
 
 function walk(dir, files = []) {
   if (!existsSync(dir)) return files;
@@ -43,7 +43,9 @@ function canonicalFiles(root) {
   for (const path of walk(join(root, '.cairn', 'missions'))) {
     const base = path.replace(/\\/g, '/');
     if (!base.endsWith('.md') || base.endsWith('.zh.md')) continue;
-    if (/\/(mission|plan|policy)\.md$/.test(base)) files.push(path);
+    if (/\/(mission|plan|policy)\.md$/.test(base) || /\/inbox\/[^/]+\.md$/.test(base)) {
+      files.push(path);
+    }
   }
   for (const path of walk(join(root, '.zcode', 'skills'))) {
     if (path.endsWith('SKILL.md')) files.push(path);

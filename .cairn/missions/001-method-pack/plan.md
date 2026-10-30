@@ -97,11 +97,11 @@ tasks:
         severity: block
 
   - id: T3
-    title: Write the fusion playbook
+    title: Write the fusion playbook and reconcile the packs
     deps: [T2]
     risk: medium
     status: todo
-    serves: [B3]
+    serves: [B2, B3, B7]
     files:
       - method/README.md
       - method/README.zh.md
@@ -110,6 +110,11 @@ tasks:
       - scripts/check-method.mjs
       - test/method.test.mjs
       - docs/i18n.md
+      - .cairn/missions/000-bootstrap/inbox/0001-plan-defects.zh.md
+      - .cairn/missions/000-bootstrap/inbox/0003-mission-end-audit.zh.md
+      - .cairn/missions/000-bootstrap/inbox/0004-mission-1-follow-ups.zh.md
+      - scripts/check-bilingual.mjs
+      - test/bilingual.test.mjs
     gates:
       - id: test
         command: node
@@ -213,11 +218,17 @@ tasks:
     deps: [T6]
     risk: medium
     status: todo
-    serves: [B1, B6]
+    serves: [B1, B3, B6, B7]
     files:
       - src/review.ts
+      - src/packs.ts
+      - src/packet.ts
       - src/cli.ts
       - test/review.test.ts
+      - test/packs.test.ts
+      - templates/dispatch.md
+      - docs/adapter.md
+      - docs/adapter.zh.md
       - docs/protocol.md
       - docs/protocol.zh.md
       - docs/self-hosting.md
@@ -245,7 +256,7 @@ tasks:
     deps: [T7]
     risk: low
     status: todo
-    serves: [B5]
+    serves: [B5, B7]
     files:
       - .cairn/missions/001-method-pack/ledger.jsonl
       - .cairn/missions/001-method-pack/inbox/
@@ -276,17 +287,35 @@ method pack, and the method pack lands before the worked example.
   proves the old mission still validates and reconciles.
 - **T2** turns bilingual from a promise into a check. It covers the mission contracts,
   decisions, guard skill, and dispatch template.
-- **T3** writes the phase map: frame, plan, execute, review, close, and unattended setup. Every
-  row names a superpowers practice, an Impeccable standard, and a Cairn artifact or gate.
+- **T3** starts with the three-way reconciliation, then writes the phase map: frame, plan,
+  execute, review, close, and unattended setup. Every row names a superpowers practice, an
+  Impeccable standard, a Cairn artifact or gate, and the fallback. It applies one superpowers
+  practice to its own work and closes the inbox bilingual gap the checker missed.
 - **T4** makes the playbook usable: standards for docs, code, and workflows, plus templates for
   missions, tasks, reviews, ADRs, and handoffs.
 - **T5** writes the operator guide: roles, commands, human checkpoints, and failure paths.
 - **T6** runs the guide on a real, small tick and records the ledger and evidence. The example
   is the proof that the guide is executable.
-- **T7** adds `cairn review` and records the `task_started` decision. Protocol invariant 3 stays
-  a separate human decision; it is not silently rewritten here.
+- **T7** adds `cairn review` and records the `task_started` decision. It also adds pack
+  detection and packet injection, including the protocol amendment for the `packs` block.
+  Protocol invariant 3 stays a separate human decision; it is not silently rewritten here.
 - **T8** is the cold-start review and `mission_done`. A fresh session must explain the method
-  from the repository alone before the mission closes.
+  from the repository alone, verify the pack mesh, and pass with both packs absent before the
+  mission closes.
+
+## Pack adoption
+
+The order is superpowers first, Impeccable second; either order is acceptable, but each step
+lands in a task with evidence, not in a batch at the end.
+
+- **T3** reconciles the three artifacts and uses one superpowers practice for its own work; it
+  records the pack and pin, or `absent, floor used`.
+- **T4** distills Impeccable's transferable standards into the in-repo floor; the UI-specific
+  detector and live mode stay external.
+- **T6** runs the worked example with the adopted packs where they apply.
+- **T7** detects both packs and injects the relevant capability into the dispatch packet; the
+  `packs` block is a protocol amendment.
+- **T8** verifies the mesh from a cold start, including both packs absent.
 
 ## Known deps
 
