@@ -87,6 +87,8 @@ tasks:
     serves: [A3, A7]
     files:
       - docs/adapter.md
+      - docs/adapter.zh.md
+      - docs/i18n.md
       - templates/dispatch.md
       - src/packet.ts
       - test/packet.test.ts
