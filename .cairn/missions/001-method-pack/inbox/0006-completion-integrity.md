@@ -288,8 +288,8 @@ Until answered, Mission #2 does not start. This is an escalation, not a ruling.
 
 | Issue | Workstreams | Close condition |
 |---|---|---|
-| P0: bind completion to the verified tree | D1 | the P0 probe fails at `record`; clean task passes; CI runs the probe |
-| Bind acceptance and review evidence to criteria | D2 | per-criterion artifacts validate; Mission #1 B5/B7 replay fails |
-| Record pack participation per task (ADR 0005) | D3 | every new `task_done` has two valid pack entries |
-| Enforce task state, init, validator, and CI | D4–D5 | start/record/answer enforced; init/validator/reconcile/probe pass |
-| Make policy executable and the contract truthful | D6–D7 | policy enforced or labelled human; docs match the CLI; portability and audit covered |
+| [#1](https://github.com/chenmudu/cairn/issues/1) P0: bind completion to the verified tree | D1 | the P0 probe fails at `record`; clean task passes; CI runs the probe |
+| [#2](https://github.com/chenmudu/cairn/issues/2) Bind acceptance and review evidence to criteria | D2 | per-criterion artifacts validate; Mission #1 B5/B7 replay fails |
+| [#3](https://github.com/chenmudu/cairn/issues/3) Record pack participation per task (ADR 0005) | D3 | every new `task_done` has two valid pack entries |
+| [#4](https://github.com/chenmudu/cairn/issues/4) Enforce task state, mission init, validator, and CI | D4–D5 | start/record/answer enforced; init/validator/reconcile/probe pass |
+| [#5](https://github.com/chenmudu/cairn/issues/5) Make policy executable and the contract truthful | D6–D7 | policy enforced or labelled human; docs match the CLI; portability and audit covered |

@@ -250,8 +250,8 @@ review 的 `packs` 块；它没有把包参与变成任务属性。D3 是 ADR 00
 
 | Issue | 工作流 | 关闭条件 |
 |---|---|---|
-| P0：把完成绑定到被验证的树 | D1 | P0 探针在 `record` 处失败；干净任务通过；CI 跑探针 |
-| 把验收和评审证据绑定到验收标准 | D2 | 逐验收标准产物通过校验；Mission #1 B5/B7 重放失败 |
-| 按任务记录包的参与（ADR 0005） | D3 | 每个新 `task_done` 有两个合法包条目 |
-| 执行任务状态、init、校验器和 CI | D4–D5 | start/record/answer 被执行；init/validator/reconcile/探针通过 |
-| 让策略可执行、契约说真话 | D6–D7 | 策略执行或标注人类；文档与 CLI 一致；可移植性和审计覆盖 |
+| [#1](https://github.com/chenmudu/cairn/issues/1) P0：把完成绑定到被验证的树 | D1 | P0 探针在 `record` 处失败；干净任务通过；CI 跑探针 |
+| [#2](https://github.com/chenmudu/cairn/issues/2) 把验收和评审证据绑定到验收标准 | D2 | 逐验收标准产物通过校验；Mission #1 B5/B7 重放失败 |
+| [#3](https://github.com/chenmudu/cairn/issues/3) 按任务记录包的参与（ADR 0005） | D3 | 每个新 `task_done` 有两个合法包条目 |
+| [#4](https://github.com/chenmudu/cairn/issues/4) 执行任务状态、mission 创建、校验器和 CI | D4–D5 | start/record/answer 被执行；init/validator/reconcile/探针通过 |
+| [#5](https://github.com/chenmudu/cairn/issues/5) 让策略可执行、契约说真话 | D6–D7 | 策略执行或标注人类；文档与 CLI 一致；可移植性和审计覆盖 |
