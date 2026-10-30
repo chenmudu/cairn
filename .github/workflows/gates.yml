@@ -1,0 +1,35 @@
+name: gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: node --test
+      - run: node scripts/validate-mission.mjs .cairn/missions/000-bootstrap
+      - run: node scripts/validate-mission.mjs .cairn/missions/001-method-pack
+      - run: node scripts/check-bilingual.mjs
+      - run: node scripts/check-workflow.mjs
+      - run: node scripts/check-example.mjs --example method/examples/0001-docs-tick
+      - run: node scripts/check-method.mjs --playbook
+      - run: node scripts/check-method.mjs --products --strict

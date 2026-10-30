@@ -80,4 +80,4 @@ Cairn 位于 harness 与两个包之间：
 
 ## 许可证
 
-待定。
+MIT。见 [`LICENSE`](LICENSE)。

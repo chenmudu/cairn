@@ -88,4 +88,4 @@ documented in [`docs/automation.md`](docs/automation.md).
 
 ## License
 
-TBD.
+MIT. See [`LICENSE`](LICENSE).

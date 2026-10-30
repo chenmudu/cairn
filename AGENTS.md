@@ -44,15 +44,17 @@
 - A task must declare `serves: [<acceptance-id>]`. If it cannot name the acceptance criterion
   it advances, do not start it.
 - Only runtime commands write `ledger.jsonl`. `cairn record` owns task and mission events;
-  `cairn review` lands in T7. The Mission #1 `mission_created` bootstrap is a recorded ruling,
-  not a standing exception.
+  `cairn review` owns `review_result` events; `cairn start` owns `task_started`. The Mission #1
+  `mission_created` bootstrap is a recorded ruling, not a standing exception.
 - Implementer claims are not evidence. Run the gate.
 - A green gate proves the step, not the goal. Report against `README.md`, not only exit codes.
 - Every decision made without a human is a ruling; every blocking question is an escalation.
 - If the plan cannot express the work, amend the plan first, and record the amendment.
 - Target artifacts (`mission.md`, `policy.md`, `plan.md`, `docs/protocol.md`) change only by
   amendment with old and new hashes. See `docs/drift-control.md`.
-- No push, publish, history rewrite, or destructive command without a human.
+- No push, publish, history rewrite, or destructive command without a human, except routine
+  pushes of `main` to `origin` after each commit (human-authorized 2026-10-31). Never force
+  push, rewrite history, or push another branch without a human.
 
 ## Milestone audit
 

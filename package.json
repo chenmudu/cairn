@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Git-native mission runtime: completion is a property of the repository, not the conversation.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenmudu/cairn.git"
+  },
   "bin": {
     "cairn": "src/cli.ts"
   },
