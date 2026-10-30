@@ -115,16 +115,27 @@ tasks:
     serves: [A3, A4, A5, A7]
     files:
       - docs/self-hosting.md
+      - docs/self-hosting.zh.md
+      - docs/i18n.md
+      - src/reconcile.ts
+      - src/cli.ts
+      - test/reconcile.test.ts
       - missions/000-bootstrap/ledger.jsonl
     interfaces:
       consumes:
         - "cairn next"
         - "cairn verify"
         - "cairn record"
+        - "cairn reconcile"
       produces:
         - "a task delivered with no manual ledger edit"
         - "a passing milestone audit recorded as review_result"
+        - "a crash window that cairn reconcile explains"
     gates:
+      - id: test
+        command: node
+        args: ["--test"]
+        severity: block
       - id: reconcile
         command: node
         args: ["scripts/validate-mission.mjs", "missions/000-bootstrap"]
