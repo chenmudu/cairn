@@ -87,15 +87,26 @@ function makeMission(t, { mission = missionOf(TWO), plan = planOf(taskYaml('T-00
   return dir;
 }
 
-test('accepts the repository mission and names a task with a serves link', () => {
+test('accepts the repository mission and covers every acceptance criterion', () => {
   const report = checkGoal(join(repo, 'missions', '000-bootstrap'));
   assert.equal(report.ok, true, report.errors.join('\n'));
-  assert.ok(report.currentTask, 'expected a next task');
-  assert.ok(report.currentTask.serves.length > 0, 'next task must declare serves');
-  assert.ok(report.currentTask.gates.length > 0, 'next task must declare gates');
   for (const [id, tasks] of Object.entries(report.coverage)) {
     assert.ok(tasks.length > 0, `acceptance ${id} must be covered`);
   }
+});
+
+test('names a runnable task with its serves link and gates', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(`  - id: F1
+    check: first
+`),
+    plan: planOf(taskYaml('T-001', { serves: '[F1]' })),
+  });
+  const report = checkGoal(dir);
+  assert.equal(report.ok, true, report.errors.join('\n'));
+  assert.equal(report.currentTask.id, 'T-001');
+  assert.deepEqual(report.currentTask.serves, ['F1']);
+  assert.ok(report.currentTask.gates.length > 0, 'next task must declare gates');
 });
 
 test('rejects a task without a serves link', (t) => {
@@ -125,15 +136,20 @@ test('rejects a serves id that is not in the mission', (t) => {
   assert.match(report.errors.join('\n'), /F9/);
 });
 
-test('brief output carries the task, serves, and gate', () => {
-  const out = execFileSync(
-    process.execPath,
-    ['scripts/goal-check.mjs', 'missions/000-bootstrap', '--brief'],
-    { cwd: repo, encoding: 'utf8' },
-  );
-  assert.match(out, /Current task:/);
-  assert.match(out, /Serves:/);
-  assert.match(out, /Gates:/);
+test('brief output carries the task, serves, and gate', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(`  - id: F1
+    check: first
+`),
+    plan: planOf(taskYaml('T-001', { serves: '[F1]' })),
+  });
+  const out = execFileSync(process.execPath, ['scripts/goal-check.mjs', dir, '--brief'], {
+    cwd: repo,
+    encoding: 'utf8',
+  });
+  assert.match(out, /Current task: T-001/);
+  assert.match(out, /Serves: F1/);
+  assert.match(out, /Gates: gate/);
 });
 
 test('the SessionStart hook emits additionalContext', () => {
