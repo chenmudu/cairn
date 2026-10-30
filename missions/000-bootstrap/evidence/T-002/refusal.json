@@ -1,0 +1,17 @@
+{
+  "gate": "refusal",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "src/cli.ts",
+    "record",
+    "T-002",
+    "--status",
+    "done"
+  ],
+  "exit_code": 2,
+  "expected_exit": 2,
+  "duration_ms": 60,
+  "tail": "refused: T-002: no blocking gate at exit 0 recorded\n",
+  "stderr": "refused: T-002: no blocking gate at exit 0 recorded"
+}

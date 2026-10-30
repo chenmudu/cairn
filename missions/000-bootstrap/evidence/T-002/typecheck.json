@@ -1,0 +1,13 @@
+{
+  "gate": "typecheck",
+  "cwd": ".",
+  "command": "pnpm",
+  "argv": [
+    "typecheck"
+  ],
+  "exit_code": 0,
+  "expected_exit": 0,
+  "duration_ms": 298,
+  "tail": "\n> cairn@0.1.0 typecheck D:\\project\\github\\cairn\n> tsc --noEmit\n\n",
+  "shell": true
+}

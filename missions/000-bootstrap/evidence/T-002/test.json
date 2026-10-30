@@ -1,0 +1,12 @@
+{
+  "gate": "test",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "--test"
+  ],
+  "exit_code": 0,
+  "expected_exit": 0,
+  "duration_ms": 467,
+  "tail": "✔ coverage maps each acceptance id to its serving tasks (1.6589ms)\n✔ accepts the repository mission (4.1163ms)\n✔ accepts a minimal valid mission (1.9518ms)\n✔ rejects the fixture whose task has no gate (0.631ms)\n✔ rejects duplicate task ids (1.4127ms)\n✔ rejects an unresolvable dependency (1.3313ms)\n✔ rejects a task whose gates are advisory only (1.4623ms)\n✔ rejects an unknown ledger event (1.3928ms)\n✔ rejects a task_done without a passing blocking gate (1.7545ms)\n✔ rejects a gate_result whose evidence file is missing (1.4384ms)\n✔ accepts a gate_result whose evidence file exists (3.0876ms)\n✔ rejects an evidence path that escapes the mission directory (1.8012ms)\n✔ accepts mission_amended with old and new hashes (1.8232ms)\n✔ rejects mission_amended without an approver (1.3818ms)\n✔ rejects YAML it does not understand instead of guessing (1.3775ms)\nℹ tests 41\nℹ suites 0\nℹ pass 41\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 433.874\n"
+}

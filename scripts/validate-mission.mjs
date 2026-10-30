@@ -31,6 +31,7 @@ const TASK_STATUSES = new Set(['todo', 'active', 'review', 'done', 'parked']);
 const SEVERITIES = new Set(['block', 'advisory']);
 const EVENT_NAMES = new Set([
   'mission_created',
+  'mission_amended',
   'task_started',
   'gate_result',
   'review_result',
@@ -188,6 +189,7 @@ export function validateMission(dir) {
   for (const event of events) {
     if (event.event === 'task_done') checkTaskDone(event, tasks, errors);
     if (event.event === 'gate_result') checkGateResult(missionDir, event, errors);
+    if (event.event === 'mission_amended') checkMissionAmended(event, errors);
   }
 
   return { ok: errors.length === 0, errors };
@@ -228,6 +230,39 @@ function checkTaskDone(event, tasks, errors) {
       gate.exit_code === 0,
   );
   if (!passed) fail(errors, where, 'records no severity: block gate at exit 0');
+}
+
+function checkMissionAmended(event, errors) {
+  const where = 'ledger.jsonl mission_amended';
+  const data = isMapping(event.data) ? event.data : null;
+  if (!data) {
+    fail(errors, where, 'missing a data object');
+    return;
+  }
+  for (const field of ['old', 'new']) {
+    if (!isMapping(data[field]) || Object.keys(data[field]).length === 0) {
+      fail(errors, where, `data.${field} must be a non-empty mapping of path to sha256`);
+      continue;
+    }
+    for (const [path, hash] of Object.entries(data[field])) {
+      if (typeof hash !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(hash)) {
+        fail(errors, where, `data.${field}.${path} must be sha256:<64 hex>`);
+      }
+    }
+  }
+  if (
+    !Array.isArray(data.acceptance) ||
+    data.acceptance.length === 0 ||
+    data.acceptance.some((id) => typeof id !== 'string')
+  ) {
+    fail(errors, where, 'data.acceptance must be a non-empty list of acceptance ids');
+  }
+  if (typeof data.why !== 'string' || data.why === '') {
+    fail(errors, where, 'missing data.why');
+  }
+  if (data.approved_by !== 'human' && data.approved_by !== 'cairn') {
+    fail(errors, where, 'data.approved_by must be human or cairn');
+  }
 }
 
 function checkGateResult(missionDir, event, errors) {

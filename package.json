@@ -4,10 +4,19 @@
   "private": true,
   "type": "module",
   "description": "Git-native mission runtime: completion is a property of the repository, not the conversation.",
+  "bin": {
+    "cairn": "src/cli.ts"
+  },
   "scripts": {
     "validate": "node scripts/validate-mission.mjs missions/000-bootstrap",
     "goal": "node scripts/goal-check.mjs missions/000-bootstrap",
     "audit": "node scripts/audit-session.mjs --mission missions/000-bootstrap",
-    "test": "node --test"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "cairn": "node src/cli.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
   }
 }

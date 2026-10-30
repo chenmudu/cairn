@@ -193,6 +193,32 @@ test('rejects an evidence path that escapes the mission directory', (t) => {
   assert.match(validateMission(dir).errors.join('\n'), /escapes the mission directory/);
 });
 
+test('accepts mission_amended with old and new hashes', (t) => {
+  const dir = makeMission(t, {
+    'ledger.jsonl': eventLine('mission_amended', undefined, {
+      old: { 'plan.md': `sha256:${'a'.repeat(64)}` },
+      new: { 'plan.md': `sha256:${'b'.repeat(64)}` },
+      acceptance: ['F1'],
+      why: 'test the event',
+      approved_by: 'cairn',
+    }),
+  });
+  const result = validateMission(dir);
+  assert.equal(result.ok, true, result.errors.join('\n'));
+});
+
+test('rejects mission_amended without an approver', (t) => {
+  const dir = makeMission(t, {
+    'ledger.jsonl': eventLine('mission_amended', undefined, {
+      old: { 'plan.md': `sha256:${'a'.repeat(64)}` },
+      new: { 'plan.md': `sha256:${'b'.repeat(64)}` },
+      acceptance: ['F1'],
+      why: 'test the event',
+    }),
+  });
+  assert.match(validateMission(dir).errors.join('\n'), /approved_by/);
+});
+
 test('rejects YAML it does not understand instead of guessing', (t) => {
   const broken = VALID['plan.md'].replace('    title: Task T-001', '    title: |');
   const dir = makeMission(t, { 'plan.md': broken });

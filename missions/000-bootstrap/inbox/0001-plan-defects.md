@@ -1,6 +1,6 @@
 # 0001 — Open defects and risks after T-001
 
-- Status: open (items 3, 4), resolved (items 1, 2)
+- Status: open (item 3), resolved (items 1, 2, 4)
 - Updated: 2026-10-31
 
 ## 1. T-003's fixture gate polarity — resolved
@@ -25,16 +25,13 @@ Options:
 - Redefine `head` as a tree object, or have `cairn record` amend the commit.
 - Record a bootstrap-only exception for Mission #0.
 
-Default if undecided: the first option, accepted before `T-005`.
+Default if undecided: the first option, accepted before `T-005`. `T-002` followed it: its
+`task_done` head names the work commit and the event lands in the ledger commit after it.
 
-## 4. T-002 needs a TypeScript toolchain — open
+## 4. T-002 needs a TypeScript toolchain — resolved
 
-The plan expects `pnpm typecheck`, but `typescript` is not installed.
+The plan expects `pnpm typecheck`, but `typescript` was not installed.
 
-Options:
-
-- Add `typescript` as a devDependency and run `pnpm install` (network).
-- Write the CLI in plain ESM and keep `node --check` as the gate (no new dependency).
-
-Default if undecided: install `typescript` as a devDependency; fall back to plain ESM if the
-network is unavailable.
+Resolution: `typescript@7.0.2` and `@types/node@26.6.6` are devDependencies; `pnpm-lock.yaml`
+is committed; `pnpm typecheck` exits 0. Node 24 also strips types at runtime, so the CLI and
+the tests run without a build step. No runtime dependency was added.

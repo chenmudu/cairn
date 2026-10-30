@@ -1,0 +1,13 @@
+{
+  "gate": "next",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "src/cli.ts",
+    "next"
+  ],
+  "exit_code": 0,
+  "expected_exit": 0,
+  "duration_ms": 76,
+  "tail": "        ],\n        \"gates\": [\n          {\n            \"id\": \"test\",\n            \"exit_code\": 0,\n            \"evidence\": \"evidence/T-006/test.json\"\n          },\n          {\n            \"id\": \"goal\",\n            \"exit_code\": 0,\n            \"evidence\": \"evidence/T-006/goal.json\"\n          },\n          {\n            \"id\": \"validate\",\n            \"exit_code\": 0,\n            \"evidence\": \"evidence/T-006/validate.json\"\n          }\n        ]\n      }\n    }\n  ],\n  \"base\": \"a172d0ed07c65343a6566b9359c9d9d51486df20\"\n}\n"
+}

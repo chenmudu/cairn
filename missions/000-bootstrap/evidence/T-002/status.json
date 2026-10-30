@@ -1,0 +1,14 @@
+{
+  "gate": "status",
+  "cwd": ".",
+  "command": "node",
+  "argv": [
+    "src/cli.ts",
+    "status",
+    "--json"
+  ],
+  "exit_code": 0,
+  "expected_exit": 0,
+  "duration_ms": 58,
+  "tail": "    ],\n    \"A7\": [\n      \"T-004\",\n      \"T-005\",\n      \"T-006\"\n    ],\n    \"A8\": [\n      \"T-002\"\n    ]\n  },\n  \"uncovered\": [],\n  \"next\": \"T-002\",\n  \"acceptance\": [\n    \"A1\",\n    \"A2\",\n    \"A3\",\n    \"A4\",\n    \"A5\",\n    \"A6\",\n    \"A7\",\n    \"A8\"\n  ]\n}\n"
+}
