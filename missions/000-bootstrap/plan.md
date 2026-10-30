@@ -118,6 +118,7 @@ tasks:
       - docs/self-hosting.zh.md
       - docs/i18n.md
       - src/reconcile.ts
+      - src/verify.ts
       - src/cli.ts
       - test/reconcile.test.ts
       - missions/000-bootstrap/ledger.jsonl
