@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md at the T1 commit; the English file is authoritative -->
+<!-- translation of docs/automation.md after the post-close audit fix; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 

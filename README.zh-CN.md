@@ -1,4 +1,4 @@
-<!-- translation of README.md at the Mission #0 close; the English file is authoritative -->
+<!-- translation of README.md at the repository setup commit; the English file is authoritative -->
 
 # Cairn
 
