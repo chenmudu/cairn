@@ -2,6 +2,8 @@
 
 - Status: proposed
 - Date: 2026-10-31
+- Follow-up: workstream D3 in
+  [Decision 0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md).
 
 ## Context
 

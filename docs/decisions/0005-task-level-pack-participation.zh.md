@@ -1,9 +1,11 @@
-<!-- translation of docs/decisions/0005-task-level-pack-participation.md at the ADR commit; the English file is authoritative -->
+<!-- translation of docs/decisions/0005-task-level-pack-participation.md at the ADR commit, with the 0006 cross-reference; the English file is authoritative -->
 
 # 0005 — 按任务记录包的参与
 
 - 状态：提议
 - 日期：2026-10-31
+- 后续：决策
+  [0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md) 的工作流 D3。
 
 ## 背景
 

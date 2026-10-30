@@ -10,7 +10,13 @@ Answered:
   commands, and the invariant 3 wording are recorded as protocol amendments with
   `approved_by: human`; T7 is unblocked.
 
-Waiting now: nothing.
+Waiting now:
+
+- `0006-completion-integrity.md` — approve the Mission #2 remediation plan for completion
+  binding, acceptance and review evidence, task-level pack participation, task state,
+  validator and CI, policy execution, and contract truth. Mission #1 stays closed;
+  implementation is Mission #2.
 
 The T3 milestone audit has no open decision. The T6 audit findings are recorded in the ledger;
-the example and bilingual repairs landed, and the remaining runtime gaps are T7 work.
+the example and bilingual repairs landed, and the remaining runtime gaps are T7 work. The
+post-close audit and the Mission #2 plan are in `0006-completion-integrity.md`.
