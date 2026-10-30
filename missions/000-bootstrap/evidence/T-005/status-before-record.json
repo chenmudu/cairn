@@ -1,0 +1,106 @@
+{
+  "mission": {
+    "id": "000-bootstrap",
+    "title": "Build Cairn with Cairn"
+  },
+  "tasks": [
+    {
+      "id": "T-001",
+      "title": "Protocol schema and validator",
+      "state": "done",
+      "serves": [
+        "A1"
+      ]
+    },
+    {
+      "id": "T-002",
+      "title": "Ledger and CLI skeleton",
+      "state": "done",
+      "serves": [
+        "A2",
+        "A6",
+        "A8"
+      ]
+    },
+    {
+      "id": "T-003",
+      "title": "Verify and gate registry",
+      "state": "done",
+      "serves": [
+        "A3"
+      ]
+    },
+    {
+      "id": "T-004",
+      "title": "Generic adapter and dispatch packet",
+      "state": "done",
+      "serves": [
+        "A3",
+        "A7"
+      ]
+    },
+    {
+      "id": "T-005",
+      "title": "Self-host the first tick",
+      "state": "todo",
+      "serves": [
+        "A3",
+        "A4",
+        "A5",
+        "A7"
+      ]
+    },
+    {
+      "id": "T-006",
+      "title": "Goal guard and session audit",
+      "state": "done",
+      "serves": [
+        "A5",
+        "A7"
+      ]
+    }
+  ],
+  "coverage": {
+    "A1": [
+      "T-001"
+    ],
+    "A2": [
+      "T-002"
+    ],
+    "A3": [
+      "T-003",
+      "T-004",
+      "T-005"
+    ],
+    "A4": [
+      "T-005"
+    ],
+    "A5": [
+      "T-005",
+      "T-006"
+    ],
+    "A6": [
+      "T-002"
+    ],
+    "A7": [
+      "T-004",
+      "T-005",
+      "T-006"
+    ],
+    "A8": [
+      "T-002"
+    ]
+  },
+  "uncovered": [],
+  "next": "T-005",
+  "acceptance": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8"
+  ]
+}

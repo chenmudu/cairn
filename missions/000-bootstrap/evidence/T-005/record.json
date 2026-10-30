@@ -1,0 +1,26 @@
+{
+  "ts": "2026-10-30T20:37:18.265Z",
+  "event": "task_done",
+  "task": "T-005",
+  "actor": "cairn",
+  "data": {
+    "base": "fe7508d63e9280b946985e87f16c58455a86c244",
+    "head": "4b74de1f6a06c03395c23814c57f127728242390",
+    "commits": [
+      "4b74de1f6a06c03395c23814c57f127728242390"
+    ],
+    "gates": [
+      {
+        "id": "test",
+        "exit_code": 0,
+        "evidence": "evidence/T-005/test.json"
+      },
+      {
+        "id": "reconcile",
+        "exit_code": 0,
+        "evidence": "evidence/T-005/reconcile.json"
+      }
+    ]
+  },
+  "mission": "000-bootstrap"
+}
