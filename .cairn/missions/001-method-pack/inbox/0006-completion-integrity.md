@@ -281,6 +281,19 @@ participation a task property. D3 is the implementation of ADR 0005. The ADR's
 backward-compatibility rule is preserved: new `task_done` events require packs; Mission #1 is
 grandfathered by a note.
 
+## Observation — the first routing-loop audit
+
+The decision-routing guard landed in `5e9d3df`. Its first self-audit reported two writes
+outside the plan: `docs/decision-routing.md` and its Chinese companion. The work was explicitly
+authorized by the human, but Mission #1 is closed, no plan declares the files, and no runtime
+command writes a `ruling` or `note`. The audit therefore cannot distinguish authorized
+post-close work from drift.
+
+This is an input to D4/D5, not a new workstream: a human-authorized write needs a runtime
+record, or the audit needs a declared authorization source. Until then, a post-close guard
+change will keep producing this verdict. The two files remain, because the rule they define is
+the fix the human asked for; deleting them would remove the check rather than the finding.
+
 ## Approval
 
 - `approve 0006` — accept D1–D7 and the sequence.
