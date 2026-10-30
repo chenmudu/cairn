@@ -65,6 +65,7 @@ export interface Packet {
   policy: {
     budgets: Record<string, unknown>;
     allowed_commands: string[];
+    forbidden_commands: string[];
     stop_conditions: string[];
   };
   constraints: string[];
@@ -196,6 +197,7 @@ export function buildPacket(missionDir: string, taskId: string): Packet {
     policy: {
       budgets: doc.policy.budgets ?? {},
       allowed_commands: doc.policy.allowed_commands ?? [],
+      forbidden_commands: doc.policy.forbidden_commands ?? [],
       stop_conditions: doc.policy.stop_conditions ?? [],
     },
     constraints: bullets(section(missionBody(doc.missionDir), 'Constraints')),
