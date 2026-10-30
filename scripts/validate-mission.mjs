@@ -700,17 +700,32 @@ function isInside(root, target) {
 
 function main(argv) {
   const args = argv.slice(2);
-  if (args.length !== 1) {
-    process.stderr.write('usage: node scripts/validate-mission.mjs <mission-dir>\n');
+  const expectInvalid = args.includes('--expect-invalid');
+  const rest = args.filter((arg) => arg !== '--expect-invalid');
+  if (rest.length !== 1) {
+    process.stderr.write(
+      'usage: node scripts/validate-mission.mjs [--expect-invalid] <mission-dir>\n',
+    );
     return 2;
   }
-  const result = validateMission(args[0]);
+  const [dir] = rest;
+  const result = validateMission(dir);
+
+  if (expectInvalid) {
+    if (result.ok) {
+      process.stderr.write(`unexpected valid: ${dir}\n`);
+      return 1;
+    }
+    process.stdout.write(`invalid as expected: ${dir}\n`);
+    return 0;
+  }
+
   if (!result.ok) {
-    process.stderr.write(`invalid: ${args[0]}\n`);
+    process.stderr.write(`invalid: ${dir}\n`);
     for (const error of result.errors) process.stderr.write(`  ${error}\n`);
     return 1;
   }
-  process.stdout.write(`ok: ${args[0]}\n`);
+  process.stdout.write(`ok: ${dir}\n`);
   return 0;
 }
 

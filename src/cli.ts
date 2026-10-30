@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, statSync } from 'node:fs';
-import { resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { appendEvent, nextTimestamp } from './ledger.ts';
 import {
@@ -14,11 +13,13 @@ import {
   taskState,
   type StatusReport,
 } from './plan.ts';
+import { checkEvidence, verifyTask } from './verify.ts';
 
 const DEFAULT_MISSION = 'missions/000-bootstrap';
 const USAGE = `usage:
   cairn status [--json] [--mission <dir>]
   cairn next [--mission <dir>]
+  cairn verify <task> [--mission <dir>]
   cairn record <task> --status done [--mission <dir>]
 `;
 
@@ -51,6 +52,18 @@ function main(argv: string[]): number {
     return 0;
   }
 
+  if (command === 'verify') {
+    const taskId = rest[0];
+    if (!taskId || rest.length > 1) return usage('verify needs <task>');
+    try {
+      const result = verifyTask(missionDir, taskId);
+      process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+      return result.passed ? 0 : 2;
+    } catch (error) {
+      return refuse(error instanceof Error ? error.message : String(error));
+    }
+  }
+
   if (command === 'record') {
     const taskId = rest[0];
     const status = takeOption(rest, '--status');
@@ -81,28 +94,8 @@ function record(missionDir: string, taskId: string): number {
     return refuse(`${taskId}: serves unknown acceptance ${unknown.join(', ')}`);
   }
 
-  const blocking = new Set(
-    task.gates.filter((gate) => gate.severity === 'block').map((gate) => gate.id),
-  );
-  const results = doc.events.filter(
-    (event) => event.event === 'gate_result' && event.task === taskId,
-  );
-  const passed = results.filter(
-    (event) => blocking.has(String(event.data.gate)) && event.data.exit_code === 0,
-  );
-  if (passed.length === 0) {
-    return refuse(`${taskId}: no blocking gate at exit 0 recorded`);
-  }
-  for (const event of passed) {
-    const evidence = event.data.evidence;
-    if (typeof evidence !== 'string' || evidence === '') {
-      return refuse(`${taskId}: gate ${String(event.data.gate)} has no evidence path`);
-    }
-    const path = resolve(doc.missionDir, evidence);
-    if (!isInside(doc.missionDir, path) || !existsSync(path) || !statSync(path).isFile()) {
-      return refuse(`${taskId}: evidence missing: ${evidence}`);
-    }
-  }
+  const errors = checkEvidence(doc.missionDir, task, doc.events);
+  if (errors.length > 0) return refuse(errors[0]);
 
   const head = gitHead(doc.missionDir);
   if (!head) return refuse('no git commit exists');
@@ -116,6 +109,24 @@ function record(missionDir: string, taskId: string): number {
     return refuse(`no commit between ${base} and ${head}`);
   }
 
+  const gates = task.gates
+    .filter((gate) => gate.severity === 'block')
+    .map((gate) => {
+      const latest = doc.events
+        .filter(
+          (event) =>
+            event.event === 'gate_result' &&
+            event.task === taskId &&
+            event.data.gate === gate.id,
+        )
+        .at(-1);
+      return {
+        id: gate.id,
+        exit_code: 0,
+        evidence: typeof latest?.data.evidence === 'string' ? latest.data.evidence : '',
+      };
+    });
+
   const completed = appendEvent(doc.missionDir, {
     ts: nextTimestamp(doc.events),
     event: 'task_done',
@@ -125,11 +136,7 @@ function record(missionDir: string, taskId: string): number {
       base,
       head,
       commits: [head],
-      gates: passed.map((event) => ({
-        id: event.data.gate,
-        exit_code: 0,
-        evidence: event.data.evidence,
-      })),
+      gates,
     },
   });
   process.stdout.write(`${JSON.stringify(completed, null, 2)}\n`);
@@ -167,13 +174,6 @@ function usage(message?: string): number {
   if (message) process.stderr.write(`${message}\n`);
   process.stderr.write(USAGE);
   return 2;
-}
-
-function isInside(root: string, target: string): boolean {
-  const normalize = (value: string) => (process.platform === 'win32' ? value.toLowerCase() : value);
-  const parent = normalize(resolve(root));
-  const child = normalize(resolve(target));
-  return child === parent || child.startsWith(parent.endsWith(sep) ? parent : parent + sep);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

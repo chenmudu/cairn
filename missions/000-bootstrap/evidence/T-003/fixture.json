@@ -1,0 +1,17 @@
+{
+  "gate": {
+    "id": "fixture",
+    "command": "node",
+    "args": [
+      "scripts/validate-mission.mjs",
+      "--expect-invalid",
+      "test/fixtures/missing-gate"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "invalid as expected: test/fixtures/missing-gate",
+  "duration_ms": 46,
+  "timed_out": false
+}

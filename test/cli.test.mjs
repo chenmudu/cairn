@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { makeTempMission } from './helpers.mjs';
 
@@ -43,8 +43,42 @@ test('record refuses a task with no gate evidence and does not write', (t) => {
   const before = readFileSync(join(dir, 'ledger.jsonl'), 'utf8');
   const result = run('record', 'T-001', '--status', 'done', '--mission', dir);
   assert.equal(result.status, 2);
-  assert.match(result.stderr, /refused:.*(no blocking gate|evidence)/);
+  assert.match(result.stderr, /refused:.*(gate|evidence)/);
   assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8'), before);
+});
+
+test('verify and record complete a task with no manual ledger write', (t) => {
+  const dir = makeTempMission(t);
+  const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  const commit = (message) =>
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      message,
+    );
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(commit('base').status, 0);
+
+  const verify = run('verify', 'T-001', '--mission', dir);
+  assert.equal(verify.status, 0, verify.stderr);
+  const report = JSON.parse(verify.stdout);
+  assert.equal(report.passed, true);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(commit('work').status, 0);
+
+  const record = run('record', 'T-001', '--status', 'done', '--mission', dir);
+  assert.equal(record.status, 0, record.stderr);
+  const events = readFileSync(join(dir, 'ledger.jsonl'), 'utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  assert.ok(events.some((event) => event.event === 'task_done' && event.task === 'T-001'));
+  assert.ok(existsSync(join(dir, report.gates[0].evidence)));
 });
 
 test('record refuses an unknown task', (t) => {
