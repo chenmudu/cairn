@@ -18,6 +18,8 @@ const PHASES = [
 ];
 const MODES = new Set(['use', 'human-in-loop', 'not-applicable']);
 const PRODUCT_KINDS = new Set(['path', 'gate', 'command']);
+const STANDARDS = ['docs', 'code', 'workflow'];
+const TEMPLATES = ['mission', 'task', 'review', 'adr', 'handoff'];
 const SP_PIN = '7.0.1';
 const IMP_PIN = '4.8.0+df3a4ab';
 const IMP_SKILL_PIN = '4.8.0';
@@ -365,6 +367,30 @@ function detectImpeccable() {
   };
 }
 
+function checkStandards(root) {
+  const errors = [];
+  for (const name of STANDARDS) {
+    const en = join(root, 'method/standards', `${name}.md`);
+    const zh = join(root, 'method/standards', `${name}.zh.md`);
+    if (!existsSync(en)) {
+      errors.push(`standards/${name}.md: missing`);
+      continue;
+    }
+    if (!existsSync(zh)) errors.push(`standards/${name}.zh.md: missing Chinese companion`);
+    const text = readText(en) ?? '';
+    if (!/^\s*-\s*Source:\s*\S+/m.test(text)) errors.push(`standards/${name}.md: missing Source`);
+    if (!/^\s*-\s*Pin:\s*\S+/m.test(text)) errors.push(`standards/${name}.md: missing Pin`);
+    if (text.trim() === '') errors.push(`standards/${name}.md: empty`);
+  }
+  for (const name of TEMPLATES) {
+    const en = join(root, 'method/templates', `${name}.md`);
+    const zh = join(root, 'method/templates', `${name}.zh.md`);
+    if (!existsSync(en)) errors.push(`templates/${name}.md: missing`);
+    if (!existsSync(zh)) errors.push(`templates/${name}.zh.md: missing Chinese companion`);
+  }
+  return errors;
+}
+
 function detectPacks() {
   return {
     schema: 'cairn/packs@0.1',
@@ -389,7 +415,15 @@ function printPacks(report, json) {
 }
 
 function parseArgs(argv) {
-  const opts = { root: ROOT, playbook: false, packs: false, products: false, strict: false, json: false };
+  const opts = {
+    root: ROOT,
+    playbook: false,
+    packs: false,
+    products: false,
+    standards: false,
+    strict: false,
+    json: false,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--root') {
@@ -404,6 +438,8 @@ function parseArgs(argv) {
       opts.packs = true;
     } else if (arg === '--products') {
       opts.products = true;
+    } else if (arg === '--standards') {
+      opts.standards = true;
     } else if (arg === '--strict') {
       opts.strict = true;
     } else if (arg === '--json') {
@@ -412,7 +448,10 @@ function parseArgs(argv) {
       throw new Error(`unknown argument ${arg}`);
     }
   }
-  if (!opts.playbook && !opts.packs && !opts.products) opts.playbook = true;
+  if (!opts.playbook && !opts.packs && !opts.products && !opts.standards) {
+    opts.playbook = true;
+    opts.standards = true;
+  }
   return opts;
 }
 
@@ -425,6 +464,14 @@ function main() {
     return 1;
   }
   if (opts.packs) printPacks(detectPacks(), opts.json);
+  if (opts.standards) {
+    const errors = checkStandards(opts.root);
+    if (errors.length) {
+      errors.forEach((error) => console.error(`standards: ${error}`));
+      return 1;
+    }
+    console.log('standards: ok');
+  }
   if (!opts.playbook && !opts.products) return 0;
 
   let doc;

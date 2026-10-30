@@ -174,6 +174,69 @@ test('reports a planned row and fails it only under --strict', () => {
   }
 });
 
+const STANDARDS = ['docs', 'code', 'workflow'];
+const TEMPLATES = ['mission', 'task', 'review', 'adr', 'handoff'];
+
+function writePair(root, dir, name, options = {}) {
+  mkdirSync(join(root, 'method', dir), { recursive: true });
+  const source = options.source === false
+    ? ''
+    : '- Source: Cairn floor; Impeccable 4.8.0+df3a4ab for UI dimensions\n';
+  const pin = options.pin === false
+    ? ''
+    : '- Pin: cairn/standards@0.1; Impeccable 4.8.0 / engine 0.1.18 / df3a4ab\n';
+  writeFileSync(
+    join(root, 'method', dir, `${name}.md`),
+    `# ${name}\n\n${source}${pin}\nBody.\n`,
+  );
+  if (options.zh !== false) {
+    writeFileSync(
+      join(root, 'method', dir, `${name}.zh.md`),
+      `<!-- translation of method/${dir}/${name}.md at the T4 commit; the English file is authoritative -->\n\n# ${name}\n`,
+    );
+  }
+}
+
+function standardsFixture(options = {}) {
+  const root = fixture();
+  STANDARDS.forEach((name) => writePair(root, 'standards', name, options[name] ?? {}));
+  TEMPLATES.forEach((name) => writePair(root, 'templates', name));
+  return root;
+}
+
+test('accepts complete standards and templates', () => {
+  const root = standardsFixture();
+  try {
+    const result = run(root, ['--standards']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /standards: ok/);
+  } finally {
+    cleanup(root);
+  }
+});
+
+test('rejects a standard without a source', () => {
+  const root = standardsFixture({ docs: { source: false } });
+  try {
+    const result = run(root, ['--standards']);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /source/i);
+  } finally {
+    cleanup(root);
+  }
+});
+
+test('rejects a standard without a Chinese companion', () => {
+  const root = standardsFixture({ code: { zh: false } });
+  try {
+    const result = run(root, ['--standards']);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /companion/i);
+  } finally {
+    cleanup(root);
+  }
+});
+
 test('reports installed and absent packs from environment overrides', () => {
   const root = fixture();
   try {
