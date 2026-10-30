@@ -53,6 +53,31 @@ generated, never edited.
    escalation (park this branch, continue the rest). Budgets bound both.
 6. **State is rebuildable.** Any index or cache is disposable; `ledger.jsonl` plus git
    history must be enough to reconstruct the mission.
+7. **Targets change only by amendment.** The goal, non-goals, acceptance criteria, and this
+   protocol are hash-recorded. A change emits `mission_amended` with the old and new hashes,
+   the acceptance criterion it serves, the reason, and the approver. No silent edit.
+8. **Every task serves an acceptance criterion.** A task declares `serves: [A#]`. A task
+   without a valid link is invalid; a plan amendment must keep the acceptance-to-task coverage
+   explicit.
+9. **Completion is audited at milestones.** Every three completed tasks and at mission end, a
+   fresh-context reviewer answers: what did this advance, did it touch a non-goal, and can a
+   fresh session derive the same next step? The verdict is a `review_result`; a fail parks the
+   mission.
+
+## Goal integrity
+
+The goal is not a comment. `mission.md`, `policy.md`, `plan.md`, and this document are frozen
+at `mission_created` by hash. Changing any of them requires a `mission_amended` event naming:
+
+- `old` and `new`: path → sha256 for every changed artifact;
+- `acceptance`: the criterion the change serves;
+- `why`: the reason;
+- `approved_by`: `human` for a goal, non-goal, acceptance, or protocol change; `cairn` for a
+  plan change inside the existing acceptance envelope.
+
+Until `cairn record` implements the event (`T-002`), an amendment is recorded as a `ruling`
+carrying the same fields. The milestone audit's three questions and the full failure register
+live in `docs/drift-control.md`.
 
 ## Event schema
 
@@ -72,6 +97,7 @@ Every line is one JSON object:
 | Event | Required data | Meaning |
 |---|---|---|
 | `mission_created` | `artifacts` (path → sha256) | Mission artifacts frozen. |
+| `mission_amended` | `old`, `new` (path → sha256), `acceptance`, `why`, `approved_by` | Target artifacts changed on purpose. |
 | `task_started` | `base` (commit) | A tick selected this task. |
 | `gate_result` | `gate`, `command`, `exit_code`, `evidence` | One gate ran. |
 | `review_result` | `reviewer`, `verdict`, `findings` | A fresh reviewer judged the task. |

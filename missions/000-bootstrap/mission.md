@@ -16,6 +16,12 @@ acceptance:
     check: killing the process between verify and record leaves a state reconcile explains, with no duplicate commit
   - id: A5
     check: a new session resumes the mission from the repository alone, without the prior conversation
+  - id: A6
+    check: every task declares serves, and cairn status --json prints the acceptance coverage map
+  - id: A7
+    check: at each milestone a fresh session names the next task, its gate, and why, from the repository alone
+  - id: A8
+    check: changing mission, policy, plan, or protocol emits a mission_amended event with old and new hashes
 ---
 
 # Build Cairn with Cairn
@@ -25,6 +31,9 @@ acceptance:
 Build the smallest version of Cairn that can carry its own development, and use it to build
 itself from the first tick. The mission is both the product and the proof: if the protocol
 cannot express its own delivery, the protocol is wrong.
+
+The method this mission tests is defined in `README.md`. Cairn is its first artifact; the goal
+is a repeatable, auditable way of building products, not a runtime for its own sake.
 
 ## Non-goals
 
@@ -53,7 +62,13 @@ cannot express its own delivery, the protocol is wrong.
 - A4: a crash between `verify` and `record` is reconciled without re-running the task or
   duplicating its commit.
 - A5: a fresh session, given only this repository, can name the next task and its gate.
+- A6: every task declares `serves`; `cairn status --json` prints the acceptance coverage map.
+- A7: at each milestone, a fresh session names the next task, its gate, and why, from the
+  repository alone.
+- A8: changing `mission.md`, `policy.md`, `plan.md`, or `docs/protocol.md` emits a
+  `mission_amended` event with old and new hashes.
 
-## First action
+## Current action
 
-`T-001` in [`plan.md`](plan.md). Nothing else starts first.
+`T-002` in [`plan.md`](plan.md). Read [`inbox/`](inbox/) first; the plan was amended after
+`T-001` to add `serves` links and drift controls.

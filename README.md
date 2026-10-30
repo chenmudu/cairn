@@ -2,48 +2,34 @@
 
 > Leave a trail, not a transcript.
 
-Cairn is a git-native mission runtime for long-horizon coding work. It makes progress a
-property of the repository instead of a property of the conversation: every completed task
-leaves a commit, gate evidence, and a ledger event that any agent, session, or machine can
-pick up.
+We are turning "building a product" from a conversation-bound craft into a repeatable,
+auditable, self-iterating way of working. Cairn is the first artifact of that work.
 
-Status: pre-alpha. Mission #0 builds Cairn with Cairn.
+The method fuses two existing packs:
 
-## Goal
+- **superpowers** — process: skills, subagent workflows, execution discipline.
+- **Impeccable** — standards: design and critique criteria.
 
-The project began with a question about two existing packs:
+The goal is to build products — docs, code, workflows — faster and with a higher floor, and to
+make long-horizon work stable when no human is watching. Cairn is the runtime and evidence
+layer: it carries a mission across sessions, proves completion from the repository, and keeps
+the goal visible while the plan evolves.
 
-- **superpowers** — process content: skills, subagent workflows, execution discipline.
-- **Impeccable** — review criteria: design and critique standards.
+The method is tested on itself. Mission #0 builds Cairn with Cairn. If the protocol cannot
+express its own delivery, the protocol is wrong.
 
-Can they be fused into one way of working that raises the quality and speed of the products
-built here — docs, code, and workflows — and then support unattended, long-horizon work that
-still lands reliably?
+Success is not "the gates are green". Success is:
 
-Cairn is the runtime half of that answer. Rather than merging the two repositories, it builds
-the layer that carries a mission and proves completion from the repository alone. The packs
-are consumed by reference: superpowers supplies process, Impeccable supplies review criteria,
-Cairn supplies evidence. See [decision 0002](docs/decisions/0002-packs-and-runtime-boundary.md).
+- a fresh session, given only this repository, continues the mission without the prior
+  conversation; and
+- a milestone audit confirms the work still serves the goal, not just the plan.
 
-The project tests the answer on itself. Mission #0 builds Cairn with Cairn; if the protocol
-cannot express its own development, the protocol is wrong.
-
-Success is not "the gates are green". Success is: a fresh session, given only this repository,
-continues the mission without the prior conversation, and output quality does not drop.
-
-## Why
-
-Coding agents can finish a task in one session. They cannot reliably finish a project across
-many sessions, context compactions, crashes, or harnesses. The missing piece is not a smarter
-agent; it is durable state and independent verification.
-
-A conversation can be compacted. A process can die. A harness can change. A commit, a gate
-exit code, and an append-only ledger event survive all three.
+Status: pre-alpha. Mission #0 is in progress.
 
 ## Model
 
 - **Mission** — bounded work with acceptance criteria.
-- **Task** — the smallest unit with its own gate and commit.
+- **Task** — the smallest unit with its own gate, commit, and acceptance link.
 - **Tick** — one transaction; at most one task.
 - **Gate** — a deterministic command; its exit code is the verdict.
 - **Ledger** — append-only JSONL; the only truth.
@@ -51,16 +37,30 @@ exit code, and an append-only ledger event survive all three.
 A task is done only when a commit exists, a blocking gate exited 0, and `task_done` is in the
 ledger. Implementer claims are not evidence.
 
+## Positioning
+
+Cairn sits between the harness and the packs:
+
+- **Above the harness**: ZCode is the first execution environment; the contract, ledger, and
+  evidence format are harness-neutral. Adapters execute; Cairn records (`T-004`).
+- **Inside git**: commits and the ledger are the durable state; every cache is rebuildable.
+- **Beside the packs**: superpowers says how to work, Impeccable says what good looks like,
+  Cairn says what counts as done and whether the goal still holds.
+
+The first user is the author: prove it here before generalizing.
+
+It is not an agent, an orchestrator, a prompt pack, a chat UI, a hosted service, or a merge of
+the two source repositories.
+
 ## Start here
 
 1. Read [`docs/protocol.md`](docs/protocol.md).
 2. Read [`missions/000-bootstrap/`](missions/000-bootstrap/).
-3. The ledger is the status: [`ledger.jsonl`](missions/000-bootstrap/ledger.jsonl). `T-001` is
-   done; the next task is in [`plan.md`](missions/000-bootstrap/plan.md).
+3. The ledger is the status: [`ledger.jsonl`](missions/000-bootstrap/ledger.jsonl).
 4. Run the current gate: `node scripts/validate-mission.mjs missions/000-bootstrap`.
 
-The repository is designed to be self-contained: a new session should be able to resume from
-the files alone, without this conversation.
+The repository is designed to be self-contained: a new session should resume from the files
+alone. That property is tested at every milestone, not assumed.
 
 ## Non-goals
 
