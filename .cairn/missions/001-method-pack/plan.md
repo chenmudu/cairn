@@ -274,6 +274,10 @@ tasks:
         command: node
         args: ["scripts/validate-mission.mjs", ".cairn/missions/001-method-pack"]
         severity: block
+      - id: method-products
+        command: node
+        args: ["scripts/check-method.mjs", "--products", "--strict"]
+        severity: block
 ---
 
 # Plan — Mission #1
@@ -319,6 +323,94 @@ lands in a task with evidence, not in a batch at the end.
 - **T7** detects both packs and injects the relevant capability into the dispatch packet; the
   `packs` block is a protocol amendment.
 - **T8** verifies the mesh from a cold start, including both packs absent.
+
+## Task specs
+
+These are binding. A task that cannot meet them returns `NEEDS_CONTEXT`; it does not
+improvise a softer interpretation.
+
+### T3 — reconciliation and playbook
+
+Inputs: `docs/decisions/0002-packs-and-runtime-boundary.md` and
+`docs/decisions/0004-absorb-the-coordination.md`; superpowers 7.0.1 from
+`CAIRN_SUPERPOWERS_DIR` or the harness cache; Impeccable 4.8.0 commit `df3a4abe7` from
+`CAIRN_IMPECCABLE_DIR` or the checkout path.
+
+Outputs:
+
+- `method/playbook.md` contains a fenced `cairn/playbook@0.1` JSON block and a rendered table.
+  Every row has `phase`, `floor`, `superpowers` (`skill`, `pin`, `mode`, `fallback`),
+  `impeccable` (`command` or `standard`, `pin`, `applicability`, `fallback`), `seam`, and
+  `status`.
+- `mode` and `applicability` are `use`, `human-in-loop`, or `not-applicable`; a
+  `not-applicable` row carries a `reason`.
+- `status` is `exists` or `planned:T#`. No `TBD`, `TODO`, or empty cell.
+- The rows cover `frame`, `plan`, `execute`, `review`, `close`, `state`, `design-check`,
+  `handoff`, and `unattended`.
+- `method/README.md` explains how to run with both packs, one pack, and neither.
+- `scripts/check-method.mjs` implements `--playbook` (structure, pins, status, no empty
+  cells), `--packs` (advisory detection), and `--products` (resolve every `exists` row;
+  report `planned:T#` as pending; `--strict` fails on pending).
+- `test/method.test.mjs` covers a valid matrix, a missing floor, an empty fallback, a
+  `not-applicable` without reason, and a pending row under `--strict`.
+- `scripts/check-bilingual.mjs` scans `.cairn/missions/*/inbox/*.md`; the three Mission #0
+  inbox companions exist.
+- The first superpowers use is `test-driven-development` for `check-method`; the JSON block's
+  top-level `packs_used` records `superpowers:test-driven-development@7.0.1` with the test
+  path as evidence.
+
+Encode these source facts, not a summary from memory: SP `task-start` writes no ledger;
+`progress.md` records completion lines only; its workspace is git-ignored. Impeccable
+`detect` on markdown returns `[]` and is `not-applicable`; `critique` asks the user;
+`audit` is web-only.
+
+Done when: `node scripts/check-method.mjs --playbook` exits 0; `node --test` exits 0;
+`node scripts/check-bilingual.mjs` exits 0.
+
+### T4 — standards and templates
+
+- Standards for docs, code, and workflow; templates for mission, task, review, ADR, and
+  handoff; every pair bilingual.
+- The Impeccable contribution is criteria-based, not the detector: cite
+  `skill/reference/{critique,audit,polish,harden}.md` at 4.8.0+df3a4ab and mark UI-only
+  dimensions `not-applicable` for docs and code.
+- `check-method --standards` verifies each pair exists and each standard names its
+  source and pin.
+
+### T5 — operator guide
+
+- Roles, one-tick steps, human checkpoints, and failure paths; separate branches for both
+  packs, one pack, and neither.
+- Every command in the guide is runnable as written; `check-workflow` asserts the sections
+  and command strings.
+
+### T6 — worked example
+
+- A real small tick with ledger, evidence, and a `packs` record. If Impeccable is
+  `not-applicable`, the example records the criteria-based review and the reason; it does
+  not claim a detector run.
+- `check-example` verifies the ledger, evidence, and pack records.
+
+### T7 — runtime gaps
+
+- `src/packs.ts` detects both packs: environment overrides first, then known roots; statuses
+  `present`, `absent`, `mismatch`, `not-invocable`; versions and pins.
+- Packet `packs` block: `{capability, pack, version, mode, instruction, fallback}`.
+- Report `packs` field: `{capability, pack, version, mode, evidence}`; `not-applicable`
+  requires a reason.
+- The packet/report schema change is a protocol amendment with `approved_by: human`.
+- `cairn review` and a `task_started` writer; `audit-session` streams the transcript and
+  fails on an over-limit line instead of crashing.
+- TDD; tests cover present, absent, mismatch, and not-invocable.
+
+### T8 — cold start and product comparison
+
+- `node scripts/check-method.mjs --products --strict` exits 0: every floor file or gate
+  exists; every pack reference resolves at its pin or is `not-applicable` with a reason;
+  every fallback is executable; no row is still `planned`.
+- Run once with both packs present and once with `CAIRN_SUPERPOWERS_DIR` and
+  `CAIRN_IMPECCABLE_DIR` pointing at nonexistent paths; both runs pass.
+- A fresh reviewer names the goal, layout, next task, and one-tick flow.
 
 ## Known deps
 

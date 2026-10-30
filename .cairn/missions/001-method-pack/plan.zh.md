@@ -35,6 +35,63 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
 - **T7** 检测两个包，并把对应能力注入 dispatch packet；`packs` 块是协议修订。
 - **T8** 从冷启动验证磨合，包括两个包都不在的情况。
 
+## 任务规格
+
+以下是有约束力的细节；做不到就返回 `NEEDS_CONTEXT`，不许自行放宽。
+
+### T3 — 对账与 playbook
+
+- `method/playbook.md` 含 `cairn/playbook@0.1` JSON 块；每行有 `phase`、`floor`、
+  `superpowers`（skill、pin、mode、fallback）、`impeccable`（command 或 standard、pin、
+  applicability、fallback）、`seam`、`status`。
+- `mode` 和 `applicability` 只能是 `use`、`human-in-loop`、`not-applicable`；
+  `not-applicable` 必须写 `reason`。
+- `status` 只能是 `exists` 或 `planned:T#`；禁止 `TBD`、`TODO`、空单元格。
+- 阶段覆盖 `frame`、`plan`、`execute`、`review`、`close`、`state`、`design-check`、
+  `handoff`、`unattended`。
+- `check-method` 支持 `--playbook`、`--packs`、`--products`；`--strict` 时 `planned` 失败。
+- 源码事实：SP 的 `task-start` 不写账，`progress.md` 只记完成行且是 git-ignored；Imp 的
+  `detect` 对 markdown 返回 `[]`，是 `not-applicable`，不是干净；`critique` 会问用户；
+  `audit` 只适用 web。
+- 第一个 superpowers 使用是 TDD；JSON 块顶层的 `packs_used` 记录
+  `superpowers:test-driven-development@7.0.1`，以测试路径为证据。
+- 完成判据：`--playbook`、`node --test`、`check-bilingual` 全部退出 0。
+
+### T4 — 标准与模板
+
+- docs、code、workflow 标准；mission、task、review、ADR、handoff 模板；全部双语。
+- Impeccable 只贡献标准（`critique`/`audit`/`polish`/`harden` 的 4.8.0+df3a4ab）；UI 专用
+  维度标 `not-applicable`，不冒充 detector。
+- `check-method --standards` 验证成对和来源/pin。
+
+### T5 — 操作手册
+
+- 角色、单 tick 步骤、人工检查点、失败路径；两包、单包、零包三个分支；命令可照抄。
+- `check-workflow` 验证章节和命令字符串。
+
+### T6 — 样例
+
+- 真实小 tick，带台账、证据和 `packs` 记录；Impeccable 不适用时记录标准审查和原因，不冒充
+  detector。
+- `check-example` 验证台账、证据和包记录。
+
+### T7 — 运行时
+
+- `src/packs.ts` 检测两个包：环境变量优先，然后已知根；状态 `present`、`absent`、
+  `mismatch`、`not-invocable`。
+- packet 的 `packs` 块字段：`capability`、`pack`、`version`、`mode`、`instruction`、
+  `fallback`；report 的 `packs` 字段：`capability`、`pack`、`version`、`mode`、`evidence`。
+- packet/report schema 变更走协议修订，`approved_by: human`。
+- `cairn review`、`task_started` 写入者；`audit-session` 流式读取。
+- TDD；测试覆盖 present、absent、mismatch、not-invocable。
+
+### T8 — 冷启动与产物对比
+
+- `node scripts/check-method.mjs --products --strict` 退出 0：每个 floor 文件或闸门存在；
+  每个包引用在 pin 上可解析，或 `not-applicable` 带原因；每个回退可执行；没有 `planned`。
+- 两包都在、两包都不在（环境变量指向不存在路径）各跑一次，都通过。
+- 全新审查者说出目标、布局、下一任务、单 tick 流程。
+
 ## 自观测
 
 T7 修 `audit-session` 的读取：当前整文件加载在 684MB transcript 上超过 V8 字符串上限。改为
@@ -56,4 +113,4 @@ T1 的协议修订和 T7 的不变量 3 决策都需要 `approved_by: human`。�
 | T5 | 写单 tick 操作手册 | B4 | T4 | test, workflow |
 | T6 | 跑一个记录在案的样例 tick | B4 | T5 | test, example |
 | T7 | 补上阻塞方法落地的运行时缺口 | B1, B3, B6, B7 | T6 | typecheck, test, mission |
-| T8 | 冷启动审查与 mission 关闭 | B5, B7 | T7 | test, mission |
+| T8 | 冷启动审查与 mission 关闭 | B5, B7 | T7 | test, mission, method-products |

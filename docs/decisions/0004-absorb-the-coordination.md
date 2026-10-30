@@ -22,6 +22,32 @@ model is three layers:
 The human made this call on 2026-10-31: the floor is ours, the packs are better when present,
 and someone must coordinate the second ledger. That someone is Cairn.
 
+## Source facts (verified 2026-10-31)
+
+These are read from the pinned source, not inferred:
+
+- **superpowers 7.0.1** `skills/executing-plans/scripts/task-start` prints `brief` and `base`;
+  it does not write the progress ledger. `scripts/task-done` appends
+  `Task N: complete (commits <base>..<head>, tests: <cmd> → <last line>)` only after the test
+  command exits 0. The workspace is `<repo-root>/.superpowers/sdd/<plan-basename>/`, which is
+  git-ignored scratch (`subagent-driven-development/SKILL.md`).
+- **superpowers 7.0.1** `skills/executing-plans/SKILL.md` runs tasks continuously and says not
+  to pause between tasks; only irreversible/destructive work, security, an external side
+  effect, or an unrecoverable plan stops it. `requesting-code-review` dispatches a reviewer
+  subagent; `using-git-worktrees` asks the human before creating a worktree.
+- **Impeccable 4.8.0 (commit df3a4abe7)** `skill/reference/critique.md` requires two isolated
+  assessments, browser/detector evidence, and ends by asking the user a question.
+  `skill/reference/audit.md` is web-only, scores five dimensions 0–4, and tags findings P0–P3.
+  `detect` scans markup and URLs only; exit 0 is clean, 2 is findings, 1 is a scan failure;
+  the README declares 62 rules. `node cli/bin/cli.js detect README.md --json` returns `[]`,
+  so markdown is `not-applicable`, not clean.
+- **Impeccable 4.8.0** `init` and `document` are interview-based and UI-specific: they write
+  `PRODUCT.md` and `DESIGN.md`; they must not be used to invent product or visual truth in an
+  unattended run.
+
+The registry marks these capabilities `human-in-loop` or `not-applicable` rather than
+pretending they ran. A clean-looking empty result is not evidence.
+
 ## Decision
 
 Cairn is the coordination layer between the packs and the work.
@@ -51,16 +77,16 @@ The initial registry lives in `method/playbook.md` and is checked by `check-meth
 
 | Capability | Pack and pin | Cairn owner | Coordination contract | Simple fallback |
 |---|---|---|---|---|
-| Process planning | superpowers `writing-plans`, `executing-plans` @ 7.0.1 | `plan.md`, `cairn next` | The pack plans inside one task; the packet is the boundary | Hand-written plan + `goal-check` |
+| Process planning | superpowers `writing-plans`, `executing-plans` @ 7.0.1 | `plan.md`, `cairn next` | Cairn's plan and packet are authoritative; the pack's plan is an optional internal aid and stays adapter-local | Hand-written plan + `goal-check` |
 | Test-first | superpowers `test-driven-development` @ 7.0.1 | `test` gate | RED→GREEN evidence lands in `gate_result` | Write the test first, then the gate |
 | Verification | superpowers `verification-before-completion` @ 7.0.1 | `cairn verify` | Claims without gate evidence are rejected | Run the gate |
-| Review | superpowers `requesting-code-review` @ 7.0.1 | `review_result` | Findings map to a verdict; blocking findings block | In-repo review checklist |
+| Review | superpowers `requesting-code-review` @ 7.0.1 | `review_result` | Dispatches a reviewer subagent; findings map to a verdict; without a subagent, a fresh-context reviewer uses the same checklist | In-repo review checklist |
 | Subagents | superpowers `dispatching-parallel-agents`, `subagent-driven-development` @ 7.0.1 | Dispatch packet + report | One packet per task; reports aggregate; no ledger writes | Single-agent serial execution |
-| Worktrees | superpowers `using-git-worktrees` @ 7.0.1 | `base`/`head`, one active task | One worktree per task; `reconcile` checks commits | Serial branch |
-| Progress journal | superpowers `.superpowers/sdd/<plan>/progress.md` @ 7.0.1 | `ledger.jsonl` | The coordinator maps `task-start`/`task-done` into Cairn events; divergence is a finding | `cairn next/verify/record` |
+| Worktrees | superpowers `using-git-worktrees` @ 7.0.1 | `base`/`head`, one active task | The skill asks the human before creating a worktree; unattended runs skip it; `reconcile` checks commits | Serial branch |
+| Progress journal | superpowers `.superpowers/sdd/<plan>/progress.md` @ 7.0.1 | `ledger.jsonl` | The journal records completion lines only; `task-start` prints brief/base but writes nothing; the workspace is git-ignored scratch. Cairn records `task_started`, reconciles the completion lines, and the report carries the Cairn↔SP task-number mapping | `cairn next/verify/record` |
 | Design context | Impeccable `PRODUCT.md`/`DESIGN.md` @ 4.8.0 | Mission/product context | Referenced once; no duplicate token source | In-repo product/design brief |
-| Deterministic design check | Impeccable `detect` (62 rules) @ 4.8.0 | Gate evidence | JSON maps to evidence; error/warning/advisory map to block/advisory | In-repo checklist |
-| Design review | Impeccable `critique`/`audit` @ 4.8.0 | `review_result` | P0–P3 map to findings; only agreed severities block | In-repo review checklist |
+| Deterministic design check | Impeccable `detect` (62 rules) @ 4.8.0 | Gate evidence | Scans markup and URLs; exit 0 clean, 2 findings, 1 scan failure. Markdown returns `[]` and is `not-applicable`, not clean | In-repo checklist |
+| Design review | Impeccable `critique`/`audit` @ 4.8.0 | `review_result` | Web/native UI only. `critique` asks the user and is human-in-loop; `audit` scores five dimensions 0–4; P0–P3 map to findings | In-repo review checklist |
 | Live and hooks | Impeccable `live`, hooks @ 4.8.0 | Not in the protocol | Human-in-loop only; never the completion path | Explicit CLI + evidence |
 
 ## Detection and activation
@@ -72,8 +98,9 @@ operational:
    install locations, reads the version, and reports `present`, `invocable`, and `pinned`.
    Detection is deterministic and advisory; it never blocks a gate.
 2. **Inject.** `cairn next` includes a `packs` block in the dispatch packet. For each
-   capability the task uses, it names the pack, pin, path, exact skill or command, and the
-   fallback. The adapter receives an instruction, not a bibliography.
+   capability the task uses, it names the pack, pin, path, exact skill or command, a `mode`
+   (`use`, `human-in-loop`, or `not-applicable`), and the fallback. The adapter receives an
+   instruction, not a bibliography.
 3. **Record.** The adapter report names the packs it used and any deviation. If a pack was
    absent, it says `absent, floor used`.
 4. **Verify.** Pack output becomes evidence; `cairn verify` remains the proof. `cairn

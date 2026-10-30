@@ -24,8 +24,9 @@
 - **B6**：`node --test` 通过；迁移后 Mission #0 的台账和证据仍然 validate、reconcile；没有阻塞
   闸门被削弱。
 - **B7**：两个包与 Cairn 磨合完成；`check-method --packs` 报告可用性；`cairn next` 注入对应
-  能力；任务证据记录 used 或 absent 加 floor 回退；至少一个 tick 记录 superpowers 用于执行，
-  一个 tick 记录 Impeccable 用于审查，各自带 pin 和证据；两个包都不在时所有闸门仍然通过。
+  能力；任务证据记录 used、not-applicable 或 absent 加 floor 回退；至少一个 tick 记录
+  superpowers 用于执行，一个 tick 记录 Impeccable 用于审查（没有 web 界面时按标准审查），
+  各自带 pin 和证据；`check-method --products` 退出 0；两个包都不在时所有闸门仍然通过。
 
 ## 意图
 
@@ -65,8 +66,8 @@ Mission #0 证明了运行时能承载自己的交付。它没有交付方法本
 - **B4**：新人只读操作手册就能跑一个 tick；一个记录在案的样例证明手册可执行。
 - **B5**：全新会话只凭仓库说出目标、布局、下一个任务和单 tick 流程。
 - **B6**：迁移不削弱运行时：既有测试通过，Mission #0 仍然 validate、reconcile。
-- **B7**：两个包磨合完成：检测、注入、记录使用或回退，至少各有一个真实 tick 使用，两个包
-  都不在时所有闸门仍然通过。
+- **B7**：两个包磨合完成：检测、注入、记录使用、`not-applicable` 或回退；至少各有一个真实
+  tick 使用；一次能解析每个 playbook 行的产物对比；两个包都不在时所有闸门仍然通过。
 
 ## 当前动作
 

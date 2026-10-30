@@ -19,7 +19,7 @@ acceptance:
   - id: B6
     check: node --test passes; Mission #0 ledger and evidence still validate and reconcile after migration; no blocking gate is weakened
   - id: B7
-    check: both packs are meshed with Cairn; check-method --packs reports availability; cairn next injects the relevant capability; task evidence records used or absent with the floor fallback; at least one tick records superpowers in execution and one records Impeccable in review, each with its pin and evidence; every gate still passes with both packs absent
+    check: both packs are meshed with Cairn; check-method --packs reports availability; cairn next injects the relevant capability; task evidence records used, not-applicable, or absent with the floor fallback; at least one tick records superpowers in execution and one records Impeccable in review (criteria-based when no web surface exists), each with its pin and evidence; check-method --products exits 0; every gate still passes with both packs absent
 ---
 
 # Make the method real
@@ -72,8 +72,9 @@ better, and keeps a simple floor when they are absent.
   task, and the one-tick flow.
 - B6: the migration does not weaken the runtime: the existing tests pass and Mission #0 still
   validates and reconciles.
-- B7: both packs are meshed: detection, injection, recorded use or fallback, real use in at
-  least one tick each, and every gate still passes with both absent.
+- B7: both packs are meshed: detection, injection, recorded use, `not-applicable`, or
+  fallback; real use in at least one tick each; a product comparison that resolves every
+  playbook row; and every gate still passing with both absent.
 
 ## Current action
 

@@ -21,6 +21,29 @@ detector、浏览器 critique、live 模式。
 人类在 2026-10-31 做了这个判断：地板是我们的，包在时更好，第二套账本必须有人协调。那个人
 就是 Cairn。
 
+## 源码事实（2026-10-31 核对）
+
+这些是从 pin 的源码读出来的，不是推断：
+
+- **superpowers 7.0.1** `skills/executing-plans/scripts/task-start` 打印 `brief` 和 `base`，
+  不写进度账。`scripts/task-done` 只在测试命令退出 0 后追加
+  `Task N: complete (commits <base>..<head>, tests: <cmd> → <last line>)`。工作区是
+  `<repo-root>/.superpowers/sdd/<plan-basename>/`，git-ignored 临时区
+  （`subagent-driven-development/SKILL.md`）。
+- **superpowers 7.0.1** `executing-plans/SKILL.md` 连续执行任务，不在任务间停下来问；只有
+  不可逆/破坏性操作、安全、外部副作用或计划不可恢复才停。`requesting-code-review` 派发审查
+  子 agent；`using-git-worktrees` 创建 worktree 前会问人类。
+- **Impeccable 4.8.0（commit df3a4abe7）** `skill/reference/critique.md` 要求两个隔离评估、
+  浏览器/detector 证据，并以向用户提问结束；`audit.md` 只适用于 web，五维 0–4，findings 分
+  P0–P3；`detect` 只扫 markup 和 URL，退出 0 干净、2 有发现、1 扫描失败；README 声明 62 条
+  规则。`node cli/bin/cli.js detect README.md --json` 返回 `[]`，所以 markdown 是
+  `not-applicable`，不是干净。
+- **Impeccable 4.8.0** 的 `init` 和 `document` 基于访谈且面向 UI：写 `PRODUCT.md` 和
+  `DESIGN.md`；无人值守时不能用它们凭空发明产品或视觉事实。
+
+登记表把这些能力标成 `human-in-loop` 或 `not-applicable`，而不是假装跑过。看起来干净的空
+结果不是证据。
+
 ## 决定
 
 Cairn 是包与工作之间的协调层。
@@ -46,16 +69,16 @@ Cairn 是包与工作之间的协调层。
 
 | 能力 | 包与 pin | Cairn 归属 | 协调合同 | 简单回退 |
 |---|---|---|---|---|
-| 流程计划 | superpowers `writing-plans`、`executing-plans` @ 7.0.1 | `plan.md`、`cairn next` | 包在一个任务内做计划；packet 是边界 | 手写计划 + `goal-check` |
+| 流程计划 | superpowers `writing-plans`、`executing-plans` @ 7.0.1 | `plan.md`、`cairn next` | Cairn 的计划和 packet 是权威；包的计划只是可选内部辅助，留在适配器本地 | 手写计划 + `goal-check` |
 | 测试先行 | superpowers `test-driven-development` @ 7.0.1 | `test` 闸门 | RED→GREEN 证据进入 `gate_result` | 先写测试，再跑闸门 |
 | 验证 | superpowers `verification-before-completion` @ 7.0.1 | `cairn verify` | 没有闸门证据的声明被拒绝 | 运行闸门 |
-| 审查 | superpowers `requesting-code-review` @ 7.0.1 | `review_result` | findings 映射为结论；阻塞项阻塞 | 仓库内审查清单 |
+| 审查 | superpowers `requesting-code-review` @ 7.0.1 | `review_result` | 派发审查子 agent；findings 映射为结论；没有子 agent 时用全新上下文审查者跑同一清单 | 仓库内审查清单 |
 | 子 agent | superpowers `dispatching-parallel-agents`、`subagent-driven-development` @ 7.0.1 | dispatch packet + report | 一个任务一个 packet；报告聚合；不写台账 | 单 agent 串行执行 |
-| Worktree | superpowers `using-git-worktrees` @ 7.0.1 | `base`/`head`、一个活动任务 | 一个任务一个 worktree；`reconcile` 检查提交 | 单分支串行 |
-| 进度台账 | superpowers `.superpowers/sdd/<plan>/progress.md` @ 7.0.1 | `ledger.jsonl` | 协调器把 `task-start`/`task-done` 映射成 Cairn 事件；分歧成为 finding | `cairn next/verify/record` |
+| Worktree | superpowers `using-git-worktrees` @ 7.0.1 | `base`/`head`、一个活动任务 | 该 skill 创建 worktree 前会问人类；无人值守跳过；`reconcile` 检查提交 | 单分支串行 |
+| 进度台账 | superpowers `.superpowers/sdd/<plan>/progress.md` @ 7.0.1 | `ledger.jsonl` | 该台账只记完成行；`task-start` 打印 brief/base 但不写账；工作区是 git-ignored 临时区。Cairn 记录 `task_started`，对账完成行，报告带 Cairn↔SP 任务编号映射 | `cairn next/verify/record` |
 | 设计上下文 | Impeccable `PRODUCT.md`/`DESIGN.md` @ 4.8.0 | mission/product 上下文 | 只引用一次；不复制 token 源 | 仓库内产品/设计 brief |
-| 确定性设计检查 | Impeccable `detect`（62 条规则）@ 4.8.0 | 闸门证据 | JSON 映射为证据；error/warning/advisory 映射为 block/advisory | 仓库内清单 |
-| 设计审查 | Impeccable `critique`/`audit` @ 4.8.0 | `review_result` | P0–P3 映射为 findings；只有约定严重度阻塞 | 仓库内审查清单 |
+| 确定性设计检查 | Impeccable `detect`（62 条规则）@ 4.8.0 | 闸门证据 | 只扫 markup 和 URL；退出 0 干净、2 有发现、1 扫描失败。Markdown 返回 `[]` 是 `not-applicable`，不是干净 | 仓库内清单 |
+| 设计审查 | Impeccable `critique`/`audit` @ 4.8.0 | `review_result` | 只适用于 web/native UI。`critique` 会问用户，是人在环；`audit` 五维 0–4；P0–P3 映射为 findings | 仓库内审查清单 |
 | Live 与 hook | Impeccable `live`、hooks @ 4.8.0 | 不在协议内 | 只用于人在环；永不走完成路径 | 显式 CLI + 证据 |
 
 ## 检测与激活
@@ -65,7 +88,8 @@ Cairn 是包与工作之间的协调层。
 1. **检测。** `check-method --packs`（以后是 `cairn packs`）检查配置路径和已知安装位置，读取
    版本，报告 `present`、`invocable`、`pinned`。检测是确定性的、advisory 的，永不阻塞闸门。
 2. **注入。** `cairn next` 在 dispatch packet 里带一个 `packs` 块。对任务用到的每个能力，写明
-   包、pin、路径、确切的 skill 或命令，以及回退。适配器收到的是指令，不是参考书目。
+   包、pin、路径、确切的 skill 或命令、`mode`（`use`、`human-in-loop` 或
+   `not-applicable`），以及回退。适配器收到的是指令，不是参考书目。
 3. **记录。** 适配器报告写明用了哪些包、有什么偏离。包缺失就写 `absent, floor used`。
 4. **校验。** 包的输出成为证据；`cairn verify` 仍是证明。`cairn reconcile` 检查包侧状态和
    台账是否一致。
