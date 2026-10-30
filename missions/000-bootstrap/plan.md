@@ -156,6 +156,8 @@ tasks:
       - test/fixtures/transcript.jsonl
       - docs/automation.md
       - docs/automation.zh.md
+      - docs/self-hosting.md
+      - docs/self-hosting.zh.md
       - docs/i18n.md
       - docs/drift-control.zh.md
       - README.md
