@@ -17,6 +17,7 @@
     "validate:m0": "node scripts/validate-mission.mjs .cairn/missions/000-bootstrap",
     "goal": "node scripts/goal-check.mjs",
     "check:decisions": "node scripts/check-decisions.mjs",
+    "check:enforcement": "node scripts/check-enforcement.mjs",
     "audit": "node scripts/audit-session.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test",

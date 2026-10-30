@@ -29,6 +29,7 @@ jobs:
       - run: node scripts/validate-mission.mjs .cairn/missions/000-bootstrap
       - run: node scripts/validate-mission.mjs .cairn/missions/001-method-pack
       - run: node scripts/check-decisions.mjs
+      - run: node scripts/check-enforcement.mjs
       - run: node scripts/check-bilingual.mjs
       - run: node scripts/check-workflow.mjs
       - run: node scripts/check-example.mjs --example method/examples/0001-docs-tick

@@ -61,6 +61,33 @@ test('init scaffolds a mission in an empty repository', (t) => {
   assert.equal(JSON.parse(status.stdout).mission.id, 'demo');
 });
 
+test('the init scaffold gate fails, so the scaffold cannot be recorded done', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'cairn-scaffold-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const init = spawnSync(process.execPath, [cli, 'init', 'demo', '--title', 'Demo mission'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(init.status, 0, init.stderr);
+
+  const verify = spawnSync(process.execPath, [cli, 'verify', 'T-001'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(verify.status, 2, verify.stderr);
+  const packet = JSON.parse(verify.stdout);
+  assert.equal(packet.passed, false);
+  assert.equal(packet.gates[0].id, 'placeholder');
+  assert.equal(packet.gates[0].exit_code, 1);
+
+  const record = spawnSync(process.execPath, [cli, 'record', 'T-001', '--status', 'done'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(record.status, 2);
+  assert.match(record.stderr, /blocking gate placeholder did not exit 0/);
+});
+
 test('next prints a packet for the task status reports', () => {
   const status = run('status', '--json', '--mission', M0);
   assert.equal(status.status, 0, status.stderr);

@@ -64,19 +64,50 @@ out of the repository.
 planned write from an unplanned one. The default is the active mission from
 `.cairn/config.json` (`.cairn/missions/001-method-pack` in this repository).
 
+## Rules, checks, and injection
+
+Four different jobs; they are not interchangeable:
+
+| Layer | Job | Can enforce? | Where it lives |
+|---|---|---|---|
+| Canonical rule | Say what is true, once. | no | `docs/*.md` |
+| Script / test / CI | Decide pass or fail. | yes | `scripts/`, `test/`, `.github/workflows/gates.yml` |
+| Hook | Inject a short anchor at session start, prompt submit, or stop. | no | `.zcode/hooks/`, `.zcode/config.json` |
+| Skill | Give the procedure at the decision point. | no | `.zcode/skills/<name>/SKILL.md` |
+| `AGENTS.md` | Always-on fallback pointer. | no | `AGENTS.md` |
+| Human / review | Judge what cannot be mechanized. | yes, by authority | `review_result`, inbox escalation |
+
+Injection makes a rule known; only a script, a test, CI, or a human/review checkpoint makes it
+binding. A rule with injection and no enforcement is a suggestion; a rule with enforcement and
+no injection is an ambush. `docs/drift-control.md` is the enforcement map; this file is the
+injection map.
+
+ZCode loads the user `AGENTS.md` first, then one workspace `AGENTS.md`. It does not merge
+multiple workspace instruction files, so the workspace file is a router: rules live in
+`docs/`, and `AGENTS.md` points to them. Hooks support seven events; this repository uses
+`SessionStart` for the anchor and reserves `Stop` for a bounded tail reminder. A `Stop` hook can
+request continuation up to three times, so it is not a gate.
+
+A skill is a directory. `SKILL.md` is the SOP; reference material belongs in `docs/` or the
+skill's `references/`; executable checks belong in `scripts/` when shared, or the skill's
+`scripts/` when private. The SOP names the check; it does not paste the script or the document.
+
 ## Wiring
 
 - **Skill** — `.zcode/skills/cairn-guard/SKILL.md` tells the agent to run the guard before work,
-  the decision check before and after writing a decision, and the audit before claiming done.
+  the decision check before and after writing a decision, the enforcement check before and
+  after changing a rule's enforcement, and the audit before claiming done.
 - **Hook** — `.zcode/config.json` runs `.zcode/hooks/session-start.mjs` on `startup`, `clear`,
   and `compact`. The hook prints `goal-check --brief` as `additionalContext`; the brief reads
   the routing rule from `docs/decision-routing.md`, so a fresh session starts with the anchor
   from the repository. Workspace hooks may require trust in ZCode; the scripts work without the
   hook in any harness.
-- **Script** — `scripts/check-decisions.mjs` validates both homes, rejects stray numbered
-  decisions, and is a CI step. The rule source is the routing document; the script does not
-  keep a second copy.
-- **Agents** — `AGENTS.md` points to the same check. The hook is an adapter, not the contract.
+- **Script** — `scripts/check-decisions.mjs` validates both decision homes and rejects stray
+  numbered decisions. `scripts/check-enforcement.mjs` validates the failure-mode map's
+  machine grammar and the Chinese token parity. Both are CI steps and read their rule source;
+  neither keeps a second copy.
+- **Agents** — `AGENTS.md` points to the same checks and stays a router. The hook is an
+  adapter, not the contract.
 
 Disable the hook by removing the `SessionStart` entry from `.zcode/config.json`; the commands
 remain available.

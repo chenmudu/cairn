@@ -23,6 +23,13 @@ guard exists so the agent does not need the human to restate the goal.
 3. Write the decision, then run the check again. A wrong path, a missing field, or a missing
    Chinese companion is a failure.
 
+## Before changing a rule's enforcement
+
+1. Run `node scripts/check-enforcement.mjs`.
+2. Decide the enforcement: a script/test/CI check, or `human`/`review`. If it cannot be
+   mechanized, label it; do not invent a check.
+3. Update `docs/drift-control.md` and its Chinese companion, then run the check again.
+
 ## Before claiming completion
 
 1. Run every `severity: block` gate in the task. Paste the commands and exit codes.
@@ -42,5 +49,8 @@ guard exists so the agent does not need the human to restate the goal.
 - Empty or `not-applicable` output is not a pass. Record the reason and the fallback.
 - If a required check cannot run, record the failure and the substitute evidence. Never report
   an unrun check as passed; fix the guard when the guard is what failed.
+- Keep the layers separate: this `SKILL.md` is the SOP, reference material lives in `docs/`,
+  executable checks in `scripts/` (shared) or the skill's `scripts/` (private). Do not paste a
+  script or a long document into the SOP.
 - The session start hook prints the same anchor from the repository. Treat it as a reminder,
   not as a substitute for running the check.

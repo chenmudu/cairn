@@ -52,6 +52,10 @@
 - Decision records: project-wide ADRs live in `docs/decisions/`; mission decisions live in
   `.cairn/missions/<id>/inbox/`. Run `node scripts/check-decisions.mjs` before and after
   writing one. The SessionStart hook injects the same routing rule.
+- Rule enforcement: a rule lives once in a canonical doc. Every failure mode in
+  `docs/drift-control.md` names a runnable check or `human`/`review`; run
+  `node scripts/check-enforcement.mjs` before and after changing one. Injection
+  (hook/skill/AGENTS) makes a rule known; only the check makes it binding.
 - If the plan cannot express the work, amend the plan first, and record the amendment.
 - Target artifacts (`mission.md`, `policy.md`, `plan.md`, `docs/protocol.md`) change only by
   amendment with old and new hashes. See `docs/drift-control.md`.

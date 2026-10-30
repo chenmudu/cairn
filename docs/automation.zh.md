@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md at the decision-routing loop; the English file is authoritative -->
+<!-- translation of docs/automation.md at the enforcement loop; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -58,17 +58,43 @@ verdict 为 `drift` 表示存在无闸门声明或计划外写入；只有目标
 `--mission <dir>` 提供 plan 声明的文件列表和 ledger，让审计能区分计划内与计划外写入。
 默认是 `.cairn/config.json` 里的活动 mission（本仓库是 `.cairn/missions/001-method-pack`）。
 
+## 规则、检查与注入
+
+四件不同的事，不能互换：
+
+| 层 | 作用 | 能否强制 | 位置 |
+|---|---|---|---|
+| 权威规则 | 只在一个地方陈述事实。 | 否 | `docs/*.md` |
+| Script / test / CI | 判定通过或失败。 | 是 | `scripts/`, `test/`, `.github/workflows/gates.yml` |
+| Hook | 在 session 开始、prompt 提交或 stop 时注入短锚点。 | 否 | `.zcode/hooks/`, `.zcode/config.json` |
+| Skill | 在决策点给出程序。 | 否 | `.zcode/skills/<name>/SKILL.md` |
+| `AGENTS.md` | 常驻兜底指针。 | 否 | `AGENTS.md` |
+| Human / review | 判断不能机械化的东西。 | 是，靠权威 | `review_result`、inbox escalation |
+
+注入让规则被知道；只有 script、test、CI 或 human/review 检查点让规则有约束力。只有注入没有
+执行，是建议；只有执行没有注入，是埋伏。`docs/drift-control.md` 是执行地图；本文件是注入
+地图。
+
+ZCode 先加载用户 `AGENTS.md`，再加载一个 workspace `AGENTS.md`。它不合并多个 workspace 指令
+文件，所以 workspace 文件是路由器：规则放 `docs/`，`AGENTS.md` 指向它们。Hook 支持七个事件；
+本仓库用 `SessionStart` 做锚点，保留 `Stop` 做有界的尾部提醒。`Stop` hook 最多可以请求三次
+continuation，所以它不是闸门。
+
+Skill 是目录。`SKILL.md` 是 SOP；参考材料放 `docs/` 或 skill 的 `references/`；可执行检查在
+共享时放 `scripts/`，私有则放 skill 的 `scripts/`。SOP 只点名检查，不粘贴脚本或文档。
+
 ## 接线
 
 - **Skill**——`.zcode/skills/cairn-guard/SKILL.md` 要求 agent 开工前跑守卫、写决策前后跑决策
-  检查、声称完成前跑审计。
+  检查、改规则执行点前后跑 enforcement 检查、声称完成前跑审计。
 - **Hook**——`.zcode/config.json` 在 `startup`、`clear`、`compact` 时运行
   `.zcode/hooks/session-start.mjs`，把 `goal-check --brief` 作为 `additionalContext` 注入；
   brief 从 `docs/decision-routing.md` 读取路由规则，新会话因此从仓库里的锚点开始。ZCode 的
   工作区 hook 可能需要信任；脚本在任何 harness 里都能单独运行。
-- **脚本**——`scripts/check-decisions.mjs` 校验两个家、拒绝放错位置的编号决策，并作为 CI
-  步骤。规则源是路由文档；脚本不保留第二份规则。
-- **Agent 指令**——`AGENTS.md` 指向同一个检查。hook 是适配器，不是契约。
+- **脚本**——`scripts/check-decisions.mjs` 校验两个决策家并拒绝放错位置的编号决策；
+  `scripts/check-enforcement.mjs` 校验失败模式表的机器语法和中文 token 对等。两者都是 CI
+  步骤并读取各自的规则源；都不保留第二份规则。
+- **Agent 指令**——`AGENTS.md` 指向同一批检查，并保持为路由器。hook 是适配器，不是契约。
 
 要停用 hook，从 `.zcode/config.json` 删除 `SessionStart` 条目即可；命令仍然可用。
 

@@ -1,4 +1,4 @@
-<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the decision-routing commit; the English file is authoritative -->
+<!-- translation of .zcode/skills/cairn-guard/SKILL.md at the enforcement loop; the English file is authoritative -->
 
 ---
 name: cairn-guard
@@ -24,6 +24,13 @@ description: 在 Cairn 仓库的每个任务开始和结束时使用。运行目
    `.cairn/missions/<id>/inbox/`。
 3. 写完后再次运行检查。路径错、字段缺失或缺少中文 companion 都是失败。
 
+## 修改规则的执行点之前
+
+1. 运行 `node scripts/check-enforcement.mjs`。
+2. 决定执行方式：脚本/测试/CI 检查，或 `human`/`review`。如果不能机械化，就如实标注；
+   不要发明一个检查。
+3. 更新 `docs/drift-control.md` 及其中文 companion，然后再次运行检查。
+
 ## 声明完成之前
 
 1. 运行任务里每个 `severity: block` 闸门。贴出命令和退出码。
@@ -43,4 +50,6 @@ description: 在 Cairn 仓库的每个任务开始和结束时使用。运行目
 - 空结果或 `not-applicable` 不是通过。记录原因和回退。
 - 必需检查跑不了时，记录失败和替代证据。永不把没跑的检查报告为通过；guard 本身错了就修
   guard。
+- 保持分层：`SKILL.md` 是 SOP，参考材料放 `docs/`，可执行检查放 `scripts/`（共享）或
+  skill 自己的 `scripts/`（私有）。不要把脚本或长文档粘进 SOP。
 - 会话启动 hook 会从仓库打印同样的锚点。把它当作提醒，而不是运行检查的替代品。
