@@ -1,0 +1,16 @@
+{
+  "gate": {
+    "id": "method",
+    "command": "node",
+    "args": [
+      "scripts/check-method.mjs",
+      "--playbook"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "playbook: ok",
+  "duration_ms": 46,
+  "timed_out": false
+}
