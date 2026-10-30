@@ -90,6 +90,7 @@ tasks:
       - docs/adapter.zh.md
       - docs/i18n.md
       - templates/dispatch.md
+      - src/plan.ts
       - src/packet.ts
       - test/packet.test.ts
     interfaces:
