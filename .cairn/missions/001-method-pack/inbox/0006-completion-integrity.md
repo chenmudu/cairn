@@ -29,9 +29,10 @@ same probe and the same argument. The issues split where the close condition is 
 4. task state, mission creation, validator, and CI (D4–D5);
 5. policy execution and contract truth (D6–D7).
 
-ADR 0005 remains the canonical task-level decision in `docs/decisions/`. D3 restates its
-decision here so this mission archive is self-contained. The earlier inbox decision 0005
-approved the packet and review `packs` block; it did not add task-level participation.
+ADR 0005 is the canonical task-level decision in `docs/decisions/`. D3 restates its decision
+here so this mission archive is self-contained. The earlier inbox decision
+`0005-packs-block.md` approved the packet and review `packs` block; it did not add task-level
+participation.
 
 ## What is already sound
 
@@ -271,10 +272,11 @@ pushed; the pushed commit is the final proof.
 
 ## Relationship to 0005
 
-ADR 0005 is the canonical task-level decision and is still `proposed`. The earlier inbox 0005
-approved the packet and review `packs` block; it did not make pack participation a task
-property. D3 is the implementation of ADR 0005. The ADR's backward-compatibility rule is
-preserved: new `task_done` events require packs; Mission #1 is grandfathered by a note.
+ADR 0005 is the canonical task-level decision and is still `proposed`. The earlier
+`0005-packs-block.md` approved the packet and review `packs` block; it did not make pack
+participation a task property. D3 is the implementation of ADR 0005. The ADR's
+backward-compatibility rule is preserved: new `task_done` events require packs; Mission #1 is
+grandfathered by a note.
 
 ## Approval
 

@@ -5,10 +5,13 @@
 等待人类决定的事项。每个决定一个文件；每个文件都有中文 companion。阻塞性问题是一次
 escalation：在得到回答前，任务保持 parked。没有人类参与的决定是 ruling，记入台账。
 
+放置规则：关闭或阻塞某个 mission 验收标准的决策，放在这个收件箱。`docs/decisions/` 保存
+项目级 ADR 系列；mission 决策只有在超出 mission 生命周期时才通过显式迁移提升到那里。
+
 已回答：
 
-- `0005-packs-block.md` — 人类于 2026-10-31 批准。`packs` 块、两个 CLI 命令和不变量 3 的措辞
-  已作为协议修订记录，`approved_by: human`；T7 解除暂停。
+- `0005-packs-block.md` — 收件箱决策 0005，人类于 2026-10-31 批准。`packs` 块、两个 CLI
+  命令和不变量 3 的措辞已作为协议修订记录，`approved_by: human`；T7 解除暂停。
 
 当前待决：
 

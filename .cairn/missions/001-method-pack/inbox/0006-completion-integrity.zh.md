@@ -27,9 +27,9 @@ Mission #2 自己的完成也没有意义。
 4. 任务状态、mission 创建、校验器与 CI（D4–D5）；
 5. 策略执行与契约真实性（D6–D7）。
 
-ADR 0005 仍然是 `docs/decisions/` 里的任务级权威决策。D3 在这里重述它的决定，让这个 mission
-存档自包含。更早的收件箱 0005 批准的是 packet 和 review 的 `packs` 块；它没有把包参与变成
-任务属性。
+ADR 0005 是 `docs/decisions/` 里的任务级权威决策。D3 在这里重述它的决定，让这个 mission
+存档自包含。更早的收件箱决策 `0005-packs-block.md` 批准的是 packet 和 review 的 `packs`
+块；它没有把包参与变成任务属性。
 
 ## 已经成立的部分
 
@@ -234,9 +234,9 @@ CI 跑 `pnpm typecheck`、`node --test`、两个 mission 校验、`check-bilingu
 
 ## 与 0005 的关系
 
-ADR 0005 是任务级的权威决策，状态仍是 `proposed`。更早的收件箱 0005 批准的是 packet 和
-review 的 `packs` 块；它没有把包参与变成任务属性。D3 是 ADR 0005 的实现。ADR 的向后兼容
-规则保留：新 `task_done` 要求 packs；Mission #1 用一条 note 登记为 grandfather。
+ADR 0005 是任务级的权威决策，状态仍是 `proposed`。更早的 `0005-packs-block.md` 批准的是
+packet 和 review 的 `packs` 块；它没有把包参与变成任务属性。D3 是 ADR 0005 的实现。ADR 的
+向后兼容规则保留：新 `task_done` 要求 packs；Mission #1 用一条 note 登记为 grandfather。
 
 ## 批准
 

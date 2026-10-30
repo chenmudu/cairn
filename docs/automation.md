@@ -17,7 +17,10 @@ It reads `mission.md`, `plan.md`, and `ledger.jsonl`, then prints:
 - the next task, derived from the ledger (`task_done`) and the plan's dependencies;
 - the acceptance criterion the task serves, with its check;
 - the task's gates;
-- the acceptance coverage map (`A# → task ids`).
+- the acceptance coverage map (`A# → task ids`);
+- the decision routing rule: an ADR is a numbered, project-wide decision in `docs/decisions/`;
+  a mission escalation closes or blocks one mission acceptance and needs a human answer, so it
+  lives in `.cairn/missions/<id>/inbox/`.
 
 Exit 1 means stop: the next task has no `serves` link, a `serves` id is unknown, an acceptance
 criterion is uncovered, no task is runnable, or a milestone audit is due. A task without an

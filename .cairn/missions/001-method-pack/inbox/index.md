@@ -4,11 +4,15 @@ Decisions waiting for a human. One file per decision; every file has a Chinese c
 blocking question is an escalation: it parks the task until answered. A decision made without
 a human is a ruling and is recorded in the ledger.
 
+Placement: a decision that closes or blocks a mission acceptance criterion lives in this inbox.
+`docs/decisions/` holds the project-wide ADR series; a mission decision is promoted there only
+when it outlives the mission, as an explicit move.
+
 Answered:
 
-- `0005-packs-block.md` — approved by the human on 2026-10-31. The `packs` block, the two CLI
-  commands, and the invariant 3 wording are recorded as protocol amendments with
-  `approved_by: human`; T7 is unblocked.
+- `0005-packs-block.md` — inbox decision 0005, approved by the human on 2026-10-31. The `packs`
+  block, the two CLI commands, and the invariant 3 wording are recorded as protocol amendments
+  with `approved_by: human`; T7 is unblocked.
 
 Waiting now:
 

@@ -2,6 +2,8 @@
 
 - Status: proposed
 - Date: 2026-10-31
+- Scope: project-wide ADR. Task-level pack participation applies to every mission, so this
+  decision lives in `docs/decisions/`, not in a mission inbox.
 - Follow-up: workstream D3 in
   [Decision 0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md).
 

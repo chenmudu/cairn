@@ -238,6 +238,8 @@ test('brief output carries the task, serves, and gate', (t) => {
   assert.match(out, /Current task: T-001/);
   assert.match(out, /Serves: F1/);
   assert.match(out, /Gates: gate/);
+  assert.match(out, /Decision routing: ADR =/);
+  assert.match(out, /mission-scoped decisions go to the mission inbox/);
 });
 
 test('the SessionStart hook emits additionalContext', () => {
@@ -248,5 +250,6 @@ test('the SessionStart hook emits additionalContext', () => {
   const parsed = JSON.parse(out);
   assert.equal(parsed.hookSpecificOutput.hookEventName, 'SessionStart');
   assert.match(parsed.hookSpecificOutput.additionalContext, /Current task:/);
+  assert.match(parsed.hookSpecificOutput.additionalContext, /Decision routing:/);
   assert.match(parsed.hookSpecificOutput.additionalContext, /Do not ask the human/);
 });

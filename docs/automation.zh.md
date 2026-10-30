@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md after the post-close audit fix; the English file is authoritative -->
+<!-- translation of docs/automation.md after the decision-routing anchor; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -18,7 +18,9 @@ node scripts/goal-check.mjs --json          # 机器可读
 - 下一个任务（由 ledger 的 `task_done` 和 plan 的依赖推出）；
 - 该任务服务的验收标准及其检查方式；
 - 该任务的闸门；
-- 验收覆盖表（`A# → 任务 id`）。
+- 验收覆盖表（`A# → 任务 id`）；
+- 决策路由规则：ADR 是 `docs/decisions/` 里的编号项目级决策；mission escalation 是关闭或
+  阻塞某个 mission 验收、需要人类回答的决策，放在 `.cairn/missions/<id>/inbox/`。
 
 退出码 1 表示停下：下一个任务没有 `serves` 链接、`serves` 指向未知验收、有验收标准无人覆盖、
 没有可运行的任务，或者到了里程碑审计的时间。没有验收链接的任务不是工作，是尚未命名的漂移。

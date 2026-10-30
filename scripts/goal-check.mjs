@@ -160,6 +160,8 @@ export function formatBrief(report) {
   lines.push(`Coverage: ${covered}/${Object.keys(report.coverage).length} acceptance criteria covered`);
   lines.push(`Non-goals: ${report.nonGoals.join(' ')}`);
   lines.push(`Ledger: ${report.ledger.total} events, last ${report.ledger.last?.event ?? 'none'}`);
+  lines.push('Decision routing: ADR = numbered, project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.');
+  lines.push('Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.');
   lines.push('Before claiming done: run the gates, then node scripts/audit-session.mjs.');
   return lines.join('\n');
 }
