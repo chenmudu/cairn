@@ -240,8 +240,8 @@ gate. No task may weaken a gate; a protocol change needs `approved_by: human`.
 
 ## Compatibility and grandfathering
 
-- Mission #0 and Mission #1 remain byte-identical. Their events stay valid; the new rules
-  apply only after a human-approved protocol amendment.
+- Mission #0 and Mission #1's target artifacts and ledgers remain byte-identical. Their events
+  stay valid; the new rules apply only after a human-approved protocol amendment.
 - No history rewrite. No target artifact (`mission.md`, `policy.md`, `plan.md`,
   `docs/protocol.md`) changes without `mission_amended` and old/new hashes.
 - The P0 probe uses a fresh temporary repository; it does not touch either historical ledger.

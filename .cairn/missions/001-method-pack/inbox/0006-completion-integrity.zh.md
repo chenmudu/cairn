@@ -207,8 +207,8 @@ T7 和 T8 有 `task_started`；T1–T6 早于 packet 注入。会话记录里实
 
 ## 兼容与 grandfather
 
-- Mission #0 和 Mission #1 保持字节不变。它们的事件继续有效；新规则只在人类批准协议修订后
-  适用。
+- Mission #0 和 Mission #1 的目标产物与台账保持字节不变。它们的事件继续有效；新规则只在
+  人类批准协议修订后适用。
 - 不改写历史。目标产物（`mission.md`、`policy.md`、`plan.md`、`docs/protocol.md`）没有
   `mission_amended` 和旧/新哈希就不改。
 - P0 探针使用全新的临时仓库；不碰两个历史台账。
