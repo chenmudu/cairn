@@ -17,7 +17,8 @@ Cairn 是这套工作方式的第一个产物。
 目标是更快、以更高的下限构建产品——文档、代码、工作流——并让长周期任务在无人值守时依然稳定。
 Cairn 是运行与证据层：它让 mission 跨会话延续，从仓库证明完成，并在计划演化时保持目标可见。
 
-方法用自己验证自己。Mission #0 用 Cairn 构建 Cairn。如果协议表达不了自己的交付，那就是协议错了。
+方法用自己验证自己。Mission #0 用 Cairn 构建 Cairn：只有当命令已经存在、并且闸门证明了它，
+手工步骤才会被替换成命令。如果协议表达不了自己的交付，那就是协议错了。
 
 成功不是“闸门全绿”。成功是：
 
@@ -58,7 +59,7 @@ Cairn 位于 harness 与两个包之间：
 1. 读 [`docs/protocol.md`](docs/protocol.md)。
 2. 读 [`docs/workflow.md`](docs/workflow.md) 的单 tick 操作流程：角色、步骤、人类检查点和失败
    路径。
-3. 读 [`missions/001-method-pack/`](.cairn/missions/001-method-pack/)。
+3. 读 [`.cairn/missions/001-method-pack/`](.cairn/missions/001-method-pack/)。
 4. 台账就是状态：[`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl)。
 5. 跑当前闸门：`node scripts/validate-mission.mjs .cairn/missions/001-method-pack`。
 6. 开工前跑 `node scripts/goal-check.mjs`。它会指出下一个任务、该任务服务的验收标准，以及闸门。

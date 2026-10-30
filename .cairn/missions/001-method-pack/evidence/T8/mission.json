@@ -1,0 +1,16 @@
+{
+  "gate": {
+    "id": "mission",
+    "command": "node",
+    "args": [
+      "scripts/validate-mission.mjs",
+      ".cairn/missions/001-method-pack"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "ok: .cairn/missions/001-method-pack",
+  "duration_ms": 51,
+  "timed_out": false
+}

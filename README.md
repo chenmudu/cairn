@@ -18,7 +18,8 @@ make long-horizon work stable when no human is watching. Cairn is the runtime an
 layer: it carries a mission across sessions, proves completion from the repository, and keeps
 the goal visible while the plan evolves.
 
-The method is tested on itself. Mission #0 builds Cairn with Cairn. If the protocol cannot
+The method is tested on itself. Mission #0 built Cairn with Cairn: a manual step was replaced
+by a command only once the command existed and a gate proved it. If the protocol cannot
 express its own delivery, the protocol is wrong.
 
 Success is not "the gates are green". Success is:
@@ -63,7 +64,7 @@ the two source repositories.
 1. Read [`docs/protocol.md`](docs/protocol.md).
 2. Read [`docs/workflow.md`](docs/workflow.md) for the one-tick operator flow: roles, steps,
    human checkpoints, and failure paths.
-3. Read [`missions/001-method-pack/`](.cairn/missions/001-method-pack/).
+3. Read [`.cairn/missions/001-method-pack/`](.cairn/missions/001-method-pack/).
 4. The ledger is the status: [`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl).
 5. Run the current gate:
    `node scripts/validate-mission.mjs .cairn/missions/001-method-pack`.
