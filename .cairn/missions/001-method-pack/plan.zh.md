@@ -1,4 +1,4 @@
-<!-- translation of .cairn/missions/001-method-pack/plan.md at the T3 amendment; the English file is authoritative -->
+<!-- translation of .cairn/missions/001-method-pack/plan.md at the T7 amendment; the English file is authoritative -->
 
 # 计划 — Mission #1
 
@@ -91,6 +91,9 @@ frontmatter 是机器合同：每个任务都有验收链接、声明的文件�
   `fallback`；report 的 `packs` 字段：`capability`、`pack`、`version`、`mode`、`evidence`。
 - packet/report schema 变更走协议修订，`approved_by: human`。
 - `cairn review`、`task_started` 写入者；`audit-session` 流式读取。
+- T6 里程碑审计发现样例不是协议有效 mission、`product.md` 没有中文译本、存在两个包检测器。
+  T7 修这些问题，并把 `check-bilingual` 扩展到 `method/`；样例必须通过 `validate-mission`
+  和 `reconcile`。
 - TDD；测试覆盖 present、absent、mismatch、not-invocable。
 
 ### T8 — 冷启动与产物对比
@@ -122,5 +125,5 @@ T1 的协议修订和 T7 的不变量 3 决策都需要 `approved_by: human`。�
 | T4 | 加入标准和模板 | B3 | T3 | test, method |
 | T5 | 写单 tick 操作手册 | B4 | T4 | test, workflow |
 | T6 | 跑一个记录在案的样例 tick | B4 | T5 | test, example |
-| T7 | 补上阻塞方法落地的运行时缺口 | B1, B3, B6, B7 | T6 | typecheck, test, mission |
+| T7 | 补上阻塞方法落地的运行时缺口 | B1, B2, B3, B4, B6, B7 | T6 | typecheck, test, mission |
 | T8 | 冷启动审查与 mission 关闭 | B5, B7 | T7 | test, mission, method-products |

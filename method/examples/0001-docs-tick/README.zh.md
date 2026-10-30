@@ -1,9 +1,10 @@
-<!-- translation of method/examples/0001-docs-tick/README.md at the T6 commit; the English file is authoritative -->
+<!-- translation of method/examples/0001-docs-tick/README.md at the T7 commit; the English file is authoritative -->
 
 # 0001 — 一个记录在案的 docs tick
 
 这是一个博物馆展品：一个真实的小 tick，用和活动 mission 相同的形状记录。它不是活动 mission，
-也不是 Cairn 的第二事实源。
+也不是 Cairn 的第二事实源。台账里的 commit id 是添加这个样例的真实 T6 提交，所以校验器和
+`reconcile` 都能接受它。
 
 ## 发生了什么
 

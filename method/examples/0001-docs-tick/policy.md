@@ -1,3 +1,17 @@
+---
+schema: cairn/policy@0.1
+mission: 0001-docs-tick
+budgets:
+  max_attempts_per_task: 1
+allowed_commands:
+  - node
+forbidden_commands:
+  - git push
+stop_conditions:
+  - irreversible_or_destructive
+merge_policy: no_push_without_human
+---
+
 # Policy — One tick, one trail
 
 - **Budget**: one task, one tick, one commit.

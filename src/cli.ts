@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { appendEvent, nextTimestamp } from './ledger.ts';
@@ -13,6 +14,7 @@ import {
   taskState,
   type StatusReport,
 } from './plan.ts';
+import { recordReview } from './review.ts';
 import { checkEvidence, verifyTask } from './verify.ts';
 import { reconcileMission } from './reconcile.ts';
 import { completeMission } from './complete.ts';
@@ -22,7 +24,9 @@ const USAGE = `usage:
   cairn init <id> [--title <title>]
   cairn status [--json] [--mission <dir>]
   cairn next [--mission <dir>]
+  cairn start <task> [--mission <dir>]
   cairn verify <task> [--mission <dir>]
+  cairn review --file <json> [--mission <dir>]
   cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--mission <dir>]
   cairn record --mission-done [--mission <dir>]
@@ -85,6 +89,18 @@ function main(argv: string[]): number {
     }
   }
 
+  if (command === 'start') {
+    const taskId = rest[0];
+    if (!taskId || rest.length > 1) return usage('start needs <task>');
+    return start(missionDir, taskId);
+  }
+
+  if (command === 'review') {
+    const file = takeOption(rest, '--file');
+    if (!file || rest.length > 0) return usage('review needs --file <json>');
+    return review(missionDir, file);
+  }
+
   if (command === 'reconcile') {
     if (rest.length > 0) return usage(`unexpected argument ${rest[0]}`);
     const report = reconcileMission(missionDir);
@@ -106,6 +122,47 @@ function main(argv: string[]): number {
   }
 
   return usage(command ? `unknown command ${command}` : 'missing command');
+}
+
+function start(missionDir: string, taskId: string): number {
+  const doc = loadMission(missionDir);
+  const task = doc.plan.tasks.find((candidate) => candidate.id === taskId);
+  if (!task) return refuse(`unknown task ${taskId}`);
+
+  const state = taskState(task, doc.events);
+  if (state === 'done') return refuse(`${taskId} is already done`);
+  if (state === 'parked') return refuse(`${taskId} is parked; answer the escalation first`);
+  if (state === 'active') return refuse(`${taskId} is already started`);
+
+  const base = gitHead(doc.missionDir);
+  if (!base) return refuse('no git commit exists');
+
+  const started = appendEvent(doc.missionDir, {
+    ts: nextTimestamp(doc.events),
+    event: 'task_started',
+    mission: doc.mission.id,
+    task: taskId,
+    actor: 'cairn',
+    data: { base },
+  });
+  process.stdout.write(`${JSON.stringify(started, null, 2)}\n`);
+  return 0;
+}
+
+function review(missionDir: string, file: string): number {
+  let input: unknown;
+  try {
+    input = JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    return refuse(error instanceof Error ? error.message : String(error));
+  }
+  try {
+    const event = recordReview(missionDir, input);
+    process.stdout.write(`${JSON.stringify(event, null, 2)}\n`);
+    return 0;
+  } catch (error) {
+    return refuse(error instanceof Error ? error.message : String(error));
+  }
 }
 
 function record(missionDir: string, taskId: string): number {

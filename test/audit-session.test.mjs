@@ -75,6 +75,37 @@ test('ignores writes outside the repository', (t) => {
   assert.equal(report.signals.unplannedWrites.length, 0);
 });
 
+test('reads a long transcript in bounded chunks', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'cairn-audit-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const file = join(dir, 'model-io-large.jsonl');
+  const lines = [];
+  for (let index = 0; index < 300; index++) {
+    const messages = index === 299
+      ? [USER('继续'), ASSISTANT([TEXT('完成。')]), RESULT('ok')]
+      : [USER(`turn ${index}`)];
+    lines.push(JSON.stringify({ request: { body: { messages } } }));
+  }
+  writeFileSync(file, `${lines.join('\n')}\n`);
+
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo' });
+
+  assert.equal(report.records, 300);
+  assert.equal(report.messages, 3);
+});
+
+test('fails on an over-limit line instead of crashing', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'cairn-audit-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const file = join(dir, 'model-io-oversize.jsonl');
+  writeFileSync(file, `${JSON.stringify({ x: 'x'.repeat(4096) })}\n`);
+
+  assert.throws(
+    () => auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo', maxLineBytes: 1024 }),
+    /line exceeds/,
+  );
+});
+
 test('does not count the injected system reminder as a human correction', (t) => {
   const file = writeTranscript(t, [
     USER('<system-reminder> Contents of AGENTS.md: 目标是识别真实问题。 </system-reminder>'),
@@ -85,4 +116,37 @@ test('does not count the injected system reminder as a human correction', (t) =>
 
   assert.equal(report.signals.alignmentCorrections.length, 0);
   assert.equal(report.turns, 0);
+});
+
+test('keeps the human text after an injected reminder', (t) => {
+  const file = writeTranscript(t, [
+    USER('<system-reminder> context </system-reminder>\n定位又错了，这个项目是做什么的？'),
+    ASSISTANT([TEXT('我重新读 README。')]),
+  ]);
+
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo' });
+
+  assert.equal(report.turns, 1);
+  assert.equal(report.signals.alignmentCorrections.length, 1);
+});
+
+test('recognizes a mission_amended event as an amendment', (t) => {
+  const file = writeTranscript(t, [USER('继续'), ASSISTANT([TEXT('ok')])]);
+  const dir = mkdtempSync(join(tmpdir(), 'cairn-audit-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const ledger = join(dir, 'ledger.jsonl');
+  writeFileSync(
+    ledger,
+    `${JSON.stringify({
+      ts: '2026-10-31T00:00:00.000Z',
+      event: 'mission_amended',
+      mission: 'demo',
+      actor: 'cairn',
+      data: { old: {}, new: {}, acceptance: ['A1'], why: 'test', approved_by: 'cairn' },
+    })}\n`,
+  );
+
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo', ledgerFile: ledger });
+
+  assert.equal(report.amendmentRecorded, true);
 });

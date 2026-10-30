@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { detectPacks, SUPERPOWERS_PIN } from '../src/packs.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PHASES = [
@@ -20,10 +20,8 @@ const MODES = new Set(['use', 'human-in-loop', 'not-applicable']);
 const PRODUCT_KINDS = new Set(['path', 'gate', 'command']);
 const STANDARDS = ['docs', 'code', 'workflow'];
 const TEMPLATES = ['mission', 'task', 'review', 'adr', 'handoff'];
-const SP_PIN = '7.0.1';
+const SP_PIN = SUPERPOWERS_PIN;
 const IMP_PIN = '4.8.0+df3a4ab';
-const IMP_SKILL_PIN = '4.8.0';
-const IMP_ENGINE_PIN = '0.1.18';
 
 function isMapping(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -35,19 +33,6 @@ function hasText(value) {
 
 function readText(file) {
   return existsSync(file) ? readFileSync(file, 'utf8') : null;
-}
-
-function readLineVersion(file) {
-  const text = readText(file);
-  return text ? text.trim().split(/\r?\n/)[0].trim() : null;
-}
-
-function frontmatterVersion(file) {
-  const text = readText(file);
-  if (!text) return null;
-  const block = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  const line = block?.[1].match(/^version:\s*(.+)$/m);
-  return line ? line[1].trim() : null;
 }
 
 function activePlanPath(root) {
@@ -294,79 +279,6 @@ function checkProducts(doc, root, strict) {
   return { errors, pending };
 }
 
-function detectSuperpowers() {
-  const override = process.env.CAIRN_SUPERPOWERS_DIR;
-  const candidates = override
-    ? [resolve(override)]
-    : [
-        join(homedir(), '.zcode/cli/plugins/cache/superpowers-dev/superpowers', SP_PIN),
-        join(homedir(), '.claude/plugins/cache/superpowers-dev/superpowers', SP_PIN),
-      ];
-  const path = candidates.find((candidate) => existsSync(candidate));
-  if (!path) {
-    return {
-      status: 'absent',
-      path: candidates[0],
-      version: null,
-      pin: SP_PIN,
-      invocable: false,
-    };
-  }
-  const basename = path.split(/[\\/]/).at(-1);
-  const version = readLineVersion(join(path, 'VERSION'))
-    ?? (/^\d+\.\d+\.\d+$/.test(basename) ? basename : null);
-  return {
-    status: version === SP_PIN ? 'present' : 'mismatch',
-    path,
-    version,
-    pin: SP_PIN,
-    invocable: existsSync(join(path, 'skills')),
-  };
-}
-
-function detectImpeccable() {
-  const override = process.env.CAIRN_IMPECCABLE_DIR;
-  const candidates = override
-    ? [resolve(override)]
-    : [join(homedir(), '.zcode/skills/impeccable')];
-  if (!override && hasText(process.env.CAIRN_IMPECCABLE_SRC)) {
-    candidates.push(join(resolve(process.env.CAIRN_IMPECCABLE_SRC), '.claude/skills/impeccable'));
-  }
-  const path = candidates.find((candidate) => existsSync(join(candidate, 'SKILL.md')));
-  if (!path) {
-    return {
-      status: 'absent',
-      path: candidates[0],
-      pin: IMP_PIN,
-      skill_version: null,
-      engine_version: null,
-      engine: null,
-    };
-  }
-  const skillVersion = frontmatterVersion(join(path, 'SKILL.md'));
-  const engineVersion = readLineVersion(join(path, 'scripts/VERSION')) ?? skillVersion;
-  const engineCandidates = process.env.CAIRN_IMPECCABLE_BIN
-    ? [resolve(process.env.CAIRN_IMPECCABLE_BIN)]
-    : [
-        join(homedir(), '.impeccable/bin', engineVersion ?? '', process.platform === 'win32' ? 'impeccable.exe' : 'impeccable'),
-        join(path, 'scripts', process.platform === 'win32' ? 'impeccable.cmd' : 'impeccable'),
-      ];
-  const engine = engineCandidates.find((candidate) => existsSync(candidate));
-  const status = !engine
-    ? 'not-invocable'
-    : skillVersion === IMP_SKILL_PIN && engineVersion === IMP_ENGINE_PIN
-      ? 'present'
-      : 'mismatch';
-  return {
-    status,
-    path,
-    pin: IMP_PIN,
-    skill_version: skillVersion,
-    engine_version: engineVersion,
-    engine: engine ?? null,
-  };
-}
-
 function checkStandards(root) {
   const errors = [];
   for (const name of STANDARDS) {
@@ -389,16 +301,6 @@ function checkStandards(root) {
     if (!existsSync(zh)) errors.push(`templates/${name}.zh.md: missing Chinese companion`);
   }
   return errors;
-}
-
-function detectPacks() {
-  return {
-    schema: 'cairn/packs@0.1',
-    packs: {
-      superpowers: detectSuperpowers(),
-      impeccable: detectImpeccable(),
-    },
-  };
 }
 
 function printPacks(report, json) {

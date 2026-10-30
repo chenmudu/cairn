@@ -16,13 +16,17 @@
  */
 
 import {
+  closeSync,
   existsSync,
+  openSync,
   readFileSync,
+  readSync,
   readdirSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
+import { StringDecoder } from 'node:string_decoder';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readMission } from './validate-mission.mjs';
@@ -38,7 +42,7 @@ const CONFIRM = /(需要你|请你|回一句|要不要|等你|确认后|由你|�
 export function auditTranscript(file, options = {}) {
   const planFiles = Array.isArray(options.planFiles) ? options.planFiles : [];
   const repoRoot = options.repoRoot ? resolve(options.repoRoot) : null;
-  const { records, messages } = readFullest(file);
+  const { records, messages } = readFullest(file, options.maxLineBytes);
   const turns = buildTurns(messages);
 
   const alignmentCorrections = turns
@@ -156,23 +160,59 @@ export function formatAudit(report) {
   return lines.join('\n');
 }
 
-function readFullest(file) {
-  const text = readFileSync(file, 'utf8');
-  const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
+const MAX_LINE_BYTES = 64 * 1024 * 1024;
+
+/**
+ * Stream the transcript line by line. A whole-file read dies on a transcript
+ * larger than the V8 string limit; a bounded buffer keeps memory flat and a
+ * single over-limit line fails with a clear error instead of a crash.
+ */
+function readFullest(file, maxLineBytes = MAX_LINE_BYTES) {
+  const fd = openSync(file, 'r');
+  const buffer = Buffer.allocUnsafe(1024 * 1024);
+  const decoder = new StringDecoder('utf8');
+  let carry = '';
   let best = null;
   let records = 0;
-  for (const line of lines) {
+
+  const consume = (line) => {
+    if (line.trim() === '') return;
+    if (Buffer.byteLength(line, 'utf8') > maxLineBytes) {
+      throw new Error(`${file}: line exceeds ${maxLineBytes} bytes`);
+    }
     let record;
     try {
       record = JSON.parse(line);
     } catch {
-      continue;
+      return;
     }
     records += 1;
     const messages = record?.request?.body?.messages;
-    if (!Array.isArray(messages)) continue;
+    if (!Array.isArray(messages)) return;
     if (!best || messages.length > best.messages.length) best = { messages };
+  };
+
+  try {
+    for (;;) {
+      const bytes = readSync(fd, buffer, 0, buffer.length, null);
+      if (bytes === 0) break;
+      carry += decoder.write(buffer.subarray(0, bytes));
+      let index = carry.indexOf('\n');
+      while (index !== -1) {
+        consume(carry.slice(0, index));
+        carry = carry.slice(index + 1);
+        index = carry.indexOf('\n');
+      }
+      if (carry.length > maxLineBytes) {
+        throw new Error(`${file}: line exceeds ${maxLineBytes} bytes`);
+      }
+    }
+    carry += decoder.end();
+    if (carry !== '') consume(carry);
+  } finally {
+    closeSync(fd);
   }
+
   if (!best) throw new Error(`${file}: no request.body.messages found`);
   return { records, messages: best.messages };
 }
@@ -186,8 +226,8 @@ function buildTurns(messages) {
 
     const isResult = isToolResult(message);
     if (message.role === 'user' && !isResult) {
-      const text = collectText(message.content);
-      if (text !== '' && !isSystemReminder(text)) {
+      const text = stripReminders(collectText(message.content));
+      if (text !== '') {
         current = {
           index: turns.length,
           messageIndex: index,
@@ -229,8 +269,13 @@ function isToolResult(message) {
   );
 }
 
-function isSystemReminder(text) {
-  return text.trimStart().startsWith('<system-reminder>');
+/**
+ * The harness injects reminders as blocks inside the user message. Keep the
+ * human text that follows them; only a message that is nothing but reminders
+ * is not a turn.
+ */
+function stripReminders(text) {
+  return text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/gi, '').trim();
 }
 
 /**
@@ -286,10 +331,11 @@ function hasAmendment(ledgerFile) {
     try {
       const event = JSON.parse(line);
       if (
-        (event.event === 'mission_amended' || event.event === 'ruling') &&
-        event.data &&
-        typeof event.data === 'object' &&
-        event.data.amends
+        event.event === 'mission_amended' ||
+        (event.event === 'ruling' &&
+          event.data &&
+          typeof event.data === 'object' &&
+          event.data.amends)
       ) {
         return true;
       }

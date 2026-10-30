@@ -1,7 +1,9 @@
 # 0001 — a recorded docs tick
 
 This is a museum piece: a real, small tick recorded with the same shapes a live mission uses.
-It is not a live mission and it is not a second source of truth for Cairn.
+It is not a live mission and it is not a second source of truth for Cairn. The ledger's commit
+ids are the real T6 commits that added this example, so the validator and `reconcile` accept
+it.
 
 ## What happened
 

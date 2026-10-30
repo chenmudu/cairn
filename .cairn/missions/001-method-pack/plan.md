@@ -6,7 +6,7 @@ tasks:
     title: Adopt the .cairn layout and migrate Mission #0
     deps: []
     risk: high
-    status: todo
+    status: done
     serves: [B1, B6]
     files:
       - src/paths.ts
@@ -69,7 +69,7 @@ tasks:
     title: Make every human-facing artifact bilingual
     deps: [T1]
     risk: medium
-    status: todo
+    status: done
     serves: [B2]
     files:
       - .cairn/missions/000-bootstrap/mission.zh.md
@@ -100,7 +100,7 @@ tasks:
     title: Write the fusion playbook and reconcile the packs
     deps: [T2]
     risk: medium
-    status: todo
+    status: done
     serves: [B2, B3, B7]
     files:
       - method/README.md
@@ -137,7 +137,7 @@ tasks:
     title: Add standards and templates
     deps: [T3]
     risk: medium
-    status: todo
+    status: done
     serves: [B3]
     files:
       - method/standards/docs.md
@@ -173,7 +173,7 @@ tasks:
     title: Write the one-tick operator guide
     deps: [T4]
     risk: medium
-    status: todo
+    status: done
     serves: [B4]
     files:
       - docs/workflow.md
@@ -197,7 +197,7 @@ tasks:
     title: Run a worked example tick
     deps: [T5]
     risk: medium
-    status: todo
+    status: done
     serves: [B4]
     files:
       - method/examples/0001-docs-tick/mission.md
@@ -225,8 +225,8 @@ tasks:
     title: Close the runtime gaps that block the method
     deps: [T6]
     risk: medium
-    status: todo
-    serves: [B1, B3, B6, B7]
+    status: active
+    serves: [B1, B2, B3, B4, B6, B7]
     files:
       - src/review.ts
       - src/packs.ts
@@ -234,11 +234,28 @@ tasks:
       - src/cli.ts
       - test/review.test.ts
       - test/packs.test.ts
+      - test/cli.test.mjs
       - scripts/audit-session.mjs
       - test/audit-session.test.mjs
+      - scripts/check-example.mjs
+      - test/example.test.mjs
+      - scripts/check-bilingual.mjs
+      - test/bilingual.test.mjs
+      - scripts/check-method.mjs
+      - test/method.test.mjs
+      - method/playbook.md
+      - method/playbook.zh.md
+      - method/examples/0001-docs-tick/policy.md
+      - method/examples/0001-docs-tick/product.zh.md
+      - method/examples/0001-docs-tick/README.md
+      - method/examples/0001-docs-tick/README.zh.md
+      - method/examples/0001-docs-tick/ledger.jsonl
       - templates/dispatch.md
+      - templates/dispatch.zh.md
       - docs/adapter.md
       - docs/adapter.zh.md
+      - docs/workflow.md
+      - docs/workflow.zh.md
       - docs/protocol.md
       - docs/protocol.zh.md
       - docs/self-hosting.md
@@ -246,6 +263,9 @@ tasks:
       - docs/automation.md
       - docs/automation.zh.md
       - docs/i18n.md
+      - .cairn/missions/001-method-pack/plan.md
+      - .cairn/missions/001-method-pack/plan.zh.md
+      - .cairn/missions/001-method-pack/inbox/
       - .cairn/missions/001-method-pack/ledger.jsonl
     gates:
       - id: typecheck
@@ -421,6 +441,9 @@ Done when: `node scripts/check-method.mjs --playbook` exits 0; `node --test` exi
 - The packet/report schema change is a protocol amendment with `approved_by: human`.
 - `cairn review` and a `task_started` writer; `audit-session` streams the transcript and
   fails on an over-limit line instead of crashing.
+- The T6 milestone audit found the worked example was not protocol-valid, `product.md` had no
+  Chinese companion, and two pack detectors existed. T7 repairs those findings and extends
+  `check-bilingual` to `method/`; the example must pass `validate-mission` and `reconcile`.
 - TDD; tests cover present, absent, mismatch, and not-invocable.
 
 ### T8 — cold start and product comparison

@@ -40,6 +40,9 @@ function canonicalFiles(root) {
   for (const path of walk(join(root, 'templates'))) {
     if (path.endsWith('.md') && !path.endsWith('.zh.md')) files.push(path);
   }
+  for (const path of walk(join(root, 'method'))) {
+    if (path.endsWith('.md') && !path.endsWith('.zh.md')) files.push(path);
+  }
   for (const path of walk(join(root, '.cairn', 'missions'))) {
     const base = path.replace(/\\/g, '/');
     if (!base.endsWith('.md') || base.endsWith('.zh.md')) continue;
@@ -54,7 +57,10 @@ function canonicalFiles(root) {
 }
 
 function companionFor(file) {
-  if (file.endsWith('README.md')) return file.replace(/README\.md$/, 'README.zh-CN.md');
+  if (file.endsWith('README.md')) {
+    const nested = file.replace(/README\.md$/, 'README.zh.md');
+    return existsSync(nested) ? nested : file.replace(/README\.md$/, 'README.zh-CN.md');
+  }
   if (file.endsWith('SKILL.md')) return file.replace(/SKILL\.md$/, 'SKILL.zh.md');
   return file.replace(/\.md$/, '.zh.md');
 }

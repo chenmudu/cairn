@@ -87,6 +87,19 @@ test('rejects a companion without a translation header', (t) => {
   assert.deepEqual(report.missingHeader, ['README.zh-CN.md']);
 });
 
+test('checks method documentation, including nested README companions', (t) => {
+  const root = makeRoot(t);
+  write(root, 'README.md');
+  write(root, 'README.zh-CN.md', '<!-- translation of README.md -->\n');
+  write(root, 'method/README.md');
+  write(root, 'method/README.zh.md', '<!-- translation of method/README.md -->\n');
+  write(root, 'method/example/product.md');
+
+  const report = checkBilingual(root);
+  assert.equal(report.ok, false);
+  assert.deepEqual(report.missing, ['method/example/product.md']);
+});
+
 test('the repository itself is fully paired', () => {
   const report = checkBilingual(repo);
   assert.equal(report.ok, true, `${report.missing.join(', ')} ${report.missingHeader.join(', ')}`);

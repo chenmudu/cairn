@@ -2,6 +2,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateMission } from './validate-mission.mjs';
+import { reconcileMission } from '../src/reconcile.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_EXAMPLE = 'method/examples/0001-docs-tick';
@@ -93,6 +95,12 @@ function checkExample(dir) {
   }
   checkProduct(dir, errors);
   checkLedger(dir, errors);
+  try {
+    errors.push(...validateMission(dir).errors);
+    errors.push(...reconcileMission(dir).findings);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+  }
   return errors;
 }
 

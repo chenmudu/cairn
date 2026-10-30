@@ -43,7 +43,7 @@ const PACKS = [
     capability: 'test-first',
     pack: 'superpowers',
     version: '7.0.1',
-    mode: 'used',
+    mode: 'use',
     evidence: 'test/example.test.mjs',
   },
 ];
@@ -59,7 +59,10 @@ function writeExample(root, options = {}) {
     join(dir, 'plan.md'),
     '---\nschema: cairn/plan@0.1\nmission: example\ntasks:\n  - id: E1\n    title: Write the product\n    deps: []\n    risk: low\n    status: done\n    serves: [A1]\n    files:\n      - product.md\n    gates:\n      - id: example\n        command: node\n        args: ["scripts/check-example.mjs", "--product", "example"]\n        severity: block\n---\n\n# Plan\n',
   );
-  writeFileSync(join(dir, 'policy.md'), '# Policy\n\nNo push. One task per tick.\n');
+  writeFileSync(
+    join(dir, 'policy.md'),
+    '---\nschema: cairn/policy@0.1\nmission: example\nbudgets:\n  max_attempts_per_task: 1\nallowed_commands:\n  - node\nforbidden_commands:\n  - git push\nstop_conditions:\n  - irreversible_or_destructive\n---\n\n# Policy\n\nNo push. One task per tick.\n',
+  );
   writeFileSync(join(dir, 'product.md'), options.product ?? PRODUCT);
   writeFileSync(join(dir, 'README.md'), '# Example\n\nThis is a recorded docs tick.\n');
   if (options.zh !== false) {
@@ -70,6 +73,29 @@ function writeExample(root, options = {}) {
   }
   const packs = options.packs ?? PACKS;
   const gateExit = options.gateExit ?? 0;
+  const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  const commit = (message) =>
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      message,
+    );
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(commit('base').status, 0);
+  const base = git('rev-parse', 'HEAD').stdout.trim();
+
+  if (options.evidence !== false) {
+    writeFileSync(join(dir, 'evidence/E1/example.json'), '{"exit_code":0}\n');
+    assert.equal(git('add', '.').status, 0);
+    assert.equal(commit('work').status, 0);
+  }
+  const head = git('rev-parse', 'HEAD').stdout.trim();
+
   const events = [
     {
       ts: '2026-10-31T00:00:00.000Z',
@@ -98,9 +124,9 @@ function writeExample(root, options = {}) {
       actor: 'cairn',
       mission: 'example',
       data: {
-        base: 'aaaaaaa',
-        head: 'bbbbbbb',
-        commits: ['bbbbbbb'],
+        base,
+        head,
+        commits: [head],
         gates: [{ id: 'example', exit_code: gateExit, evidence: 'evidence/E1/example.json' }],
       },
     },
@@ -117,9 +143,8 @@ function writeExample(root, options = {}) {
     },
   ];
   writeFileSync(join(dir, 'ledger.jsonl'), `${events.map((event) => JSON.stringify(event)).join('\n')}\n`);
-  if (options.evidence !== false) {
-    writeFileSync(join(dir, 'evidence/E1/example.json'), '{"exit_code":0}\n');
-  }
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(commit('ledger').status, 0);
   return dir;
 }
 

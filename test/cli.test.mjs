@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { makeTempMission } from './helpers.mjs';
@@ -127,6 +127,64 @@ test('record refuses an unknown task', (t) => {
   const result = run('record', 'T-999', '--status', 'done', '--mission', dir);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /unknown task/);
+});
+
+test('start records task_started with the base commit and refuses a second start', (t) => {
+  const dir = makeTempMission(t);
+  const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      'base',
+    ).status,
+    0,
+  );
+
+  const started = run('start', 'T-001', '--mission', dir);
+  assert.equal(started.status, 0, started.stderr);
+  const event = JSON.parse(started.stdout);
+  assert.equal(event.event, 'task_started');
+  assert.match(event.data.base, /^[0-9a-f]{40}$/);
+
+  const again = run('start', 'T-001', '--mission', dir);
+  assert.equal(again.status, 2);
+  assert.match(again.stderr, /already started/);
+});
+
+test('review writes a review_result from a JSON file', (t) => {
+  const dir = makeTempMission(t);
+  const file = join(dir, 'review.json');
+  writeFileSync(
+    file,
+    JSON.stringify({ reviewer: 'fresh context', verdict: 'pass', findings: ['ok'] }),
+  );
+  const result = run('review', '--file', file, '--mission', dir);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).event, 'review_result');
+
+  const events = readFileSync(join(dir, 'ledger.jsonl'), 'utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  assert.equal(events.at(-1).data.reviewer, 'fresh context');
+});
+
+test('review refuses an invalid verdict and writes nothing', (t) => {
+  const dir = makeTempMission(t);
+  const file = join(dir, 'review.json');
+  writeFileSync(file, JSON.stringify({ reviewer: 'x', verdict: 'maybe', findings: [] }));
+  const before = readFileSync(join(dir, 'ledger.jsonl'), 'utf8');
+  const result = run('review', '--file', file, '--mission', dir);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /verdict must be pass or fail/);
+  assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8'), before);
 });
 
 test('usage exits 2', () => {

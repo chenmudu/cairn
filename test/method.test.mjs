@@ -243,7 +243,7 @@ test('reports installed and absent packs from environment overrides', () => {
     const sp = join(root, 'packs/superpowers/7.0.1');
     const imp = join(root, 'packs/impeccable');
     const engine = join(root, 'packs/engine.exe');
-    mkdirSync(sp, { recursive: true });
+    mkdirSync(join(sp, 'skills'), { recursive: true });
     mkdirSync(join(imp, 'scripts'), { recursive: true });
     writeFileSync(join(imp, 'SKILL.md'), '---\nversion: 4.8.0\n---\n');
     writeFileSync(join(imp, 'scripts/VERSION'), '0.1.18\n');
