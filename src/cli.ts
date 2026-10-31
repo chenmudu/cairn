@@ -1,6 +1,7 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { appendEvent, nextTimestamp } from './ledger.ts';
 import {
@@ -9,7 +10,6 @@ import {
   gitHead,
   gitParent,
   gitTree,
-  ledgerAtHead,
   loadMission,
   nextTask,
   statusReport,
@@ -264,14 +264,34 @@ function record(missionDir: string, taskId: string, packsFile?: string): number 
   return 0;
 }
 
+/**
+ * The ledger bytes at HEAD, not a re-serialization of the parsed events. A
+ * whitespace-only edit still means the committed ledger is not the one being
+ * closed.
+ */
+function committedLedgerBlob(missionDir: string): string | null {
+  const root = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+    cwd: missionDir,
+    encoding: 'utf8',
+  });
+  if (root.status !== 0) return null;
+  const rel = relative(root.stdout.trim(), missionDir).split(sep).join('/');
+  const path = rel === '' ? 'ledger.jsonl' : `${rel}/ledger.jsonl`;
+  const blob = spawnSync('git', ['cat-file', 'blob', `HEAD:${path}`], {
+    cwd: missionDir,
+    encoding: 'utf8',
+  });
+  return blob.status === 0 ? blob.stdout : null;
+}
+
 function recordMission(missionDir: string): number {
   const report = completeMission(missionDir);
   if (!report.ok) return refuse(report.errors[0]);
   const doc = loadMission(missionDir);
 
-  const committed = ledgerAtHead(doc.missionDir);
+  const committed = committedLedgerBlob(doc.missionDir);
   if (committed === null) return refuse('the ledger is not committed at HEAD');
-  if (JSON.stringify(committed) !== JSON.stringify(doc.events)) {
+  if (committed !== readFileSync(join(doc.missionDir, 'ledger.jsonl'), 'utf8')) {
     return refuse('the ledger has changes that are not committed at HEAD');
   }
 

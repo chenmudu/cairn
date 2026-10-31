@@ -1,0 +1,38 @@
+✔ closes a mission whose only task is done with evidence and a passing review (5.8471ms)
+✔ refuses an open task (2.612ms)
+✔ refuses an uncovered acceptance criterion (2.7517ms)
+✔ refuses missing evidence (2.6848ms)
+✔ refuses a failing latest review (2.8444ms)
+✔ refuses a review that predates the last task_done (3.052ms)
+✔ refuses a review missing any field the close rule names (25.0481ms)
+✔ refuses a coverage artifact that does not exist (2.5789ms)
+✔ refuses a coverage gate reference without a passing gate result (2.5368ms)
+✔ refuses mission_done without a human authorization after the last review (2.8393ms)
+✔ refuses an authorization that predates the latest review (2.6322ms)
+✔ refuses an authorization not approved by a human (2.4892ms)
+✔ replaying Mission #1 B5/B7 evidence fails under the new rule (2.3479ms)
+✔ cairn record --mission-done appends mission_done and refuses a second time (269.6313ms)
+✔ record --mission-done compares the raw ledger blob, not parsed JSON (336.2288ms)
+✔ accepts a complete review and preserves extra fields (6.047ms)
+✔ records a review against a known task (2.6266ms)
+✔ refuses an unknown task and writes nothing (2.5859ms)
+✔ refuses a review missing a reviewer or verdict (0.312ms)
+✔ refuses findings that are not a list of strings (0.0803ms)
+✔ refuses a review without pack records (0.0717ms)
+✔ refuses a not-applicable pack without a reason (0.0896ms)
+✔ refuses an unknown pack name or mode (0.0678ms)
+✔ accepts an absent pack with the floor as evidence (0.0732ms)
+✔ refuses every missing review field the close rule names (0.1934ms)
+✔ refuses an invalid context or ui_surface (0.0692ms)
+✔ refuses coverage that is not a list of entries (0.0805ms)
+✔ refuses coverage evidence that is not a list of references (0.0482ms)
+✔ requires coverage for every acceptance id and no duplicates (3.3414ms)
+✔ refuses a review whose artifact is not an evidence file (2.1227ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 748.8875

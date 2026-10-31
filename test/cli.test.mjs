@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { makeTempMission, makeTempRepo } from './helpers.mjs';
@@ -197,11 +197,15 @@ test('start records task_started with the base commit and refuses a second start
 
 test('review writes a review_result from a JSON file', (t) => {
   const dir = makeTempMission(t);
+  mkdirSync(join(dir, 'evidence'), { recursive: true });
+  writeFileSync(join(dir, 'evidence', 'review.json'), '{}\n');
   const file = join(dir, 'review.json');
   writeFileSync(
     file,
     JSON.stringify({
       reviewer: 'fresh context',
+      context: 'fresh',
+      artifact: 'evidence/review.json',
       verdict: 'pass',
       findings: ['ok'],
       packs: [
@@ -221,6 +225,35 @@ test('review writes a review_result from a JSON file', (t) => {
           evidence: 'README.md review',
         },
       ],
+      coverage: [
+        {
+          criterion: 'F1',
+          tasks: ['T-001'],
+          evidence: [{ path: 'evidence/review.json' }],
+          verdict: 'pass',
+        },
+        {
+          criterion: 'F2',
+          tasks: ['T-002'],
+          evidence: [{ path: 'evidence/review.json' }],
+          verdict: 'pass',
+        },
+        {
+          criterion: 'F3',
+          tasks: ['T-003'],
+          evidence: [{ path: 'evidence/review.json' }],
+          verdict: 'pass',
+        },
+      ],
+      non_goals: [
+        { non_goal: 'No UI', verdict: 'pass', evidence: ['evidence/review.json'] },
+      ],
+      cold_start: {
+        reviewer: 'fresh context',
+        artifact: 'evidence/review.json',
+        verdict: 'pass',
+      },
+      ui_surface: 'none',
     }),
   );
   const result = run('review', '--file', file, '--mission', dir);

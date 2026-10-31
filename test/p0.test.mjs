@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -135,8 +135,27 @@ function events(dir) {
 
 const REVIEW = {
   reviewer: 'fresh-context fixture',
+  context: 'fresh',
+  artifact: 'evidence/review.json',
   verdict: 'pass',
   findings: ['the gate read the committed tree'],
+  coverage: [
+    {
+      criterion: 'A1',
+      tasks: ['T1'],
+      evidence: [{ gate: 'code', path: 'evidence/T1/code.json' }],
+      verdict: 'pass',
+    },
+  ],
+  non_goals: [
+    { non_goal: 'no UI surface', verdict: 'pass', evidence: ['evidence/review.json'] },
+  ],
+  cold_start: {
+    reviewer: 'fresh-context fixture',
+    artifact: 'evidence/review.json',
+    verdict: 'pass',
+  },
+  ui_surface: 'none',
   packs: [
     {
       capability: 'test-first',
@@ -206,9 +225,29 @@ test('mission_done requires the ledger to be committed and closes after the ledg
   assert.equal(run('verify', 'T1', '--mission', mission).status, 0);
   assert.equal(run('record', 'T1', '--status', 'done', '--mission', mission).status, 0);
 
+  mkdirSync(join(mission, 'evidence'), { recursive: true });
+  writeFileSync(join(mission, 'evidence', 'review.json'), `${JSON.stringify(REVIEW)}\n`);
+
   const reviewFile = join(root, 'review.json');
   writeFileSync(reviewFile, JSON.stringify(REVIEW));
   assert.equal(run('review', '--file', reviewFile, '--mission', mission).status, 0);
+
+  const reviewTs = events(mission).at(-1).ts;
+  appendFileSync(
+    join(mission, 'ledger.jsonl'),
+    `${JSON.stringify({
+      ts: new Date(Date.parse(reviewTs) + 1000).toISOString(),
+      event: 'authorization',
+      mission: 'temp-mission',
+      actor: 'human',
+      data: {
+        scope: 'mission_done',
+        approved_by: 'human',
+        why: 'the fixture human authorized the close after the review',
+        date: '2026-10-31',
+      },
+    })}\n`,
+  );
 
   const refused = run('record', '--mission-done', '--mission', mission);
   assert.equal(refused.status, 2, refused.stdout);

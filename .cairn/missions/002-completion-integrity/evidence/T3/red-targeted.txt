@@ -1,0 +1,374 @@
+✖ closes a mission whose only task is done with evidence and a passing review (4.5314ms)
+✔ refuses an open task (2.8148ms)
+✖ refuses an uncovered acceptance criterion (2.4961ms)
+✖ refuses missing evidence (2.6574ms)
+✖ refuses a failing latest review (2.545ms)
+✖ refuses a review that predates the last task_done (2.2363ms)
+✖ refuses a review missing any field the close rule names (2.2533ms)
+✖ refuses a coverage artifact that does not exist (2.2987ms)
+✖ refuses a coverage gate reference without a passing gate result (2.205ms)
+✖ refuses mission_done without a human authorization after the last review (2.8284ms)
+✖ refuses an authorization that predates the latest review (2.1744ms)
+✖ refuses an authorization not approved by a human (2.4765ms)
+✖ replaying Mission #1 B5/B7 evidence fails under the new rule (2.2152ms)
+✖ cairn record --mission-done appends mission_done and refuses a second time (141.4025ms)
+✖ record --mission-done compares the raw ledger blob, not parsed JSON (138.9294ms)
+✔ accepts a complete review and preserves extra fields (5.4887ms)
+✔ records a review against a known task (2.429ms)
+✔ refuses an unknown task and writes nothing (2.3184ms)
+✔ refuses a review missing a reviewer or verdict (0.3076ms)
+✔ refuses findings that are not a list of strings (0.0622ms)
+✔ refuses a review without pack records (0.0538ms)
+✔ refuses a not-applicable pack without a reason (0.0814ms)
+✔ refuses an unknown pack name or mode (0.0674ms)
+✔ accepts an absent pack with the floor as evidence (0.0627ms)
+✖ refuses every missing review field the close rule names (0.4006ms)
+✖ refuses an invalid context or ui_surface (0.4198ms)
+✖ refuses coverage that is not a list of entries (0.1638ms)
+✖ refuses coverage evidence that is not a list of references (0.124ms)
+✖ requires coverage for every acceptance id and no duplicates (2.584ms)
+✖ refuses a review whose artifact is not an evidence file (2.6204ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 10
+ℹ fail 20
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 392.2712
+
+✖ failing tests:
+
+test at test\complete.test.ts:268:1
+✖ closes a mission whose only task is done with evidence and a passing review (4.5314ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:270:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17)
+
+test at test\complete.test.ts:284:1
+✖ refuses an uncovered acceptance criterion (2.4961ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:286:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:291:1
+✖ refuses missing evidence (2.6574ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:294:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:299:1
+✖ refuses a failing latest review (2.545ms)
+  Error: ledger.jsonl:3: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:306:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:311:1
+✖ refuses a review that predates the last task_done (2.2363ms)
+  Error: ledger.jsonl:3: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:318:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:323:1
+✖ refuses a review missing any field the close rule names (2.2533ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:346:20)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:355:1
+✖ refuses a coverage artifact that does not exist (2.2987ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:370:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:375:1
+✖ refuses a coverage gate reference without a passing gate result (2.205ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:390:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:395:1
+✖ refuses mission_done without a human authorization after the last review (2.8284ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:403:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\complete.test.ts:407:1
+✖ refuses an authorization that predates the latest review (2.1744ms)
+  Error: ledger.jsonl:3: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:416:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:421:1
+✖ refuses an authorization not approved by a human (2.4765ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:431:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:436:1
+✖ replaying Mission #1 B5/B7 evidence fails under the new rule (2.2152ms)
+  Error: ledger.jsonl:6: unknown event "authorization"
+      at loadMission (file:///D:/project/github/cairn/src/plan.ts:102:36)
+      at completeMission (file:///D:/project/github/cairn/src/complete.ts:23:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:459:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\complete.test.ts:467:1
+✖ cairn record --mission-done appends mission_done and refuses a second time (141.4025ms)
+  AssertionError [ERR_ASSERTION]: error: ledger.jsonl:4: unknown event "authorization"
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:472:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\complete.test.ts:481:1
+✖ record --mission-done compares the raw ledger blob, not parsed JSON (138.9294ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:493:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\review.test.ts:137:1
+✖ refuses every missing review field the close rule names (0.4006ms)
+  AssertionError [ERR_ASSERTION]: context was not refused: 
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/review.test.ts:153:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\review.test.ts:160:1
+✖ refuses an invalid context or ui_surface (0.4198ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'context must be fresh or coordinator'
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/review.test.ts:161:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'context must be fresh or coordinator' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\review.test.ts:169:1
+✖ refuses coverage that is not a list of entries (0.1638ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'coverage must be a list of entries'
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/review.test.ts:170:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'coverage must be a list of entries' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\review.test.ts:175:1
+✖ refuses coverage evidence that is not a list of references (0.124ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'coverage[0].evidence must be a list of { gate?, path } references'
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/review.test.ts:177:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'coverage[0].evidence must be a list of { gate?, path } references' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\review.test.ts:182:1
+✖ requires coverage for every acceptance id and no duplicates (2.584ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/review.test.ts:186:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /coverage must name every acceptance criterion: missing F3/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at test\review.test.ts:208:1
+✖ refuses a review whose artifact is not an evidence file (2.6204ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/review.test.ts:211:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /artifact is not a file in the mission/,
+    operator: 'throws',
+    diff: 'simple'
+  }

@@ -84,14 +84,53 @@ node scripts/check-method.mjs --packs
 
 ## 关闭 mission
 
-`record --mission-done` 要求工作区台账等于 HEAD 的台账，因为关闭也是仓库的属性。关闭是两次提交：
+`record --mission-done` 要求工作区台账逐字节等于 HEAD 的台账，因为关闭也是仓库的属性。关闭是两次提交：
 
-1. 提交 `task_done`、review 和证据；
+1. 提交 `task_done`、review、authorization 和证据；
 2. `node src/cli.ts record --mission-done --mission .cairn/missions/<id>`；
 3. 提交 `mission_done`；
 4. `node src/cli.ts reconcile --mission .cairn/missions/<id>` 退出 0。
 
 只改了工作区台账、HEAD 没跟上的 `record --mission-done` 会被拒绝。不要编辑台账去凑，提交它。
+
+### review 记录
+
+`cairn review` 拒绝缺少下列任一字段的 review，`cairn record --mission-done` 会再检查最后一条：
+
+| 字段 | 含义 |
+| --- | --- |
+| `reviewer`、`context` | 谁审的，以及 `fresh` 或 `coordinator` |
+| `artifact` | mission 内的 review 文件，必须存在 |
+| `verdict`、`findings` | `pass` 或 `fail`，以及发现了什么 |
+| `packs` | 两条 pack 记录，规则同 `task_done` |
+| `coverage` | 每个验收 id 一条，不重复、不出现未知 id |
+| `non_goals` | mission 声明的每个非目标一条 |
+| `cold_start` | `{ reviewer, artifact, verdict }`：冷启动会话能说出下一个任务 |
+| `ui_surface` | `none` 或 `present` |
+
+一条 coverage 记录形如：
+
+```json
+{ "criterion": "A2", "tasks": ["T3"],
+  "evidence": [{ "gate": "test", "path": "evidence/T3/test.json" }],
+  "verdict": "pass" }
+```
+
+`evidence` 放引用，不放叙述。带 `gate` 的引用必须对应一条服务于该验收项的 exit-0
+`gate_result`；不带 `gate` 的只要求文件存在。只挂任务链接不算证据。
+
+### authorization
+
+审查者证明工作，人授权关闭。最后一条 review 之后追加一条事件：
+
+```json
+{ "event": "authorization", "actor": "human",
+  "data": { "scope": "mission_done", "approved_by": "human",
+            "why": "人接受关闭的理由", "date": "2026-10-31" } }
+```
+
+`scope` 和 `approved_by` 会被检查，`why` 与 `date` 不能为空，事件必须晚于最后一条
+`review_result`。`paths` 可以把授权收窄到指定路径。形状见决策 0007，不存在第二个 reason 字段。
 
 ## 人类检查点
 
@@ -207,8 +246,8 @@ mission 里第一条带 packs 的 `task_done` 之后，每个任务交回两条�
 - 每个阻塞闸门在被验证的树上退出 0 并有证据；
 - `task_done` 在 HEAD 的台账里。
 
-绿色闸门证明这一步，不是 mission。mission 结束时跑里程碑审计，把结论写进包含 `reviewer`、
-`verdict`、`findings`、`packs` 的 JSON 文件并记录，提交台账，然后才
+绿色闸门证明这一步，不是 mission。mission 结束时跑里程碑审计，把结论写进「review 记录」
+规定形状的 JSON 文件并记录，追加人类 `authorization`，提交台账，然后才
 `cairn record --mission-done`。之后再提交 `mission_done`。见「关闭 mission」。
 
 ```sh

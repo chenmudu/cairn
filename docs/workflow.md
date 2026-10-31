@@ -96,16 +96,59 @@ node scripts/check-method.mjs --packs
 
 ## Closing the mission
 
-`record --mission-done` requires the worktree ledger to equal the ledger at HEAD, because the
-close is a property of the repository too. The close is two commits:
+`record --mission-done` requires the worktree ledger to equal the ledger at HEAD, byte for
+byte, because the close is a property of the repository too. The close is two commits:
 
-1. commit `task_done`, the review, and the evidence;
+1. commit `task_done`, the review, the authorization, and the evidence;
 2. `node src/cli.ts record --mission-done --mission .cairn/missions/<id>`;
 3. commit `mission_done`;
 4. `node src/cli.ts reconcile --mission .cairn/missions/<id>` exits 0.
 
 A `record --mission-done` that closes the worktree ledger but not HEAD is refused. Do not edit
 the ledger to make it match; commit it.
+
+### The review record
+
+`cairn review` refuses a review that does not carry every field below, and `cairn record
+--mission-done` re-checks the latest one:
+
+| field | meaning |
+| --- | --- |
+| `reviewer`, `context` | who reviewed, and `fresh` or `coordinator` |
+| `artifact` | the review file inside the mission; it must exist |
+| `verdict`, `findings` | `pass` or `fail`, and what was found |
+| `packs` | the two-entry pack record, same rule as `task_done` |
+| `coverage` | one entry per acceptance id, no duplicates, no unknown ids |
+| `non_goals` | one entry per non-goal the mission names |
+| `cold_start` | `{ reviewer, artifact, verdict }`: a fresh session names the next task |
+| `ui_surface` | `none` or `present` |
+
+A coverage entry is:
+
+```json
+{ "criterion": "A2", "tasks": ["T3"],
+  "evidence": [{ "gate": "test", "path": "evidence/T3/test.json" }],
+  "verdict": "pass" }
+```
+
+`evidence` holds references, not prose. A reference with a `gate` must match an exit-0
+`gate_result` for a task that serves the criterion; a reference without one only has to exist.
+A task link alone is not evidence.
+
+### Authorization
+
+The reviewer proves the work; the human authorizes the close. After the last review, append
+one event:
+
+```json
+{ "event": "authorization", "actor": "human",
+  "data": { "scope": "mission_done", "approved_by": "human",
+            "why": "why the human accepted the close", "date": "2026-10-31" } }
+```
+
+`scope` and `approved_by` are checked, `why` and `date` must be non-empty, and the event must
+be later than the last `review_result`. `paths` may narrow the authorization to specific paths.
+The shape is decision 0007; no second reason field exists.
 
 ## Human checkpoints
 
@@ -234,9 +277,9 @@ A task is done only when all three are true:
 - `task_done` is in the ledger at HEAD.
 
 A green gate proves the step, not the goal. At mission end, run the milestone audit, write the
-verdict to a JSON file with `reviewer`, `verdict`, `findings`, and `packs`, record it, commit
-the ledger, and only then `cairn record --mission-done`. Commit `mission_done` afterwards. See
-"Closing the mission".
+verdict to a JSON file in the shape "The review record" names, record it, append the human
+`authorization`, commit the ledger, and only then `cairn record --mission-done`. Commit
+`mission_done` afterwards. See "Closing the mission".
 
 ```sh
 node src/cli.ts review --file review.json --mission .cairn/missions/<id>

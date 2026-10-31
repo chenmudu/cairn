@@ -1,0 +1,43 @@
+superpowers:test-driven-development
+
+# Invocation (ZCode desktop session, 2026-10-31)
+skill id: superpowers:test-driven-development
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T3 followed it:
+test/review.test.ts and test/complete.test.ts were rewritten to the D2 close contract and run
+before src/review.ts, src/complete.ts, src/cli.ts, or scripts/validate-mission.mjs changed.
+
+RED
+$ node --test test/review.test.ts test/complete.test.ts   # runtime at b39ac58, 2026-10-31
+exit 1
+✖ closes a mission whose only task is done with evidence and a passing review (4.5314ms)
+  Error: ledger.jsonl:4: unknown event "authorization"
+✖ refuses mission_done without a human authorization after the last review (2.8284ms)
+  AssertionError [ERR_ASSERTION]: true !== false
+✖ record --mission-done compares the raw ledger blob, not parsed JSON (138.9294ms)
+  AssertionError [ERR_ASSERTION]: 1 !== 2
+✖ refuses every missing review field the close rule names (0.4006ms)
+✖ refuses an invalid context or ui_surface (0.4198ms)
+✖ requires coverage for every acceptance id and no duplicates (2.584ms)
+ℹ tests 30
+ℹ pass 10
+ℹ fail 20
+
+20 of 30 failed: the runtime did not know the `authorization` event, did not require
+`context` / `artifact` / `coverage` / `non_goals` / `cold_start` / `ui_surface`, did not check
+coverage artifacts or gate results, and compared the parsed ledger instead of the raw blob.
+The full output is `evidence/T3/red-targeted.txt`.
+
+GREEN
+$ node --test test/review.test.ts test/complete.test.ts   # T3 runtime, 2026-10-31
+exit 0
+ℹ tests 30
+ℹ pass 30
+ℹ fail 0
+
+$ node --test   # full suite, T3 runtime, 2026-10-31
+exit 0
+ℹ tests 195
+ℹ pass 195
+ℹ fail 0
+
+The full outputs are `evidence/T3/green-targeted.txt` and `evidence/T3/green-full.txt`.

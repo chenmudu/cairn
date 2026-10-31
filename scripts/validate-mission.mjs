@@ -35,6 +35,7 @@ const EVENT_NAMES = new Set([
   'task_started',
   'gate_result',
   'review_result',
+  'authorization',
   'ruling',
   'task_done',
   'task_parked',

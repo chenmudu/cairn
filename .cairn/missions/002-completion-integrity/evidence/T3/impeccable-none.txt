@@ -1,0 +1,7 @@
+skill: impeccable:design-review
+mode: not-applicable
+
+T3 declares src/*.ts, test/*.ts and *.mjs, and docs/*.md, plus the mission directory.
+None of those extensions is a UI surface (no html, css, tsx, jsx, vue, svelte, astro, svg),
+so there is no markup or URL for `impeccable detect` to read. The review is criteria-based
+against method/standards/docs.md, which is the in-repo floor, not a pack invocation.
