@@ -413,6 +413,13 @@ tasks:
       - README.md
       - README.zh-CN.md
       - docs/i18n.md
+      - src/cli.ts
+      - test/cli.test.mjs
+      - test/complete.test.ts
+      - docs/workflow.md
+      - docs/workflow.zh.md
+      - docs/drift-control.md
+      - docs/drift-control.zh.md
     interfaces:
       produces:
         - "a fresh-context review with per-criterion evidence and a cold-start check"

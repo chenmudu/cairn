@@ -86,8 +86,8 @@ Changing `mission.md`, `policy.md`, `plan.md`, or `docs/protocol.md` requires a
 - `approved_by`: `human` for a goal, non-goal, acceptance, or protocol change; `cairn` for a
   plan change inside the existing acceptance envelope.
 
-Until `T-002` implements the event, the amendment is a `ruling` carrying the same fields. No
-silent edit.
+`cairn record --amended --artifact <path>` is the writer. It takes the old hash from the frozen
+chain and the new hash from the file, and appends the event. No silent edit.
 
 ## What this cannot guarantee
 

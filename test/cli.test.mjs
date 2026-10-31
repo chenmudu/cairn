@@ -769,6 +769,83 @@ test('record --authorized refuses a non-human approval and missing fields', (t) 
   assert.equal(noWhy.status, 2, noWhy.stdout);
 });
 
+test('record --authorized defaults to writes and requires paths', (t) => {
+  const mission = makeTempMission(t);
+  const defaulted = run(
+    'record',
+    '--authorized',
+    '--paths',
+    'docs/guide.md',
+    '--why',
+    'the human widened the write set',
+    '--approved-by',
+    'human',
+    '--mission',
+    mission,
+  );
+  assert.equal(defaulted.status, 0, defaulted.stderr);
+  assert.equal(JSON.parse(defaulted.stdout).data.scope, 'writes');
+
+  const noPaths = run(
+    'record',
+    '--authorized',
+    '--scope',
+    'writes',
+    '--why',
+    'no paths',
+    '--approved-by',
+    'human',
+    '--mission',
+    mission,
+  );
+  assert.equal(noPaths.status, 2, noPaths.stdout);
+  assert.match(noPaths.stderr, /paths/);
+});
+
+test('record --authorized --scope mission_done writes no paths', (t) => {
+  const mission = makeTempMission(t);
+  const result = run(
+    'record',
+    '--authorized',
+    '--scope',
+    'mission_done',
+    '--why',
+    'the human authorized the close',
+    '--approved-by',
+    'human',
+    '--date',
+    '2026-11-01',
+    '--mission',
+    mission,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const event = JSON.parse(result.stdout);
+  assert.equal(event.event, 'authorization');
+  assert.equal(event.data.scope, 'mission_done');
+  assert.equal('paths' in event.data, false);
+  assert.equal(event.data.approved_by, 'human');
+  assert.equal(event.data.why, 'the human authorized the close');
+  assert.equal(event.data.date, '2026-11-01');
+});
+
+test('record --authorized refuses an unknown scope', (t) => {
+  const mission = makeTempMission(t);
+  const result = run(
+    'record',
+    '--authorized',
+    '--scope',
+    'close',
+    '--why',
+    'unknown scope',
+    '--approved-by',
+    'human',
+    '--mission',
+    mission,
+  );
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /scope/);
+});
+
 test('record --amended --acceptance records only the named criterion', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'cairn-amend-acceptance-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));

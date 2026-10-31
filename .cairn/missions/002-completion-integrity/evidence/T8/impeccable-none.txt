@@ -1,0 +1,9 @@
+skill: impeccable:design-review
+mode: not-applicable
+
+T8 declares src/cli.ts, test/cli.test.mjs, test/complete.test.ts, docs/workflow.md,
+docs/workflow.zh.md, docs/drift-control.md, docs/drift-control.zh.md, README.md,
+README.zh-CN.md, docs/i18n.md, and the mission directory. None of those extensions is a UI
+surface (no html, css, tsx, jsx, vue, svelte, astro, svg), so there is no markup or URL for
+`impeccable detect` to read. The review is criteria-based against method/standards/docs.md,
+which is the in-repo floor, not a pack invocation.

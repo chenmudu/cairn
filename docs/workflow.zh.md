@@ -169,16 +169,16 @@ node src/cli.ts answer <task> --text "决定内容" --mission .cairn/missions/<i
 
 ### authorization
 
-审查者证明工作，人授权关闭。最后一条 review 之后追加一条事件：
+审查者证明工作，人授权关闭。最后一条 review 之后运行写入器：
 
-```json
-{ "event": "authorization", "actor": "human",
-  "data": { "scope": "mission_done", "approved_by": "human",
-            "why": "人接受关闭的理由", "date": "2026-10-31" } }
+```sh
+node src/cli.ts record --authorized --scope mission_done --why <why> --approved-by human --date <YYYY-MM-DD>
 ```
 
-`scope` 和 `approved_by` 会被检查，`why` 与 `date` 不能为空，事件必须晚于最后一条
-`review_result`。`paths` 可以把授权收窄到指定路径。形状见决策 0007，不存在第二个 reason 字段。
+`--scope` 默认是 `writes`；`writes` 必须给 `--paths`，`mission_done` 不给。写入器产生
+`{scope, paths?, approved_by: "human", why, date}`。`scope` 和 `approved_by` 会被检查，`why`
+与 `date` 不能为空，事件必须晚于最后一条 `review_result`。`paths` 可以把 `writes` 授权收窄到
+指定路径。形状见决策 0007，不存在第二个 reason 字段。不要手写这条事件。
 
 ## 策略、预算与授权
 
@@ -202,7 +202,7 @@ node src/cli.ts answer <task> --text "决定内容" --mission .cairn/missions/<i
 声明文件之外的写入需要人类授权事件：
 
 ```sh
-node src/cli.ts record --authorized --paths a.md,dir/ --why <why> --approved-by human
+node src/cli.ts record --authorized --scope writes --paths a.md,dir/ --why <why> --approved-by human
 ```
 
 事件形状是 `{scope: "writes", paths, approved_by: "human", why, date}`。此后

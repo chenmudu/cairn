@@ -1,0 +1,4 @@
+
+> cairn@0.1.0 typecheck D:\project\github\cairn
+> tsc --noEmit
+

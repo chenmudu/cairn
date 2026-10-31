@@ -187,18 +187,18 @@ A task link alone is not evidence.
 
 ### Authorization
 
-The reviewer proves the work; the human authorizes the close. After the last review, append
-one event:
+The reviewer proves the work; the human authorizes the close. After the last review, run the
+writer:
 
-```json
-{ "event": "authorization", "actor": "human",
-  "data": { "scope": "mission_done", "approved_by": "human",
-            "why": "why the human accepted the close", "date": "2026-10-31" } }
+```sh
+node src/cli.ts record --authorized --scope mission_done --why <why> --approved-by human --date <YYYY-MM-DD>
 ```
 
-`scope` and `approved_by` are checked, `why` and `date` must be non-empty, and the event must
-be later than the last `review_result`. `paths` may narrow the authorization to specific paths.
-The shape is decision 0007; no second reason field exists.
+`--scope` defaults to `writes`; `writes` requires `--paths`, while `mission_done` omits it. The
+writer emits `{scope, paths?, approved_by: "human", why, date}`. `scope` and `approved_by` are
+checked, `why` and `date` must be non-empty, and the event must be later than the last
+`review_result`. `paths` may narrow a `writes` authorization. The shape is decision 0007; no
+second reason field exists. Do not hand-append the event.
 
 ## Policy, budgets, and authorizations
 
@@ -224,7 +224,7 @@ match that exception and are refused.
 A write outside the declared files needs a human authorization event:
 
 ```sh
-node src/cli.ts record --authorized --paths a.md,dir/ --why <why> --approved-by human
+node src/cli.ts record --authorized --scope writes --paths a.md,dir/ --why <why> --approved-by human
 ```
 
 The event is `{scope: "writes", paths, approved_by: "human", why, date}`. `audit-session` then

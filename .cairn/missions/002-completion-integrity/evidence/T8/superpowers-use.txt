@@ -1,0 +1,28 @@
+superpowers:test-driven-development
+
+# Applied in the T8 tick (2026-11-01, +0800)
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T8 added the
+`--scope mission_done` cases to `test/cli.test.mjs` and the writer-to-close integration case to
+`test/complete.test.ts` before `src/cli.ts` gained the scope argument.
+
+RED
+$ node --test test/cli.test.mjs test/complete.test.ts
+exit 1
+✖ record --authorized --scope mission_done writes no paths
+✖ record --authorized refuses an unknown scope
+✖ completeMission accepts the mission_done authorization the writer emits
+ℹ tests 48
+ℹ pass 45
+ℹ fail 3
+
+The full output is `evidence/T8/red-targeted.txt`.
+
+GREEN
+$ node --test test/cli.test.mjs test/complete.test.ts
+exit 0
+ℹ tests 48
+ℹ pass 48
+ℹ fail 0
+
+The full output is `evidence/T8/green-targeted.txt`; the full suite is
+`evidence/T8/green-full.txt` (249/249) and the typecheck is `evidence/T8/typecheck.txt` (exit 0).

@@ -41,7 +41,7 @@ const USAGE = `usage:
   cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--packs <json>] [--mission <dir>]
   cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>] [--mission <dir>]
-  cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>] [--mission <dir>]
+  cairn record --authorized --why <text> --approved-by human [--scope writes|mission_done] [--paths <a,b>] [--date <YYYY-MM-DD>] [--mission <dir>]
   cairn record --mission-done [--mission <dir>]
 `;
 
@@ -158,16 +158,17 @@ function main(argv: string[]): number {
   if (command === 'record') {
     if (rest.includes('--authorized')) {
       rest.splice(rest.indexOf('--authorized'), 1);
+      const scope = takeOption(rest, '--scope') ?? 'writes';
       const paths = takeOption(rest, '--paths');
       const why = takeOption(rest, '--why');
       const approvedBy = takeOption(rest, '--approved-by');
       const date = takeOption(rest, '--date');
-      if (!paths || rest.length > 0) {
+      if (rest.length > 0) {
         return usage(
-          'record --authorized needs --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]',
+          'record --authorized needs --why <text> --approved-by human [--scope writes|mission_done] [--paths <a,b>] [--date <YYYY-MM-DD>]',
         );
       }
-      return authorize(missionDir, paths, why ?? '', approvedBy, date);
+      return authorize(missionDir, scope, paths ?? '', why ?? '', approvedBy, date);
     }
     if (rest.includes('--amended')) {
       rest.splice(rest.indexOf('--amended'), 1);
@@ -289,24 +290,31 @@ function checkWallTimeBudget(doc: MissionDocuments, taskId: string): string | nu
 }
 
 /**
- * The human authorizes writes outside the plan. This grants scope, not
- * approval of content: paths, why, and `approved_by: human` are all required,
- * and the agent cannot write this event for itself.
+ * The human authorizes writes outside the plan or the mission close. This
+ * grants scope, not approval of content: `why` and `approved_by: human` are
+ * always required. `writes` names the paths it covers; `mission_done` is the
+ * close authorization and needs no paths.
  */
 function authorize(
   missionDir: string,
+  scope: string,
   paths: string,
   why: string,
   approvedBy?: string,
   date?: string,
 ): number {
+  if (scope !== 'writes' && scope !== 'mission_done') {
+    return refuse('--scope must be writes or mission_done');
+  }
   if (approvedBy !== 'human') return refuse('--approved-by must be human');
   if (why.trim() === '') return refuse('--why is required');
   const list = paths
     .split(',')
     .map((entry) => entry.trim())
     .filter((entry) => entry !== '');
-  if (list.length === 0) return refuse('--paths must name at least one path');
+  if (scope === 'writes' && list.length === 0) {
+    return refuse('--paths must name at least one path for scope writes');
+  }
 
   const doc = loadMission(missionDir);
   const ts = nextTimestamp(doc.events);
@@ -325,8 +333,8 @@ function authorize(
     mission: doc.mission.id,
     actor: 'human',
     data: {
-      scope: 'writes',
-      paths: list,
+      scope,
+      ...(list.length > 0 ? { paths: list } : {}),
       approved_by: 'human',
       why,
       date: chosen,

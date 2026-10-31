@@ -449,6 +449,38 @@ test('refuses an authorization not approved by a human', (t) => {
   assert.match(report.errors.join('\n'), /approved_by|approved by human/);
 });
 
+test('completeMission accepts the mission_done authorization the writer emits', (t) => {
+  const dir = makeMission(t, {
+    ledger: `${gateFor('T-001', '2026-10-31T00:00:00.000Z')}\n${doneFor(
+      'T-001',
+      '2026-10-31T00:00:01.000Z',
+    )}\n${reviewEvent('2026-10-31T00:00:02.000Z')}\n`,
+  });
+  initGit(dir);
+
+  const written = run(
+    'record',
+    '--authorized',
+    '--scope',
+    'mission_done',
+    '--why',
+    'the human authorized the close',
+    '--approved-by',
+    'human',
+    '--date',
+    '2026-11-01',
+    '--mission',
+    dir,
+  );
+  assert.equal(written.status, 0, written.stderr);
+  const authorization = JSON.parse(written.stdout);
+  assert.equal(authorization.data.scope, 'mission_done');
+  assert.equal('paths' in authorization.data, false);
+
+  const report = completeMission(dir);
+  assert.equal(report.ok, true, report.errors.join('\n'));
+});
+
 test('replaying Mission #1 B5/B7 evidence fails under the new rule', (t) => {
   const oldReview = event(
     'review_result',

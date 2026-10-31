@@ -1,0 +1,162 @@
+✔ status --json reports Mission #0 and every coverage link (77.1749ms)
+✔ the default mission is the active mission from .cairn/config.json (80.6815ms)
+✔ a bare mission id and a legacy missions/<id> path resolve (164.1261ms)
+✔ init scaffolds a mission in an empty repository (168.8771ms)
+✔ the init scaffold gate fails, so the scaffold cannot be recorded done (588.373ms)
+✔ next prints a packet for the task status reports (161.6213ms)
+✔ record refuses a task with no gate evidence and does not write (90.4279ms)
+✔ record refuses a task that was never started and writes nothing (83.2101ms)
+✔ verify and record complete a task with no manual ledger write (642.0702ms)
+✔ record refuses an unknown task (74.7551ms)
+✔ start records task_started with the base commit and refuses a second start (246.9731ms)
+✔ start refuses an unmet dependency and names it (158.6933ms)
+✔ start refuses a second active task and names it (267.8888ms)
+✔ a parked task can be answered and then completed (724.5584ms)
+✔ answer refuses a task that is not parked (77.5529ms)
+✔ review writes a review_result from a JSON file (88.4025ms)
+✔ review refuses an invalid verdict and writes nothing (78.1693ms)
+✔ usage exits 2 (73.8427ms)
+✔ init writes mission_created and the new mission validates (117.9507ms)
+✔ init defaults to cairn and never claims a human approval (79.1273ms)
+✔ record --amended writes old and new hashes and enforces the approver (322.6989ms)
+✔ verify refuses an out-of-list gate command and names the policy (82.4084ms)
+✔ verify refuses a forbidden gate command (76.1543ms)
+✔ start refuses a task at max_attempts_per_task (76.3014ms)
+✔ record refuses a tick over max_wall_time_per_tick_minutes (93.193ms)
+✔ record --authorized writes an authorization event (77.2206ms)
+✔ record --authorized refuses a non-human approval and missing fields (225.9271ms)
+✔ record --authorized defaults to writes and requires paths (154.9365ms)
+✖ record --authorized --scope mission_done writes no paths (76.9457ms)
+✖ record --authorized refuses an unknown scope (76.8095ms)
+✔ record --amended --acceptance records only the named criterion (407.9561ms)
+✔ closes a mission whose only task is done with evidence and a passing review (5.7196ms)
+✔ refuses an open task (2.4391ms)
+✔ refuses an uncovered acceptance criterion (2.7632ms)
+✔ refuses missing evidence (2.7302ms)
+✔ refuses a failing latest review (3.0698ms)
+✔ refuses a review that predates the last task_done (2.7332ms)
+✔ refuses a review missing any field the close rule names (25.9002ms)
+✔ refuses a close review that does not cover every acceptance criterion (2.8967ms)
+✔ refuses a coverage artifact that does not exist (2.6122ms)
+✔ refuses a coverage gate reference without a passing gate result (2.5734ms)
+✔ refuses mission_done without a human authorization after the last review (2.5748ms)
+✔ refuses an authorization that predates the latest review (2.4932ms)
+✔ refuses an authorization not approved by a human (2.5078ms)
+✖ completeMission accepts the mission_done authorization the writer emits (163.188ms)
+✔ replaying Mission #1 B5/B7 evidence fails under the new rule (3.1538ms)
+✔ cairn record --mission-done appends mission_done and refuses a second time (263.7383ms)
+✔ record --mission-done compares the raw ledger blob, not parsed JSON (354.6243ms)
+ℹ tests 48
+ℹ suites 0
+ℹ pass 45
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5770.5823
+
+✖ failing tests:
+
+test at test\cli.test.mjs:805:1
+✖ record --authorized --scope mission_done writes no paths (76.9457ms)
+  AssertionError [ERR_ASSERTION]: record --authorized needs --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn answer <task> --text <text> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>] [--mission <dir>]
+    cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>] [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:821:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:831:1
+✖ record --authorized refuses an unknown scope (76.8095ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /scope/. Input:
+  
+  'record --authorized needs --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]\n' +
+    'usage:\n' +
+    '  cairn init <id> [--title <title>]\n' +
+    '  cairn status [--json] [--mission <dir>]\n' +
+    '  cairn next [--mission <dir>]\n' +
+    '  cairn start <task> [--mission <dir>]\n' +
+    '  cairn answer <task> --text <text> [--mission <dir>]\n' +
+    '  cairn verify <task> [--mission <dir>]\n' +
+    '  cairn review --file <json> [--mission <dir>]\n' +
+    '  cairn reconcile [--mission <dir>]\n' +
+    '  cairn record <task> --status done [--packs <json>] [--mission <dir>]\n' +
+    '  cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>] [--mission <dir>]\n' +
+    '  cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>] [--mission <dir>]\n' +
+    '  cairn record --mission-done [--mission <dir>]\n'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:846:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'record --authorized needs --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]\nusage:\n  cairn init <id> [--title <title>]\n  cairn status [--json] [--mission <dir>]\n  cairn next [--mission <dir>]\n  cairn start <task> [--mission <dir>]\n  cairn answer <task> --text <text> [--mission <dir>]\n  cairn verify <task> [--mission <dir>]\n  cairn review --file <json> [--mission <dir>]\n  cairn reconcile [--mission <dir>]\n  cairn record <task> --status done [--packs <json>] [--mission <dir>]\n  cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>] [--mission <dir>]\n  cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>] [--mission <dir>]\n  cairn record --mission-done [--mission <dir>]\n',
+    expected: /scope/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\complete.test.ts:452:1
+✖ completeMission accepts the mission_done authorization the writer emits (163.188ms)
+  AssertionError [ERR_ASSERTION]: record --authorized needs --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn answer <task> --text <text> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>] [--mission <dir>]
+    cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>] [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/complete.test.ts:475:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
