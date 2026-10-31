@@ -1,0 +1,16 @@
+{
+  "gate": {
+    "id": "reconcile",
+    "command": "node",
+    "args": [
+      "src/cli.ts",
+      "reconcile"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "{\n  \"ok\": true,\n  \"findings\": [],\n  \"pending\": []\n}",
+  "duration_ms": 109,
+  "timed_out": false
+}

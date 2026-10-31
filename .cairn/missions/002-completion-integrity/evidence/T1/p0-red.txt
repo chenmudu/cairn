@@ -1,0 +1,165 @@
+P0 probe against the runtime at HEAD, before D1
+
+base: ac62b9c4ff421688b6d66542dbf9cf60c12d2c9a
+command: git archive HEAD | tar -x -C "$TMP" && cp test/p0.test.mjs "$TMP/test/" && cd "$TMP" && node --test test/p0.test.mjs
+
+✖ record refuses a gate result that belongs to a different tree (419.3489ms)
+✖ record refuses a dirty worktree outside the mission runtime paths (362.5114ms)
+✖ reconcile reports a completion event that is not in the ledger at HEAD (484.8489ms)
+✖ mission_done requires the ledger to be committed and closes after the ledger commit (491.5444ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1806.9581
+
+✖ failing tests:
+
+test at test\p0.test.mjs:159:1
+✖ record refuses a gate result that belongs to a different tree (419.3489ms)
+  AssertionError [ERR_ASSERTION]: record must refuse a stale gate result
+  {
+    "ts": "2026-10-31T00:36:15.746Z",
+    "event": "task_done",
+    "task": "T1",
+    "actor": "cairn",
+    "data": {
+      "base": "b23be56f9ed2ae1404c735152b826503d9c444ff",
+      "head": "a8cecf215c891cf896a41f8fbe1a8fd4fe3edf5a",
+      "commits": [
+        "a8cecf215c891cf896a41f8fbe1a8fd4fe3edf5a"
+      ],
+      "gates": [
+        {
+          "id": "code",
+          "exit_code": 0,
+          "evidence": "evidence/T1/code.json"
+        }
+      ]
+    },
+    "mission": "temp-mission"
+  }
+  
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (file:///C:/Users/Administrator/AppData/Local/Temp/tmp.ANNoNRZ8S8/test/p0.test.mjs:170:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\p0.test.mjs:175:1
+✖ record refuses a dirty worktree outside the mission runtime paths (362.5114ms)
+  AssertionError [ERR_ASSERTION]: {
+    "ts": "2026-10-31T00:36:16.111Z",
+    "event": "task_done",
+    "task": "T1",
+    "actor": "cairn",
+    "data": {
+      "base": "1dbc0ad4f2f464b4bed2100708697a3d0cfeedbe",
+      "head": "b23be56f9ed2ae1404c735152b826503d9c444ff",
+      "commits": [
+        "b23be56f9ed2ae1404c735152b826503d9c444ff"
+      ],
+      "gates": [
+        {
+          "id": "code",
+          "exit_code": 0,
+          "evidence": "evidence/T1/code.json"
+        }
+      ]
+    },
+    "mission": "temp-mission"
+  }
+  
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (file:///C:/Users/Administrator/AppData/Local/Temp/tmp.ANNoNRZ8S8/test/p0.test.mjs:185:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\p0.test.mjs:190:1
+✖ reconcile reports a completion event that is not in the ledger at HEAD (484.8489ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 3
+  
+      at TestContext.<anonymous> (file:///C:/Users/Administrator/AppData/Local/Temp/tmp.ANNoNRZ8S8/test/p0.test.mjs:198:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 3,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\p0.test.mjs:202:1
+✖ mission_done requires the ledger to be committed and closes after the ledger commit (491.5444ms)
+  AssertionError [ERR_ASSERTION]: {
+    "ts": "2026-10-31T00:36:17.088Z",
+    "event": "mission_done",
+    "actor": "cairn",
+    "mission": "temp-mission",
+    "data": {
+      "acceptance": [
+        {
+          "id": "A1",
+          "tasks": [
+            "T1"
+          ],
+          "evidence": [
+            "evidence/T1/code.json"
+          ]
+        }
+      ]
+    }
+  }
+  
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (file:///C:/Users/Administrator/AppData/Local/Temp/tmp.ANNoNRZ8S8/test/p0.test.mjs:214:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+exit: 1
