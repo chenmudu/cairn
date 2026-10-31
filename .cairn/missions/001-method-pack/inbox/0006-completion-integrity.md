@@ -1,11 +1,13 @@
 # Decision 0006 — completion integrity and the Mission #2 remediation plan
 
-Status: waiting for human approval. Mission #1 stays closed. This file records a post-close
-audit and the plan for Mission #2; it makes no runtime change and adds no Mission #1 ledger
-event.
+Status: approved by the human on 2026-10-31 with the amendments in this revision. The binding
+record is the Mission #2 `mission_created` event
+(`approval_source: ["0006", "0005"]`); this line is a pointer, not the record. Mission #1 stays
+closed. This file records a post-close audit and the contract for Mission #2; it adds no
+Mission #1 ledger event.
 
-Scope: mission escalation. It closes Mission #1's post-close audit and plans Mission #2; it is
-not a project-wide ADR.
+Scope: mission escalation. It closes Mission #1's post-close audit and defines Mission #2; it
+is not a project-wide ADR.
 
 Date: 2026-10-31. Audited commit: `700f68c`.
 
@@ -20,30 +22,37 @@ mean anything.
 
 ## Granularity
 
-One decision file, seven workstreams (D1–D7), five GitHub issues.
+One decision file, eight workstreams (D1–D8), eight tasks (T1–T8), six acceptance criteria
+(A1–A6).
 
 The defects share one root: completion is asserted by events, not bound to the tree and
-evidence that justify it. Splitting the root cause into seven decision files would repeat the
-same probe and the same argument. The issues split where the close condition is independent:
+evidence that justify it. Splitting the root cause into eight decision files would repeat the
+same probe and the same argument. The workstreams split where the close condition is
+independent:
 
-1. completion binding (D1);
-2. acceptance and review binding (D2);
-3. task-level pack participation (D3, ADR 0005);
-4. task state, mission creation, validator, and CI (D4–D5);
-5. policy execution and contract truth (D6–D7).
+1. completion binding (D1 → A1, T1);
+2. acceptance and review binding (D2 → A2, T3);
+3. task-level pack participation (D3, ADR 0005 → A3, T2);
+4. task state machine (D4 → A4, T4);
+5. mission creation, validator, and CI (D5 → A5, T5);
+6. policy execution and authorization records (D6, D8 → A6, T6);
+7. contract and status truth (D7 → A6, T7);
+8. mission-end review and close (T8).
 
-ADR 0005 is the canonical task-level decision in `docs/decisions/`. D3 restates its decision
-here so this mission archive is self-contained. The earlier inbox decision
-`0005-packs-block.md` approved the packet and review `packs` block; it did not add task-level
-participation.
+ADR 0005 is the canonical task-level pack decision in `docs/decisions/`. D3 references it and
+adds no schema of its own. The earlier inbox decision `0005-packs-block.md` approved the
+packet and review `packs` block; it did not add task-level participation.
 
 ## What is already sound
 
-The deterministic layer is green at `700f68c`: 133 tests, `tsc --noEmit`, both mission
+At `700f68c` the deterministic layer was green: 133 tests, `tsc --noEmit`, both mission
 validations, Mission #1 `reconcile`, bilingual checks, method products, and the hash chain
 (`mission` `6cc8961`, `policy` `c755611`, `plan` `a1aa5b2`, `protocol` `f9498f3`). The audit did
 not find a failing test or a broken gate. It found that a green gate is not bound to the tree
 that completes the task.
+
+The suite grew after that audit: at `33ee177`, the HEAD before Mission #2, `node --test` runs
+167 tests and the gates above still exit 0. The defect is structural, not a regression.
 
 ## P0 — a red tree can close green
 
@@ -120,14 +129,17 @@ and `README.md` says complete.
 
 ### D1 — completion is bound to the verified tree
 
-- `verify` requires a clean worktree outside `.cairn/`, so the content it verifies is already
-  committed. It captures `head` and `tree` once and writes both into every `gate_result`. If the
-  tracked content changes during the run, verify fails.
+- The order is **work → commit the work → verify → record → commit the ledger only**. `verify`
+  requires a clean worktree outside `.cairn/`, so the content it verifies is already committed.
+  It captures `head` and `tree` once and writes both into every `gate_result`. If tracked
+  content changes during the run, verify fails. The operator guide and the protocol record this
+  order; the guide is updated in T1, the protocol text in T7.
 - `record` requires, for every blocking gate, a latest result with the current `head` and
   `tree`, exit 0. It also requires no worktree change outside `.cairn/` since verify. A
   mismatched or missing result refuses `task_done`.
-- `record --mission-done` requires every prior `task_done` line to exist in the ledger blob at
-  HEAD. The final `mission_done` is proven by the commit that contains it.
+- `record --mission-done` requires the worktree ledger to equal the ledger blob at HEAD, so
+  every prior `task_done` line is committed. The final `mission_done` is proven by the commit
+  that contains it.
 - `reconcile` fails when a completion event exists in the worktree ledger but not in the ledger
   at HEAD. CI runs `reconcile` on the pushed commit.
 - Done when: the P0 probe fails at `record`; a clean tree passes; tests cover tree mismatch,
@@ -141,30 +153,26 @@ and `README.md` says complete.
   result is exit 0. A task's `serves` link alone is not evidence.
 - `review_result` requires `non_goals` (each non-goal, verdict, evidence) and `cold_start`
   (reviewer, artifact, verdict). `mission_done` rejects a review missing either.
-- Reviewer provenance is recorded: `reviewer`, `context: fresh | coordinator`, and the
-  artifact (subagent id or transcript path). A coordinator-launched fresh subagent counts as
-  fresh context but is not an independent signature; the human checkpoint remains the proof of
-  independence.
+- Reviewer provenance is evidence: `reviewer`, `context: fresh | coordinator`, and the artifact
+  (subagent id or transcript path). A coordinator-launched fresh subagent counts as fresh
+  context but is not an independent signature; the human checkpoint remains the proof of
+  independence. The review artifact is evidence for the criterion it covers.
+- `mission_done` requires a human authorization event with `scope: mission_done`,
+  `approved_by: human`, and a reason, recorded after the last review. The reviewer proves the
+  work; the human authorizes the close.
 - Mission #1's B5/B7 evidence would fail this rule. That is expected; the rule applies to
   missions that close after the amendment.
 - Done when: replaying Mission #1's B5/B7 evidence under the new rule fails; a new mission's
-  review passes with per-criterion artifacts; mission_done rejects a missing field.
+  review passes with per-criterion artifacts; `mission_done` rejects a missing field or a
+  missing authorization event.
 
 ### D3 — record pack participation per task (ADR 0005)
 
-- Every `task_done` carries `packs` with two entries: superpowers and Impeccable.
-- superpowers: `test-first` for code tasks, `verify-before-close` for docs or mixed tasks.
-  `mode: use` names the skill and concrete evidence (test path with RED→GREEN, or the gate
-  command); a missing pack is `mode: absent` with the floor as evidence.
-- Impeccable: `design-check` when a UI surface exists; otherwise `design-review` with
-  `mode: not-applicable` and a reason. It is recorded on every task, never omitted.
-- `cairn record` refuses a `task_done` without a valid `packs` record. The record is inline in
-  the ledger; a detailed task report under `evidence/<task>/packs.json` is optional.
-- The requirement applies only to events after a human-approved protocol amendment. Mission
-  #1's 8 `task_done` events are grandfathered by a note; no history is rewritten.
-- Done when: every new `task_done` has two valid entries; `record` rejects a missing or invalid
-  record; a code task shows `test-first` evidence and a docs task shows
-  `verify-before-close`; a non-UI task shows Impeccable `not-applicable` with a reason.
+- ADR 0005 is the canonical decision for task-level pack participation. D3 adds no schema and
+  no rule of its own; it is the implementation of that ADR.
+- Mission #2 T2 implements it; A3 is the acceptance criterion. The selection rule, the record
+  shape, the evidence-file requirement, and the three hard constraints live in ADR 0005.
+- The grandfather rule is stated once, under Compatibility.
 
 ### D4 — the task state machine is enforced
 
@@ -174,18 +182,23 @@ and `README.md` says complete.
 - `cairn answer` is implemented: it records the human decision and resumes a parked task.
   `task_parked` keeps its meaning; it is no longer a dead end.
 - Done when: a direct `record` without `start` fails; an out-of-order `start` fails; a parked
-  task can be answered and completed; the two historical tasks without `task_started` remain
+  task can be answered and completed; the historical tasks without `task_started` remain
   valid.
 
 ### D5 — init, validator, and CI match the contract
 
-- `init` appends `mission_created` with the mission id, owner, approval source, and the sha256
-  of the scaffold `mission.md`, `plan.md`, and `policy.md`. Later edits to a target artifact
-  are `mission_amended` events with old and new hashes, as drift control already requires.
+- `init` is the writer of `mission_created`: it appends the mission id, owner, approval source,
+  and the sha256 of the scaffold `mission.md`, `plan.md`, and `policy.md`, plus
+  `docs/protocol.md` when the repository has one. Later edits to a target artifact are
+  `mission_amended` events with old and new hashes; T5 also adds the runtime writer for that
+  event, so no target changes by hand after T5.
 - `validate-mission` requires `mission_created`; validates every event shape; requires all
   blocking gates, not `.some`; checks that `base` and `head` resolve to commits; recomputes the
-  target artifact hashes at HEAD and compares them with the latest amendment; validates
-  `review_result` fields and `mission_done` coverage.
+  target artifact hashes for the active mission at HEAD and compares them with the latest
+  amendment; validates `review_result` fields and `mission_done` coverage. New-shape checks
+  apply to missions whose `mission_created` carries `approval_source`; closed historical
+  missions keep the old shapes, exactly as `check-targets` already scopes itself to the active
+  mission.
 - CI adds `reconcile` and the P0 negative probe. The probe lives in the test suite, not only
   in the workflow, so a local `node --test` catches it.
 - Done when: `init` produces a non-empty ledger with `mission_created`; a tampered hash, a
@@ -214,7 +227,8 @@ and `README.md` says complete.
 - Protocol: replace the single-writer sentence with the actual ownership map (`start`,
   `verify`, `record`, `review`, `answer`, `init` each own their event types). Remove the stale
   T-002 text. Remove `cairn export` from the command list, and delete the unused
-  `renderDispatch` path, until a consumer exists. Implement `cairn answer` per D4.
+  `renderDispatch` path, until a consumer exists. Implement `cairn answer` per D4. Document the
+  D1 order and the task-level `packs` record recorded by D3.
 - Status: the ledger is the only status. `mission.md.status` is the initial declaration;
   `plan.md` task `status` is a deprecated hint. `goal-check` already derives from the ledger.
   New plans omit `status`; existing values stay as history and are not edited.
@@ -231,30 +245,122 @@ and `README.md` says complete.
   source; `check-bilingual` checks what it claims; CI proves the Node floor; a mission has a
   recorded audit artifact.
 
+### D8 — human-authorized writes are recorded, not inferred
+
+- `cairn record --authorized --paths <a,b> --why <text> --approved-by human` appends an
+  `authorization` event with `paths`, `approved_by`, `why`, and `date`. Authorization is
+  mission-scoped; the event lives in the active mission's ledger.
+- `audit-session` treats a write inside an authorized path as authorized, not drift. A write
+  outside every authorization and outside the plan is still drift.
+- The event is a record of a human approval, not a gate. It does not make an unauthorized write
+  legitimate; it makes an authorized one visible.
+- Done when: an authorized write is not reported as drift; an authorization with no matching
+  write is reported and does not hide other writes; a write outside the paths is still drift.
+
+## Mission #2 contract
+
+Id: `002-completion-integrity`. Title: `Completion integrity`. Owner: `chenmudu`.
+
+### Acceptance
+
+- **A1** — completion is bound to the verified tree. Check: the P0 probe fails at `record`; a
+  clean tree passes; tests cover a tree mismatch, a dirty worktree, and an uncommitted
+  `task_done`; CI runs the probe.
+- **A2** — acceptance and review evidence name the criterion, the reviewer is evidence, and
+  `mission_done` requires a human authorization event. Check: per-criterion coverage with
+  artifacts validates; a review missing `non_goals`, `cold_start`, reviewer provenance, or
+  `ui_surface` is refused; a `mission_done` without the human authorization event is refused;
+  replaying Mission #1's B5/B7 evidence under the rule fails.
+- **A3** — pack participation is recorded per task (ADR 0005). Check: every new `task_done`
+  carries two valid entries; `record` refuses a missing or invalid record; at least one
+  superpowers `mode: use` has evidence passing `isEvidenceFile` with RED then GREEN; Impeccable
+  is all-`not-applicable` only when the mission has no UI surface and the closing review
+  records `ui_surface: none`; `absent` carries a reason and floor evidence.
+- **A4** — the task state machine is enforced. Check: `record` without `start` fails; an
+  out-of-order `start` fails; a parked task can be answered and completed; historical tasks
+  without `task_started` stay valid.
+- **A5** — `init`, the validator, and CI match the contract. Check: `init` appends
+  `mission_created`; a tampered hash, a non-existent commit, a partial blocking-gate set, and
+  an uncommitted completion event each fail; CI runs `reconcile` and the probe.
+- **A6** — policy is executable or labelled human, the contract matches the CLI, and every
+  audit finding is covered. Check: an out-of-list gate is refused; a push requires a recorded
+  exception; `docs/protocol.md` matches the CLI; `cairn record --authorized` writes an
+  `authorization` event and `audit-session` accepts covered paths; every mechanizable audit
+  finding becomes a negative test and every non-mechanizable one is labelled `human` or
+  `review`.
+
+### Tasks
+
+- **T1 — bind completion to the verified tree (D1, serves A1).** The P0 probe first, then
+  `verify` head/tree binding, `record` tree and clean-worktree checks, `mission_done` committed
+  ledger, `reconcile` uncommitted-completion detection, the operator order, and CI.
+- **T2 — record pack participation per task (D3, ADR 0005, serves A3).** The record, the
+  validation, the evidence-file rule, the three hard constraints, and a real RED→GREEN test.
+  T1 is grandfathered; T2 is the first `task_done` with packs.
+- **T3 — bind acceptance and review evidence, authorize the close (D2, serves A2).**
+  Per-criterion coverage, non-goals, cold start, reviewer provenance, `ui_surface`, and the
+  human authorization event for `mission_done`.
+- **T4 — enforce the task state machine (D4, serves A4).** Dependency and single-active-task
+  checks, `task_started` required, and `cairn answer` with a recovery path.
+- **T5 — make init, the validator, and CI match the contract (D5, serves A5).** The
+  `mission_created` writer, the `mission_amended` writer, the stricter validator, and CI.
+- **T6 — make policy executable and record authorizations (D6, D8, serves A6).** Gate-command
+  policy, budgets and stop conditions, `approved_exceptions`, the `authorization` writer, and
+  `audit-session` coverage.
+- **T7 — make the contract and status sources tell the truth (D7, serves A6).** Protocol text,
+  CLI truth, bilingual claim, Node floor, Windows gate shell, and audit artifact path.
+- **T8 — mission-end review and close (serves A2, covers A1–A6).** A fresh-context review with
+  per-criterion evidence, the cold-start check, the audit artifact, and the human authorization
+  event before `mission_done`.
+
+### Non-goals
+
+- No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay
+  byte-identical and valid; the new rules apply only to new events.
+- No vendoring or merging of the superpowers or Impeccable repositories. They stay external.
+- No UI surface, design system, or hosted service. Impeccable participation is criteria-based;
+  `not-applicable` is expected and must be recorded.
+- No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a
+  later mission.
+- No new runtime feature outside D1–D8.
+- No reopening GitHub issues #1–#5. They are closed as superseded by this decision; reopen one
+  only if this decision is rejected.
+- No protocol change without `approved_by: human`.
+
+### Order
+
+T1 D1 → T2 D3 → T3 D2 → T4 D4 → T5 D5 → T6 D6 + D8 → T7 D7 → T8 review.
+
+Each task has a `serves` link and at least one blocking gate. No task may weaken a gate. The
+milestone audit runs every three completed tasks and at mission end, before the next task.
+
 ## Sequencing
 
 1. D1 — completion binding. Nothing else can be trusted until a red tree cannot record done.
-2. D2 — acceptance and review binding. A green completion still needs a semantic link.
-3. D3 — task-level packs. Independent of D2; can run in parallel once D1 lands.
+2. D3 — task-level packs. It follows D1 because every later task must carry a pack record.
+3. D2 — acceptance and review binding. A green completion still needs a semantic link.
 4. D4–D5 — state machine, init, validator, CI. These make the contract enforceable.
-5. D6–D7 — policy and contract truth. These remove false claims and portability traps.
-
-Each workstream becomes one Mission #2 task with a `serves` link and at least one blocking
-gate. No task may weaken a gate; a protocol change needs `approved_by: human`.
+5. D6 + D8 — policy and authorization records. A human-authorized write becomes visible.
+6. D7 — contract and status truth. The text catches up with the behavior.
 
 ## Compatibility and grandfathering
 
 - Mission #0 and Mission #1's target artifacts and ledgers remain byte-identical. Their events
-  stay valid; the new rules apply only after a human-approved protocol amendment.
+  stay valid; the new rules apply only to new events. New-shape validation is gated by
+  `mission_created.approval_source`, so a closed mission is never re-judged by a rule it
+  predates.
 - No history rewrite. No target artifact (`mission.md`, `policy.md`, `plan.md`,
   `docs/protocol.md`) changes without `mission_amended` and old/new hashes.
+- T1 predates D3, so its `task_done` has no `packs`; this is the single grandfather case in
+  Mission #2. From T2 onward every `task_done` carries packs.
+- Mission #1's 8 `task_done` events remain valid and are grandfathered by this note.
 - The P0 probe uses a fresh temporary repository; it does not touch either historical ledger.
 - The completion rule becomes stricter, not looser. A task that passed before may fail under
   the new rule; that is the point, and it is scoped to new events.
 
 ## Why CI did not catch P0
 
-CI runs `pnpm typecheck`, `node --test`, both mission validators, `check-bilingual`,
+CI ran `pnpm typecheck`, `node --test`, both mission validators, `check-bilingual`,
 `check-workflow`, `check-example`, `check-method --playbook`, and
 `check-method --products --strict`. That proves the deterministic layer has not regressed. It
 does not prove completion:
@@ -275,11 +381,11 @@ pushed; the pushed commit is the final proof.
 
 ## Relationship to 0005
 
-ADR 0005 is the canonical task-level decision and is still `proposed`. The earlier
-`0005-packs-block.md` approved the packet and review `packs` block; it did not make pack
-participation a task property. D3 is the implementation of ADR 0005. The ADR's
-backward-compatibility rule is preserved: new `task_done` events require packs; Mission #1 is
-grandfathered by a note.
+ADR 0005 is the canonical task-level decision. The human accepted it on 2026-10-31; the
+`mission_created` event of Mission #2 records the approval through `approval_source`. Its
+Status line stays `proposed` as a pointer to that event; editing it would make the document,
+not the ledger, the record. D3 is its implementation. The ADR's backward-compatibility rule is
+preserved: new `task_done` events require packs; Mission #1 is grandfathered by a note.
 
 ## Observation — the first routing-loop audit
 
@@ -289,7 +395,7 @@ authorized by the human, but Mission #1 is closed, no plan declares the files, a
 command writes a `ruling` or `note`. The audit therefore cannot distinguish authorized
 post-close work from drift.
 
-This is an input to D4/D5, not a new workstream: a human-authorized write needs a runtime
+This is an input to D4/D5/D8, not a new workstream: a human-authorized write needs a runtime
 record, or the audit needs a declared authorization source. Until then, a post-close guard
 change will keep producing this verdict. The two files remain, because the rule they define is
 the fix the human asked for; deleting them would remove the check rather than the finding.
@@ -328,28 +434,45 @@ script that hashed anything: the validator never recomputed the chain.
   it and no runtime command that records the authorization. Zero alignment corrections, zero
   claims without a gate, zero confirmation requests.
 
-**Blocker for Mission #2.** `cairn init` scaffolds `mission.md`, `plan.md`, `policy.md`, and
-an empty `ledger.jsonl`; it appends no `mission_created`. Verified in a temp repository: `init`
-exits 0, the ledger has 0 lines, and `check-targets` exits 1 with `no mission_created event`.
-A mission created today has no frozen targets, so the chain D5 relies on starts empty. D5's
-init writer is the fix. Until D5 lands, starting Mission #2 requires either D5 first or an
-explicit human authorization for a manual freeze append — not a scaffold event invented to
-look like one.
+### The bootstrap blocker and its resolution
+
+`cairn init` scaffolds `mission.md`, `plan.md`, `policy.md`, and an empty `ledger.jsonl`; it
+appends no `mission_created`. Verified in a temp repository: `init` exits 0, the ledger has 0
+lines, and `check-targets` exits 1 with `no mission_created event`. A mission created today has
+no frozen targets, so the chain D5 relies on starts empty.
+
+The blocker is resolved, for one mission only, by a human-authorized manual `mission_created`
+freeze for Mission #2. The human explicitly authorized this single append on 2026-10-31. It is
+the last bootstrap exception:
+
+- the event is written once, with `actor: human`, `approved_by: human`,
+  `approval_source: ["0006", "0005"]`, and the sha256 of `mission.md`, `plan.md`, `policy.md`,
+  and `docs/protocol.md`;
+- after that append, every event is written by a runtime command;
+- T5 adds the `init` writer, and from T5 onward no mission is created by hand.
+
+If the freeze is rejected, Mission #2 does not start until D5 lands; that path is slower and
+would make this decision's order impossible.
 
 ## Approval
 
-- `approve 0006` — accept D1–D7 and the sequence.
+The human approved this revision on 2026-10-31 and accepted ADR 0005. The binding record is the
+Mission #2 `mission_created` event with `approval_source: ["0006", "0005"]`; this file is the
+plan, the ledger is the approval. The options below are kept for history:
+
+- `approve 0006` — accept D1–D8 and the sequence.
 - `adjust 0006 -- ...` — change a decision, a granularity boundary, or the order.
 - `reject 0006` — keep Mission #1 closed and record why.
 
-Until answered, Mission #2 does not start. This is an escalation, not a ruling.
-
 ## Issue map
 
-| Issue | Workstreams | Close condition |
-|---|---|---|
-| [#1](https://github.com/chenmudu/cairn/issues/1) P0: bind completion to the verified tree | D1 | the P0 probe fails at `record`; clean task passes; CI runs the probe |
-| [#2](https://github.com/chenmudu/cairn/issues/2) Bind acceptance and review evidence to criteria | D2 | per-criterion artifacts validate; Mission #1 B5/B7 replay fails |
-| [#3](https://github.com/chenmudu/cairn/issues/3) Record pack participation per task (ADR 0005) | D3 | every new `task_done` has two valid pack entries |
-| [#4](https://github.com/chenmudu/cairn/issues/4) Enforce task state, mission init, validator, and CI | D4–D5 | start/record/answer enforced; init/validator/reconcile/probe pass |
-| [#5](https://github.com/chenmudu/cairn/issues/5) Make policy executable and the contract truthful | D6–D7 | policy enforced or labelled human; docs match the CLI; portability and audit covered |
+All five issues were closed on 2026-10-31 as superseded by this decision. They are not
+reopened; a rejection of this decision is the only reason to reopen one.
+
+| Issue | Workstreams | Close condition | Status |
+|---|---|---|---|
+| [#1](https://github.com/chenmudu/cairn/issues/1) P0: bind completion to the verified tree | D1 | the P0 probe fails at `record`; clean task passes; CI runs the probe | closed, superseded |
+| [#2](https://github.com/chenmudu/cairn/issues/2) Bind acceptance and review evidence to criteria | D2 | per-criterion artifacts validate; Mission #1 B5/B7 replay fails | closed, superseded |
+| [#3](https://github.com/chenmudu/cairn/issues/3) Record pack participation per task (ADR 0005) | D3 | every new `task_done` has two valid pack entries | closed, superseded |
+| [#4](https://github.com/chenmudu/cairn/issues/4) Enforce task state, mission init, validator, and CI | D4–D5 | start/record/answer enforced; init/validator/reconcile/probe pass | closed, superseded |
+| [#5](https://github.com/chenmudu/cairn/issues/5) Make policy executable and the contract truthful | D6–D8 | policy enforced or labelled human; docs match the CLI; authorization recorded; audit findings covered | closed, superseded |

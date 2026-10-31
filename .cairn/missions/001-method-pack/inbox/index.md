@@ -14,13 +14,16 @@ Answered:
   block, the two CLI commands, and the invariant 3 wording are recorded as protocol amendments
   with `approved_by: human`; T7 is unblocked.
 
-Waiting now:
+Approved:
 
-- `0006-completion-integrity.md` — approve the Mission #2 remediation plan for completion
-  binding, acceptance and review evidence, task-level pack participation, task state,
-  validator and CI, policy execution, and contract truth. Mission #1 stays closed;
-  implementation is Mission #2.
+- `0006-completion-integrity.md` — approved by the human on 2026-10-31. It defines Mission #2
+  (`002-completion-integrity`), A1–A6, T1–T8, and the D1–D8 workstreams. The binding approval is
+  the Mission #2 `mission_created` event with `approval_source: ["0006", "0005"]`; the decision
+  file is not the record. Mission #1 stays closed.
+
+Waiting now: nothing. Mission #2 is created by a human-authorized manual `mission_created`
+freeze, the last bootstrap exception; T5 makes `cairn init` the writer.
 
 The T3 milestone audit has no open decision. The T6 audit findings are recorded in the ledger;
 the example and bilingual repairs landed, and the remaining runtime gaps are T7 work. The
-post-close audit and the Mission #2 plan are in `0006-completion-integrity.md`.
+post-close audit and the Mission #2 contract are in `0006-completion-integrity.md`.

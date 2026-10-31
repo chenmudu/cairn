@@ -1,13 +1,15 @@
-<!-- translation of docs/decisions/0005-task-level-pack-participation.md at the 0006 cross-reference commit; the English file is authoritative -->
+<!-- translation of docs/decisions/0005-task-level-pack-participation.md at the Mission #2 approval revision; the English file is authoritative -->
 
 # 0005 — 按任务记录包的参与
 
-- 状态：提议
+- 状态：提议。人类于 2026-10-31 通过决策 0006 接受了本 ADR。具有约束力的记录是 Mission #2
+  的 `mission_created` 事件，其 `approval_source: ["0006", "0005"]`；这一行只是指针，不是记录。
 - 日期：2026-10-31
 - 范围：项目级 ADR。任务级包参与适用于每个 mission，所以这个决策放在 `docs/decisions/`，
   不放在某个 mission 的收件箱。
 - 后续：决策
-  [0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md) 的工作流 D3。
+  [0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md) 的工作流
+  D3；Mission #2 的任务 T2 和验收 A3。
 
 ## 背景
 
@@ -34,18 +36,29 @@ mission 是靠 review 级证据加样例 fixture 关闭的，不是靠任务级�
 
 包的参与是任务属性，不是 review 的附属属性。
 
-- `task_done` 必须携带 `packs` 记录，或引用携带它的任务报告。缺失或非法时，`cairn record`
-  拒绝追加 `task_done`。
+- `task_done` 必须携带 `packs` 记录，包含两个条目：superpowers 和 Impeccable。缺失或非法时，
+  `cairn record` 拒绝追加 `task_done`。
 - 每个任务固定两条：
   - **superpowers**——代码任务用 `test-first`，文档或混合任务用 `verify-before-close`。
-    `mode: use` 要写明 skill 和具体证据（测试路径 + RED→GREEN，或闸门命令）；包缺失时
-    `mode: absent`，证据是地板。
+    `mode: use` 要写明 skill 和具体证据；包缺失时 `mode: absent`，证据是地板。
   - **Impeccable**——有 UI 表面时用 `design-check`；否则 `design-review`，
     `mode: not-applicable` 并写原因。每个任务都要记录，不能省略。
-- `cairn next` 明确要求执行者返回任务报告。报告写到 mission 的 `evidence/` 下，是
-  `cairn record` 校验的输入。
+- 台账记录就是证明。`cairn next` 明确要求执行者返回包记录；`cairn record --packs <file>`
+  校验后写进 `task_done`。`evidence/<task>/packs.json` 下的详细任务报告是可选的。
+- 每个 `evidence` 值都是 mission 相对路径，指向 mission 的 `evidence/` 下真实存在的文件，且必须
+  通过 `isEvidenceFile`。文字声明不是证据。
 - packet 仍然是上下文；台账和证据仍然是证明。这个 ADR 补的是任务级记录，不是把包报告变成
   闸门。
+
+### 硬约束
+
+- **superpowers**：每个 mission 至少有一个 `task_done` 的 superpowers 条目是 `mode: use`，
+  且该条目的 `evidence` 通过 `isEvidenceFile`。对 `test-first`，证据文件要记录测试命令的
+  RED 结果，随后是 GREEN 结果。
+- **Impeccable**：只有 mission 声明没有 UI 表面，且收尾的 `review_result` 记录
+  `ui_surface: none` 时，才允许全部 `not-applicable`。任何任务声明了标记、样式或组件文件时，
+  至少有一个 `task_done` 带 `design-check` 且 `mode: use`。
+- **absent**：同时要求 `reason` 和指向实际运行地板的 `evidence` 文件。
 
 ## 为什么
 
@@ -55,15 +68,18 @@ mission 是靠 review 级证据加样例 fixture 关闭的，不是靠任务级�
 - review 级 packs 回答的是“审查是否可靠”，不是“任务是否用了包”。owner 要的是后者，而且是
   每个任务。
 - `withPacks` 已经有确定性的选择规则（代码 / UI / 文档）。缺的是记录和校验，不是选择。
+- 必须通过 `isEvidenceFile` 的路径可以被运行时检查；自由文本声明不行。
 
 ## 后果
 
-- 变更向后兼容。要求只适用于人类批准协议修订之后记录的 `task_done`。Mission #1 的事件继续
-  有效，用一条 note 登记为 grandfather；不改写历史。
-- 每个任务多一个证据产物。`cairn record` 多一条阻塞校验；没有包记录的任务变成未完成，而不是
-  静默干净。
+- 变更向后兼容。要求适用于从 T2 开始的 `task_done` 事件，也就是实现并记录本 ADR 的那个任务；
+  人类批准记录在 Mission #2 `mission_created` 事件的 `approval_source` 里。T1 由决策 0006
+  登记为 grandfather，Mission #1 的 8 个事件继续有效，不改写历史。
+- 每个任务多一个包记录，其证据条目是真实文件。`cairn record` 多一条阻塞校验；没有包记录的
+  任务变成未完成，而不是静默干净。
 - Impeccable 的 `not-applicable` 会按任务可见并带原因，这对没有 UI 表面的仓库是正确结果。
-- 这个 ADR 不实现变更。实现需要新 mission 或任务，以及 `approved_by: human` 的协议修订。
+- 这个 ADR 不实现变更。实现是 Mission #2 T2；协议文本在 T7 追平，T7 拥有
+  `docs/protocol.md`。
 
 ## 备选方案
 
@@ -72,3 +88,4 @@ mission 是靠 review 级证据加样例 fixture 关闭的，不是靠任务级�
   skill，实际调用仍为 0。
 - **把 superpowers vendor 进仓库。** 拒绝：违反 ADR 0002 和 0004；包保持外部，Cairn 拥有
   接缝。
+- **只校验记录，不要求证据文件。** 拒绝：那会把文字声明当作证明，正是本 ADR 要关闭的缺陷。

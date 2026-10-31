@@ -1,11 +1,14 @@
 # 0005 — Record pack participation per task
 
-- Status: proposed
+- Status: proposed. The human accepted this ADR through decision 0006 on 2026-10-31. The
+  binding record is the Mission #2 `mission_created` event with
+  `approval_source: ["0006", "0005"]`; this line is a pointer, not the record.
 - Date: 2026-10-31
 - Scope: project-wide ADR. Task-level pack participation applies to every mission, so this
   decision lives in `docs/decisions/`, not in a mission inbox.
 - Follow-up: workstream D3 in
-  [Decision 0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md).
+  [Decision 0006](../../.cairn/missions/001-method-pack/inbox/0006-completion-integrity.md);
+  Mission #2 task T2 and acceptance A3.
 
 ## Context
 
@@ -36,18 +39,33 @@ mission closed on review-level evidence plus the example fixture, not on a task-
 
 Pack participation is a task property, not a review-only property.
 
-- A `task_done` must carry a `packs` record, or reference a task report that carries it.
-  `cairn record` refuses to append `task_done` when the record is missing or invalid.
+- A `task_done` must carry a `packs` record with two entries, one for superpowers and one for
+  Impeccable. `cairn record` refuses to append `task_done` when the record is missing or
+  invalid.
 - The record has two entries for every task:
   - **superpowers** — `test-first` for code tasks and `verify-before-close` for docs or
-    mixed tasks. `mode: use` names the skill and concrete evidence (a test path with RED→GREEN,
-    or the gate command); a missing pack is `mode: absent` with the floor as evidence.
+    mixed tasks. `mode: use` names the skill and concrete evidence; a missing pack is
+    `mode: absent` with the floor as evidence.
   - **Impeccable** — `design-check` when a UI surface exists; otherwise `design-review` with
     `mode: not-applicable` and a reason. It is recorded on every task, not omitted.
-- `cairn next` states that the executor must return the task report. The report is written
-  under the mission's `evidence/` directory and is the input `cairn record` validates.
+- The ledger record is the proof. `cairn next` states that the executor must return the pack
+  record; `cairn record --packs <file>` validates it and writes it into `task_done`. A
+  detailed task report under `evidence/<task>/packs.json` is optional.
+- Every `evidence` value is a mission-relative path to a real file under the mission's
+  `evidence/` directory and must pass `isEvidenceFile`. A prose claim is not evidence.
 - The packet remains context; the ledger and evidence remain proof. This ADR adds the missing
-  task-level record, it does not make a pack report a gate.
+  task-level record; it does not make a pack report a gate.
+
+### Hard constraints
+
+- **superpowers**: every mission has at least one `task_done` whose superpowers entry is
+  `mode: use`, and that entry's `evidence` passes `isEvidenceFile`. For `test-first`, the
+  evidence file records the test command with a RED result followed by a GREEN result.
+- **Impeccable**: an all-`not-applicable` mission is allowed only when the mission declares no
+  UI surface and the closing `review_result` records `ui_surface: none`. If any task declares a
+  markup, style, or component file, at least one `task_done` carries `design-check` with
+  `mode: use`.
+- **absent**: requires both a `reason` and an `evidence` file naming the floor that ran.
 
 ## Why
 
@@ -60,18 +78,20 @@ Pack participation is a task property, not a review-only property.
   pack?". The owner asked for the latter, on every task.
 - A deterministic selection rule already exists in `withPacks` (code vs UI vs docs). The missing
   piece is recording and validation, not selection.
+- A path that must pass `isEvidenceFile` is checkable by the runtime; a free-text claim is not.
 
 ## Consequences
 
-- The change is backward compatible. The requirement applies only to `task_done` events
-  recorded after a human-approved protocol amendment. Mission #1 events stay valid and are
-  grandfathered by a note; no history is rewritten.
-- Each task gains one evidence artifact. `cairn record` gains a blocking validation; a task
-  without a pack record becomes incomplete, not silently clean.
+- The change is backward compatible. The requirement applies to `task_done` events from T2
+  onward, the task that implements this ADR and records it; the human approval is the Mission
+  #2 `mission_created` event's `approval_source`. T1 is grandfathered by decision 0006,
+  Mission #1's 8 events stay valid, and no history is rewritten.
+- Each task gains a pack record whose evidence entries are real files. `cairn record` gains a
+  blocking validation; a task without a pack record becomes incomplete, not silently clean.
 - Impeccable `not-applicable` becomes visible per task with a reason, which is the correct
   outcome for a repository with no UI surface.
-- This ADR does not implement the change. Implementation needs a new mission or task and a
-  protocol amendment with `approved_by: human`.
+- This ADR does not implement the change. Implementation is Mission #2 T2; the protocol text
+  catches up in T7, which owns `docs/protocol.md`.
 
 ## Alternatives
 
@@ -81,3 +101,5 @@ Pack participation is a task property, not a review-only property.
   evidence, and the session shows zero invocations despite the packet naming the skill.
 - **Vendor superpowers into the repository.** Rejected by ADR 0002 and ADR 0004: the pack stays
   external, and Cairn owns the seam.
+- **Validate the record without requiring an evidence file.** Rejected: it would accept a prose
+  claim as proof, which is the defect this ADR exists to close.
