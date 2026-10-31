@@ -1,0 +1,56 @@
+superpowers:test-driven-development
+
+# Invocation (ZCode desktop session, 2026-10-31)
+skill id: superpowers:test-driven-development
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T5 followed it: the
+eleven tests covering the init writer, the amended writer, the validator, and check-targets
+were written and run against the pre-T5 runtime before src/paths.ts, src/cli.ts, and
+scripts/*.mjs changed.
+
+RED
+$ node --test test/validate-mission.test.mjs test/check-targets.test.mjs test/cli.test.mjs
+exit 1
+✖ skips a closed mission that is not the active mission
+✖ the check-targets script prints the skip line and exits 0
+✖ init writes mission_created and the new mission validates
+✖ init defaults to cairn and never claims a human approval
+✖ record --amended writes old and new hashes and enforces the approver
+✖ rejects a new-shape mission whose target hash was tampered with
+✖ rejects a task_done whose base or head is not a commit
+✖ rejects a task_done that omits a blocking gate
+ℹ tests 50
+ℹ pass 42
+ℹ fail 8
+
+The first three failures are the old runtime refusing the new flags or doing the old thing:
+`init needs <id>`, `record --amended` exiting 2, and check-targets reporting a hash mismatch
+for a closed mission instead of skipping it. The validator failures are empty error lists: the
+old validator had no new-shape checks. The full output is `evidence/T5/red-targeted.txt`.
+
+$ node --test test/validate-mission.test.mjs   # after the HEAD-history test was added
+exit 1
+✖ rejects a new-shape mission whose target hash was tampered with
+✖ rejects a task_done whose base or head is not a commit
+✖ rejects a task_done that omits a blocking gate
+✖ rejects a task_done whose head is not in HEAD history
+ℹ tests 19
+ℹ pass 15
+ℹ fail 4
+
+Full output: `evidence/T5/red-validator.txt`. The fifteenth test, "accepts a new-shape mission
+whose hashes match", passed before the implementation and is a regression guard, not RED.
+
+GREEN
+$ node --test test/validate-mission.test.mjs test/check-targets.test.mjs test/cli.test.mjs test/paths.test.ts
+exit 0
+ℹ tests 60
+ℹ pass 60
+ℹ fail 0
+
+$ node --test   # full suite, T5 runtime, 2026-10-31
+exit 0
+ℹ tests 215
+ℹ pass 215
+ℹ fail 0
+
+The full outputs are `evidence/T5/green-targeted.txt` and `evidence/T5/green-full.txt`.

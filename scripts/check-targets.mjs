@@ -17,7 +17,7 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, basename } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readMission } from './validate-mission.mjs';
 import { resolveMission } from '../src/paths.ts';
@@ -44,6 +44,18 @@ function normalizeKey(key, missionRel, errors) {
   }
   if (value.includes('/')) return value;
   return `${missionRel}/${value}`;
+}
+
+/** True when `.cairn/config.json` names this mission, or there is no config. */
+function isActiveMission(repo, missionId) {
+  const file = join(repo, '.cairn', 'config.json');
+  if (!existsSync(file)) return true;
+  try {
+    const config = JSON.parse(readFileSync(file, 'utf8'));
+    return config?.active_mission === missionId;
+  } catch {
+    return true;
+  }
 }
 
 function applyArtifacts(map, artifacts, where, missionRel, errors) {
@@ -83,6 +95,17 @@ export function checkTargets(root, missionDir) {
   }
 
   const loaded = readMission(mission);
+
+  /**
+   * A closed mission that is no longer active is history: its target files may
+   * legitimately change under a later mission, so the chain is not re-checked.
+   * The active mission is always checked, closed or not (decision 0008).
+   */
+  const closed = loaded.events.some((event) => event.event === 'mission_done');
+  if (closed && !isActiveMission(repo, basename(mission))) {
+    return { ok: true, errors: [], checked: 0, skipped: true };
+  }
+
   if (!loaded.mission) {
     return { ok: false, errors: [`${missionRel}: no mission contract`], checked: 0 };
   }
@@ -156,7 +179,11 @@ function main(argv) {
 
   const report = checkTargets(root, mission);
   if (report.ok) {
-    process.stdout.write(`targets: ok (${report.checked} artifacts)\n`);
+    process.stdout.write(
+      report.skipped
+        ? 'targets: skip (closed mission)\n'
+        : `targets: ok (${report.checked} artifacts)\n`,
+    );
     return 0;
   }
   for (const error of report.errors) process.stderr.write(`${error}\n`);

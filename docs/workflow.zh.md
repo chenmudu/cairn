@@ -1,4 +1,4 @@
-<!-- translation of docs/workflow.md at the Mission #2 T2 revision; the English file is authoritative -->
+<!-- translation of docs/workflow.md at the Mission #2 T5 revision; the English file is authoritative -->
 
 # 一个 tick
 
@@ -81,6 +81,29 @@
 ```sh
 node scripts/check-method.mjs --packs
 ```
+
+## 创建与修订 mission
+
+`cairn init` 是 `mission_created` 的写入者。它生成 `mission.md`、`plan.md`、`policy.md`，把三者的
+sha256 冻结进台账；仓库里有 `docs/protocol.md` 时也一并冻结；最后把新 mission 设为活动 mission。
+
+```sh
+node src/cli.ts init <id> --title <title> --owner <owner> --approval-source <ids> \
+  --approved-by cairn|human
+```
+
+`--owner` 默认 `replace-me`，`--approval-source` 默认 `none`，`--approved-by` 默认 `cairn`。
+只有人类会传 `--approved-by human`；`init` 自己从不声称人类批准。
+
+目标文件只能通过带旧哈希和新哈希的修订事件改变：
+
+```sh
+node src/cli.ts record --amended --artifact plan.md --why <why> --approved-by cairn
+```
+
+`plan.md` 可由 `cairn` 修订。`mission.md`、`policy.md` 和 `docs/protocol.md` 要求
+`--approved-by human`。`validate-mission` 会为活动 mission 重算哈希链；不匹配就让 `mission`
+闸门失败。
 
 ## 任务状态
 

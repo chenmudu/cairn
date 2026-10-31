@@ -468,3 +468,122 @@ test('usage exits 2', () => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /usage/);
 });
+
+const runIn = (root, ...args) =>
+  spawnSync(process.execPath, [cli, ...args], { cwd: root, encoding: 'utf8' });
+
+const ledgerOf = (mission) =>
+  readFileSync(join(mission, 'ledger.jsonl'), 'utf8')
+    .trim()
+    .split('\n')
+    .filter((line) => line !== '')
+    .map((line) => JSON.parse(line));
+
+test('init writes mission_created and the new mission validates', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'cairn-init-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const init = runIn(
+    root,
+    'init',
+    'demo',
+    '--title',
+    'Demo mission',
+    '--owner',
+    'fixture',
+    '--approval-source',
+    '0006,0005',
+    '--approved-by',
+    'cairn',
+  );
+  assert.equal(init.status, 0, init.stderr);
+
+  const mission = join(root, '.cairn', 'missions', 'demo');
+  const events = ledgerOf(mission);
+  assert.equal(events.length, 1);
+  const created = events[0];
+  assert.equal(created.event, 'mission_created');
+  assert.equal(created.mission, 'demo');
+  assert.equal(created.data.approved_by, 'cairn');
+  assert.deepEqual(created.data.approval_source, ['0006', '0005']);
+  assert.equal(created.data.owner, 'fixture');
+  for (const name of ['mission.md', 'plan.md', 'policy.md']) {
+    assert.match(created.data.artifacts[name], /^sha256:[0-9a-f]{64}$/);
+  }
+  assert.match(readFileSync(join(mission, 'mission.md'), 'utf8'), /owner: fixture/);
+
+  const validate = spawnSync(
+    process.execPath,
+    [resolve(repo, 'scripts', 'validate-mission.mjs'), mission],
+    { encoding: 'utf8' },
+  );
+  assert.equal(validate.status, 0, validate.stderr);
+});
+
+test('init defaults to cairn and never claims a human approval', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'cairn-init-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  assert.equal(runIn(root, 'init', 'demo').status, 0);
+
+  const [created] = ledgerOf(join(root, '.cairn', 'missions', 'demo'));
+  assert.equal(created.data.approved_by, 'cairn');
+  assert.deepEqual(created.data.approval_source, ['none']);
+  assert.equal(created.data.owner, 'replace-me');
+});
+
+test('record --amended writes old and new hashes and enforces the approver', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'cairn-amend-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  assert.equal(runIn(root, 'init', 'demo', '--owner', 'fixture').status, 0);
+  const mission = join(root, '.cairn', 'missions', 'demo');
+
+  appendFileSync(join(mission, 'plan.md'), '\n# plan amendment\n');
+  const amended = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'plan.md',
+    '--why',
+    'the plan gained a task',
+    '--approved-by',
+    'cairn',
+  );
+  assert.equal(amended.status, 0, amended.stderr);
+  const event = JSON.parse(amended.stdout);
+  assert.equal(event.event, 'mission_amended');
+  assert.match(event.data.old['plan.md'], /^sha256:[0-9a-f]{64}$/);
+  assert.match(event.data.new['plan.md'], /^sha256:[0-9a-f]{64}$/);
+  assert.notEqual(event.data.old['plan.md'], event.data.new['plan.md']);
+  assert.deepEqual(event.data.acceptance, ['A1']);
+  assert.equal(event.data.approved_by, 'cairn');
+
+  appendFileSync(join(mission, 'mission.md'), '\n<!-- edit -->\n');
+  const refused = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'mission.md',
+    '--why',
+    'tighten the acceptance',
+    '--approved-by',
+    'cairn',
+  );
+  assert.equal(refused.status, 2, refused.stdout);
+  assert.match(refused.stderr, /human/);
+
+  const human = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'mission.md',
+    '--why',
+    'tighten the acceptance',
+    '--approved-by',
+    'human',
+  );
+  assert.equal(human.status, 0, human.stderr);
+  assert.equal(JSON.parse(human.stdout).data.approved_by, 'human');
+});

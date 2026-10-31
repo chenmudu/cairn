@@ -23,8 +23,10 @@
  * Exit:  0 valid, 1 invalid, 2 usage error.
  */
 
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const TASK_STATUSES = new Set(['todo', 'active', 'review', 'done', 'parked']);
@@ -187,16 +189,38 @@ export function validateMission(dir) {
     }
   }
 
+  /**
+   * New-shape missions declare `approval_source` in `mission_created`. That is
+   * the gate for every stricter check: missions created before the writer
+   * existed keep the old shapes instead of failing retroactively (decision
+   * 0006 D5).
+   */
+  const created = events.find((event) => event.event === 'mission_created');
+  const newShape =
+    created !== undefined &&
+    isMapping(created.data) &&
+    Array.isArray(created.data.approval_source);
+
   for (const event of events) {
-    if (event.event === 'task_done') checkTaskDone(event, tasks, errors);
+    if (event.event === 'task_done') checkTaskDone(event, tasks, errors, newShape);
     if (event.event === 'gate_result') checkGateResult(missionDir, event, errors);
     if (event.event === 'mission_amended') checkMissionAmended(event, errors);
+    if (newShape && event.event === 'review_result') checkReviewResult(missionDir, event, errors);
+    if (newShape && event.event === 'mission_done') checkMissionDone(event, mission, errors);
+  }
+
+  if (newShape) {
+    checkMissionCreated(created, errors);
+    for (const event of events) {
+      if (event.event === 'task_done') checkTaskDoneCommits(missionDir, event, errors);
+    }
+    checkTargetChain(missionDir, mission, events, created, errors);
   }
 
   return { ok: errors.length === 0, errors };
 }
 
-function checkTaskDone(event, tasks, errors) {
+function checkTaskDone(event, tasks, errors, requireAll = false) {
   const where = `ledger.jsonl task_done ${event.task ?? '(no task)'}`;
   const task = typeof event.task === 'string' ? tasks.get(event.task) : undefined;
   if (!task) {
@@ -230,7 +254,22 @@ function checkTaskDone(event, tasks, errors) {
       blocking.has(gate.id) &&
       gate.exit_code === 0,
   );
-  if (!passed) fail(errors, where, 'records no severity: block gate at exit 0');
+  if (!passed) {
+    fail(errors, where, 'records no severity: block gate at exit 0');
+    return;
+  }
+  if (requireAll) {
+    const recorded = new Map(
+      data.gates
+        .filter((gate) => isMapping(gate) && typeof gate.id === 'string')
+        .map((gate) => [gate.id, gate.exit_code]),
+    );
+    for (const id of blocking) {
+      if (recorded.get(id) !== 0) {
+        fail(errors, where, `blocking gate ${id} has no exit 0 result`);
+      }
+    }
+  }
 }
 
 function checkMissionAmended(event, errors) {
@@ -263,6 +302,249 @@ function checkMissionAmended(event, errors) {
   }
   if (data.approved_by !== 'human' && data.approved_by !== 'cairn') {
     fail(errors, where, 'data.approved_by must be human or cairn');
+  }
+}
+
+function checkMissionCreated(event, errors) {
+  const where = 'ledger.jsonl mission_created';
+  const data = isMapping(event.data) ? event.data : null;
+  if (!data) {
+    fail(errors, where, 'missing a data object');
+    return;
+  }
+  if (data.approved_by !== 'human' && data.approved_by !== 'cairn') {
+    fail(errors, where, 'data.approved_by must be human or cairn');
+  }
+  if (
+    !Array.isArray(data.approval_source) ||
+    data.approval_source.length === 0 ||
+    data.approval_source.some((source) => typeof source !== 'string' || source.trim() === '')
+  ) {
+    fail(errors, where, 'data.approval_source must be a non-empty list of ids');
+  }
+  if (!isMapping(data.artifacts) || Object.keys(data.artifacts).length === 0) {
+    fail(errors, where, 'data.artifacts must be a non-empty mapping');
+  }
+}
+
+/**
+ * A completion claim names commits. Both must exist in this repository, and
+ * `head` must be in HEAD's history: a task_done whose work is not committed on
+ * this branch is an uncommitted completion, not evidence.
+ */
+function checkTaskDoneCommits(missionDir, event, errors) {
+  const where = `ledger.jsonl task_done ${event.task ?? '(no task)'}`;
+  const data = isMapping(event.data) ? event.data : {};
+  for (const field of ['base', 'head']) {
+    const sha = data[field];
+    if (typeof sha !== 'string' || sha === '') continue;
+    if (!isCommit(missionDir, sha)) {
+      fail(errors, where, `data.${field} ${sha} is not a commit in this repository`);
+    }
+  }
+  const head = data.head;
+  if (
+    typeof head === 'string' &&
+    head !== '' &&
+    isCommit(missionDir, head) &&
+    !isInHeadHistory(missionDir, head)
+  ) {
+    fail(errors, where, `data.head ${head} is not in HEAD history`);
+  }
+}
+
+function gitOk(missionDir, args) {
+  const result = spawnSync('git', args, { cwd: missionDir, encoding: 'utf8' });
+  return result.status === 0;
+}
+
+function isCommit(missionDir, sha) {
+  return gitOk(missionDir, ['cat-file', '-e', `${sha}^{commit}`]);
+}
+
+function isInHeadHistory(missionDir, sha) {
+  return gitOk(missionDir, ['merge-base', '--is-ancestor', sha, 'HEAD']);
+}
+
+function checkReviewResult(missionDir, event, errors) {
+  const where = `ledger.jsonl review_result ${event.task ?? ''}`.trim();
+  const data = isMapping(event.data) ? event.data : null;
+  if (!data) {
+    fail(errors, where, 'missing a data object');
+    return;
+  }
+  if (typeof data.reviewer !== 'string' || data.reviewer === '') {
+    fail(errors, where, 'missing data.reviewer');
+  }
+  if (data.context !== 'fresh' && data.context !== 'coordinator') {
+    fail(errors, where, 'data.context must be fresh or coordinator');
+  }
+  if (typeof data.artifact !== 'string' || data.artifact === '') {
+    fail(errors, where, 'missing data.artifact');
+  } else {
+    const artifact = resolve(missionDir, data.artifact);
+    if (!isInside(missionDir, artifact) || !existsSync(artifact) || !statSync(artifact).isFile()) {
+      fail(errors, where, `artifact is not a file in the mission: ${data.artifact}`);
+    }
+  }
+  if (data.verdict !== 'pass' && data.verdict !== 'fail') {
+    fail(errors, where, 'data.verdict must be pass or fail');
+  }
+  if (
+    !Array.isArray(data.findings) ||
+    data.findings.some((finding) => typeof finding !== 'string' || finding.trim() === '')
+  ) {
+    fail(errors, where, 'data.findings must be a list of non-empty strings');
+  }
+  if (!Array.isArray(data.packs) || data.packs.length === 0) {
+    fail(errors, where, 'data.packs must be a non-empty list');
+  }
+  if (!Array.isArray(data.coverage) || data.coverage.length === 0) {
+    fail(errors, where, 'data.coverage must be a non-empty list');
+  } else {
+    data.coverage.forEach((entry, index) => {
+      const at = `${where} coverage[${index}]`;
+      if (!isMapping(entry)) {
+        fail(errors, at, 'must be a mapping');
+        return;
+      }
+      if (typeof entry.criterion !== 'string' || entry.criterion === '') {
+        fail(errors, at, 'missing criterion');
+      }
+      if (!Array.isArray(entry.tasks) || entry.tasks.some((id) => typeof id !== 'string')) {
+        fail(errors, at, 'tasks must be a list of strings');
+      }
+      if (!Array.isArray(entry.evidence) || entry.evidence.length === 0) {
+        fail(errors, at, 'evidence must be a non-empty list');
+      }
+      if (entry.verdict !== 'pass' && entry.verdict !== 'fail') {
+        fail(errors, at, 'verdict must be pass or fail');
+      }
+    });
+  }
+  if (!Array.isArray(data.non_goals) || data.non_goals.length === 0) {
+    fail(errors, where, 'data.non_goals must be a non-empty list');
+  }
+  if (!isMapping(data.cold_start)) {
+    fail(errors, where, 'data.cold_start must be an object');
+  }
+  if (data.ui_surface !== 'none' && data.ui_surface !== 'present') {
+    fail(errors, where, 'data.ui_surface must be none or present');
+  }
+}
+
+/** The close must name every acceptance criterion the contract declares. */
+function checkMissionDone(event, mission, errors) {
+  const where = 'ledger.jsonl mission_done';
+  const data = isMapping(event.data) ? event.data : null;
+  if (!data) {
+    fail(errors, where, 'missing a data object');
+    return;
+  }
+  if (!Array.isArray(data.acceptance) || data.acceptance.length === 0) {
+    fail(errors, where, 'data.acceptance must be a non-empty list');
+    return;
+  }
+  const named = new Set();
+  for (const entry of data.acceptance) {
+    if (!isMapping(entry) || typeof entry.id !== 'string' || entry.id === '') {
+      fail(errors, where, 'each data.acceptance entry needs an id');
+      continue;
+    }
+    named.add(entry.id);
+  }
+  for (const criterion of mission?.acceptance ?? []) {
+    if (isMapping(criterion) && typeof criterion.id === 'string' && !named.has(criterion.id)) {
+      fail(errors, where, `coverage is missing acceptance ${criterion.id}`);
+    }
+  }
+}
+
+const TARGETS = ['mission.md', 'plan.md', 'policy.md'];
+
+function targetName(key) {
+  const value = String(key).replace(/\\/g, '/');
+  if (value === 'docs/protocol.md' || value.endsWith('/docs/protocol.md')) {
+    return 'docs/protocol.md';
+  }
+  for (const name of TARGETS) {
+    if (value === name || value.endsWith(`/${name}`)) return name;
+  }
+  return null;
+}
+
+/**
+ * Rebuild the latest expected hash for every frozen target and compare it to
+ * the file on disk. A closed mission that is no longer active is history; its
+ * files may change under a later mission (decision 0008).
+ */
+function checkTargetChain(missionDir, mission, events, created, errors) {
+  const repoRoot = findRepoRoot(missionDir);
+  const closed = events.some((event) => event.event === 'mission_done');
+  if (closed && !isActiveMission(repoRoot, basename(missionDir))) return;
+
+  const expected = new Map();
+  const apply = (artifacts, where) => {
+    if (!isMapping(artifacts)) return;
+    for (const [key, value] of Object.entries(artifacts)) {
+      const name = targetName(key);
+      if (!name) {
+        fail(errors, where, `artifact key "${key}" is not a known target`);
+        continue;
+      }
+      if (typeof value !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(value)) {
+        fail(errors, where, `${key} must be sha256:<64 hex>`);
+        continue;
+      }
+      expected.set(name, value);
+    }
+  };
+  apply(created.data?.artifacts, 'ledger.jsonl mission_created');
+  for (const event of events) {
+    if (event.event !== 'mission_amended') continue;
+    apply(event.data?.new, `ledger.jsonl mission_amended ${event.ts ?? ''}`.trim());
+  }
+  for (const name of TARGETS) {
+    if (!expected.has(name)) {
+      fail(errors, 'ledger.jsonl mission_created', `${name} was never frozen`);
+    }
+  }
+
+  for (const [name, want] of expected) {
+    const file = name === 'docs/protocol.md' ? resolve(repoRoot, name) : resolve(missionDir, name);
+    if (!existsSync(file) || !statSync(file).isFile()) {
+      fail(errors, name, 'artifact is missing');
+      continue;
+    }
+    const got = `sha256:${createHash('sha256').update(readFileSync(file)).digest('hex')}`;
+    if (got !== want) fail(errors, name, `hash ${got} does not match the ledger ${want}`);
+  }
+}
+
+function findRepoRoot(missionDir) {
+  const id = basename(missionDir);
+  let current = resolve(missionDir);
+  for (;;) {
+    const parent = dirname(current);
+    if (parent === current) break;
+    if (
+      existsSync(join(parent, '.cairn', 'missions', id)) ||
+      (basename(parent) !== '.cairn' && existsSync(join(parent, 'missions', id)))
+    ) {
+      return parent;
+    }
+    current = parent;
+  }
+  return resolve(missionDir, '..', '..', '..');
+}
+
+function isActiveMission(repoRoot, missionId) {
+  const file = join(repoRoot, '.cairn', 'config.json');
+  if (!existsSync(file)) return true;
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'))?.active_mission === missionId;
+  } catch {
+    return true;
   }
 }
 

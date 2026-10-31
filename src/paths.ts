@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
+import { appendEvent } from './ledger.ts';
 
 export interface CairnConfig {
   layout_version?: number;
@@ -77,14 +79,14 @@ function yamlScalar(value: string): string {
   return /^[A-Za-z0-9][A-Za-z0-9 .,'()/_-]*$/.test(value) ? value : JSON.stringify(value);
 }
 
-function missionScaffold(id: string, title: string): string {
+function missionScaffold(id: string, title: string, owner: string): string {
   return `---
 schema: cairn/mission@0.1
 id: ${id}
 title: ${yamlScalar(title)}
 status: draft
 created: ${new Date().toISOString().slice(0, 10)}
-owner: replace-me
+owner: ${yamlScalar(owner)}
 acceptance:
   - id: A1
     check: replace with a deterministic check
@@ -176,23 +178,62 @@ Replace the budgets and stop conditions that do not fit this mission.
 /**
  * Scaffold `.cairn/missions/<id>/` and make it the active mission. The
  * placeholder gate fails on purpose, so a scaffold cannot be recorded as done
- * before the contract is edited.
+ * before the contract is edited. `init` is the writer of `mission_created`: it
+ * freezes the scaffold hashes, so the validator and `check-targets` have a
+ * chain from the first tick. `approved_by` defaults to `cairn`; a caller must
+ * pass `human` explicitly, and `init` never claims it on its own.
  */
 export function initMission(
   id: string,
-  options: { root?: string; title?: string } = {},
+  options: {
+    root?: string;
+    title?: string;
+    owner?: string;
+    approvalSource?: string[];
+    approvedBy?: 'cairn' | 'human';
+  } = {},
 ): string {
   if (!MISSION_ID.test(id)) throw new Error(`invalid mission id: ${id}`);
   const root = options.root ?? process.cwd();
   const dir = join(root, '.cairn', 'missions', id);
   if (existsSync(dir)) throw new Error(`${dir}: already exists`);
 
+  const owner = (options.owner ?? 'replace-me').trim();
+  const approvedBy = options.approvedBy ?? 'cairn';
+  const approvalSource = options.approvalSource ?? ['none'];
+  if (approvedBy !== 'cairn' && approvedBy !== 'human') {
+    throw new Error(`approved_by must be cairn or human, not ${approvedBy}`);
+  }
+  if (approvalSource.length === 0 || approvalSource.some((source) => source.trim() === '')) {
+    throw new Error('approval_source must name at least one non-empty source');
+  }
+
   mkdirSync(dir, { recursive: true });
   const title = (options.title ?? id).replace(/\s+/g, ' ').trim();
-  writeFileSync(join(dir, 'mission.md'), missionScaffold(id, title));
+  writeFileSync(join(dir, 'mission.md'), missionScaffold(id, title, owner));
   writeFileSync(join(dir, 'plan.md'), planScaffold(id));
   writeFileSync(join(dir, 'policy.md'), policyScaffold(id));
   writeFileSync(join(dir, 'ledger.jsonl'), '');
+
+  const artifacts: Record<string, string> = {};
+  for (const name of ['mission.md', 'plan.md', 'policy.md']) {
+    artifacts[name] = sha256(join(dir, name));
+  }
+  const protocol = join(root, 'docs', 'protocol.md');
+  if (existsSync(protocol)) artifacts['docs/protocol.md'] = sha256(protocol);
+
+  appendEvent(dir, {
+    ts: new Date().toISOString(),
+    event: 'mission_created',
+    mission: id,
+    actor: 'cairn',
+    data: {
+      owner,
+      approved_by: approvedBy,
+      approval_source: approvalSource,
+      artifacts,
+    },
+  });
 
   const config = readConfig(root) ?? {};
   config.layout_version ??= 1;
@@ -200,4 +241,8 @@ export function initMission(
   mkdirSync(join(root, '.cairn'), { recursive: true });
   writeFileSync(join(root, CONFIG_PATH), `${JSON.stringify(config, null, 2)}\n`);
   return dir;
+}
+
+function sha256(file: string): string {
+  return `sha256:${createHash('sha256').update(readFileSync(file)).digest('hex')}`;
 }

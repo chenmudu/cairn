@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   cpSync,
@@ -56,7 +57,8 @@ function appendLedger(missionDir, event) {
 }
 
 test('the active mission satisfies its target hash chain', () => {
-  const mission = join(repo, '.cairn', 'missions', '001-method-pack');
+  const config = JSON.parse(readFileSync(join(repo, '.cairn', 'config.json'), 'utf8'));
+  const mission = join(repo, '.cairn', 'missions', config.active_mission);
   const report = checkTargets(repo, mission);
   assert.equal(report.ok, true, report.errors.join('\n'));
   assert.equal(report.checked, 4);
@@ -146,4 +148,68 @@ test('rejects an artifact key that escapes the repository', (t) => {
   const report = checkTargets(root, missionDir);
   assert.equal(report.ok, false);
   assert.match(report.errors.join('\n'), /must be repo-relative/);
+});
+
+function writeConfig(root, active) {
+  mkdirSync(join(root, '.cairn'), { recursive: true });
+  writeFileSync(
+    join(root, '.cairn', 'config.json'),
+    `${JSON.stringify({ layout_version: 1, active_mission: active }, null, 2)}\n`,
+  );
+}
+
+test('skips a closed mission that is not the active mission', (t) => {
+  const { root, missionDir } = makeRepo(t);
+  appendLedger(missionDir, {
+    ts: '2026-10-31T00:00:01.000Z',
+    event: 'mission_done',
+    mission: 'temp-mission',
+    actor: 'cairn',
+    data: { acceptance: [] },
+  });
+  writeConfig(root, 'something-else');
+  writeFileSync(join(root, 'docs', 'protocol.md'), '# changed protocol\n');
+
+  const report = checkTargets(root, missionDir);
+  assert.equal(report.ok, true, report.errors.join('\n'));
+  assert.equal(report.skipped, true);
+  assert.equal(report.checked, 0);
+});
+
+test('still checks a closed mission that is the active mission', (t) => {
+  const { root, missionDir } = makeRepo(t);
+  appendLedger(missionDir, {
+    ts: '2026-10-31T00:00:01.000Z',
+    event: 'mission_done',
+    mission: 'temp-mission',
+    actor: 'cairn',
+    data: { acceptance: [] },
+  });
+  writeConfig(root, '001-test');
+  writeFileSync(join(root, 'docs', 'protocol.md'), '# changed protocol\n');
+
+  const report = checkTargets(root, missionDir);
+  assert.equal(report.ok, false);
+  assert.match(report.errors.join('\n'), /does not match the ledger/);
+});
+
+test('the check-targets script prints the skip line and exits 0', (t) => {
+  const { root, missionDir } = makeRepo(t);
+  appendLedger(missionDir, {
+    ts: '2026-10-31T00:00:01.000Z',
+    event: 'mission_done',
+    mission: 'temp-mission',
+    actor: 'cairn',
+    data: { acceptance: [] },
+  });
+  writeConfig(root, 'something-else');
+  writeFileSync(join(root, 'docs', 'protocol.md'), '# changed protocol\n');
+
+  const result = spawnSync(
+    process.execPath,
+    [join(repo, 'scripts', 'check-targets.mjs'), missionDir, '--root', root],
+    { encoding: 'utf8' },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /targets: skip \(closed mission\)/);
 });

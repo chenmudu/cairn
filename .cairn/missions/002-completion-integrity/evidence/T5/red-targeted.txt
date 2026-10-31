@@ -1,0 +1,231 @@
+✔ the active mission satisfies its target hash chain (3.8305ms)
+✔ accepts a complete hash chain with mission-relative keys (6.3254ms)
+✔ rejects a target file changed after the freeze (5.6747ms)
+✔ rejects a target that was never frozen (4.5931ms)
+✔ rejects a missing target file (4.7283ms)
+✔ rejects an amendment whose old hash does not match the chain (5.2713ms)
+✔ accepts a valid amendment and checks the new file (4.6599ms)
+✔ rejects an artifact key that escapes the repository (4.8318ms)
+✖ skips a closed mission that is not the active mission (5.2158ms)
+✔ still checks a closed mission that is the active mission (4.5076ms)
+✖ the check-targets script prints the skip line and exits 0 (62.6184ms)
+✔ status --json reports Mission #0 and every coverage link (78.1786ms)
+✔ the default mission is the active mission from .cairn/config.json (80.6105ms)
+✔ a bare mission id and a legacy missions/<id> path resolve (140.2709ms)
+✔ init scaffolds a mission in an empty repository (146.9672ms)
+✔ the init scaffold gate fails, so the scaffold cannot be recorded done (539.453ms)
+✔ next prints a packet for the task status reports (140.2646ms)
+✔ record refuses a task with no gate evidence and does not write (70.1985ms)
+✔ record refuses a task that was never started and writes nothing (73.0247ms)
+✔ verify and record complete a task with no manual ledger write (590.13ms)
+✔ record refuses an unknown task (69.2945ms)
+✔ start records task_started with the base commit and refuses a second start (222.7121ms)
+✔ start refuses an unmet dependency and names it (143.0489ms)
+✔ start refuses a second active task and names it (232.3569ms)
+✔ a parked task can be answered and then completed (666.0904ms)
+✔ answer refuses a task that is not parked (73.2376ms)
+✔ review writes a review_result from a JSON file (72.8565ms)
+✔ review refuses an invalid verdict and writes nothing (70.1963ms)
+✔ usage exits 2 (66.2008ms)
+✖ init writes mission_created and the new mission validates (67.417ms)
+✖ init defaults to cairn and never claims a human approval (81.963ms)
+✖ record --amended writes old and new hashes and enforces the approver (67.6105ms)
+✔ accepts the repository mission (5.5542ms)
+✔ accepts a minimal valid mission (2.2554ms)
+✔ rejects the fixture whose task has no gate (0.6738ms)
+✔ rejects duplicate task ids (1.5416ms)
+✔ rejects an unresolvable dependency (1.6081ms)
+✔ rejects a task whose gates are advisory only (1.568ms)
+✔ rejects an unknown ledger event (1.5425ms)
+✔ rejects a task_done without a passing blocking gate (1.4948ms)
+✔ rejects a gate_result whose evidence file is missing (1.4779ms)
+✔ accepts a gate_result whose evidence file exists (1.9733ms)
+✔ rejects an evidence path that escapes the mission directory (1.4401ms)
+✔ accepts mission_amended with old and new hashes (1.4769ms)
+✔ rejects mission_amended without an approver (1.8035ms)
+✔ rejects YAML it does not understand instead of guessing (1.653ms)
+✔ accepts a new-shape mission whose hashes match (2.733ms)
+✖ rejects a new-shape mission whose target hash was tampered with (2.733ms)
+✖ rejects a task_done whose base or head is not a commit (2.7201ms)
+✖ rejects a task_done that omits a blocking gate (2.2742ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 42
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3751.3074
+
+✖ failing tests:
+
+test at test\check-targets.test.mjs:160:1
+✖ skips a closed mission that is not the active mission (5.2158ms)
+  AssertionError [ERR_ASSERTION]: docs/protocol.md: hash sha256:06eb6c2c5fd071f8b1e85c2d1d161d20637e38e2fc597f0dc2226d9a23b7d136 does not match the ledger sha256:69efb6b76dddefc41691d9fb821c89f20630204ff59949aa0bf4b359d72ab0aa
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/check-targets.test.mjs:173:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\check-targets.test.mjs:195:1
+✖ the check-targets script prints the skip line and exits 0 (62.6184ms)
+  AssertionError [ERR_ASSERTION]: docs/protocol.md: hash sha256:06eb6c2c5fd071f8b1e85c2d1d161d20637e38e2fc597f0dc2226d9a23b7d136 does not match the ledger sha256:69efb6b76dddefc41691d9fb821c89f20630204ff59949aa0bf4b359d72ab0aa
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/check-targets.test.mjs:212:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:482:1
+✖ init writes mission_created and the new mission validates (67.417ms)
+  AssertionError [ERR_ASSERTION]: init needs <id>
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn answer <task> --text <text> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:499:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:523:1
+✖ init defaults to cairn and never claims a human approval (81.963ms)
+  TypeError: Cannot read properties of undefined (reading 'data')
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:529:24)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\cli.test.mjs:534:1
+✖ record --amended writes old and new hashes and enforces the approver (67.6105ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:537:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\validate-mission.test.mjs:270:1
+✖ rejects a new-shape mission whose target hash was tampered with (2.733ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /hash .* does not match/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:274:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /hash .* does not match/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\validate-mission.test.mjs:277:1
+✖ rejects a task_done whose base or head is not a commit (2.7201ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /not a commit/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:292:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /not a commit/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\validate-mission.test.mjs:295:1
+✖ rejects a task_done that omits a blocking gate (2.2742ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /blocking gate gate/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:323:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /blocking gate gate/,
+    operator: 'match',
+    diff: 'simple'
+  }

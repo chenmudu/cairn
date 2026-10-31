@@ -69,7 +69,14 @@ test('initMission scaffolds .cairn/missions/<id> and makes it active', (t) => {
     assert.ok(existsSync(join(dir, name)), `${name} must exist`);
   }
   assert.match(readFileSync(join(dir, 'mission.md'), 'utf8'), /title: New mission/);
-  assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8'), '');
+  const events = readFileSync(join(dir, 'ledger.jsonl'), 'utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  assert.equal(events.length, 1);
+  assert.equal(events[0].event, 'mission_created');
+  assert.equal(events[0].data.owner, 'replace-me');
+  assert.equal(events[0].data.approved_by, 'cairn');
   assert.equal(readConfig(root)?.active_mission, '003-new-mission');
   assert.equal(resolveMission(undefined, root), dir);
 });

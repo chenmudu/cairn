@@ -1,0 +1,113 @@
+✔ accepts the repository mission (4.4047ms)
+✔ accepts a minimal valid mission (2.1281ms)
+✔ rejects the fixture whose task has no gate (0.5896ms)
+✔ rejects duplicate task ids (1.643ms)
+✔ rejects an unresolvable dependency (1.3866ms)
+✔ rejects a task whose gates are advisory only (1.43ms)
+✔ rejects an unknown ledger event (1.8469ms)
+✔ rejects a task_done without a passing blocking gate (1.4558ms)
+✔ rejects a gate_result whose evidence file is missing (1.5238ms)
+✔ accepts a gate_result whose evidence file exists (1.8995ms)
+✔ rejects an evidence path that escapes the mission directory (1.6767ms)
+✔ accepts mission_amended with old and new hashes (1.382ms)
+✔ rejects mission_amended without an approver (1.5477ms)
+✔ rejects YAML it does not understand instead of guessing (1.3159ms)
+✔ accepts a new-shape mission whose hashes match (2.6116ms)
+✖ rejects a new-shape mission whose target hash was tampered with (2.4431ms)
+✖ rejects a task_done whose base or head is not a commit (2.1002ms)
+✖ rejects a task_done that omits a blocking gate (2.2807ms)
+✖ rejects a task_done whose head is not in HEAD history (234.1534ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 15
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 324.6801
+
+✖ failing tests:
+
+test at test\validate-mission.test.mjs:271:1
+✖ rejects a new-shape mission whose target hash was tampered with (2.4431ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /hash .* does not match/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:275:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /hash .* does not match/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\validate-mission.test.mjs:278:1
+✖ rejects a task_done whose base or head is not a commit (2.1002ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /not a commit/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:293:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /not a commit/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\validate-mission.test.mjs:296:1
+✖ rejects a task_done that omits a blocking gate (2.2807ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /blocking gate gate/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:328:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /blocking gate gate/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\validate-mission.test.mjs:331:1
+✖ rejects a task_done whose head is not in HEAD history (234.1534ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /not in HEAD history/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/validate-mission.test.mjs:369:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /not in HEAD history/,
+    operator: 'match',
+    diff: 'simple'
+  }

@@ -1,0 +1,8 @@
+skill: impeccable:design-review
+mode: not-applicable
+
+T5 declares src/*.ts and scripts/*.mjs and test/*.mjs|*.ts, plus docs/*.md, the CI workflow,
+and the mission directory. None of those extensions is a UI surface (no html, css, tsx, jsx,
+vue, svelte, astro, svg), so there is no markup or URL for `impeccable detect` to read. The
+review is criteria-based against method/standards/docs.md, which is the in-repo floor, not a
+pack invocation.

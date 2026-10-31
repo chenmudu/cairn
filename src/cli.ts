@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { appendEvent, nextTimestamp } from './ledger.ts';
 import {
@@ -34,6 +35,7 @@ const USAGE = `usage:
   cairn review --file <json> [--mission <dir>]
   cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--packs <json>] [--mission <dir>]
+  cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--mission <dir>]
   cairn record --mission-done [--mission <dir>]
 `;
 
@@ -47,10 +49,28 @@ function main(argv: string[]): number {
 
   if (command === 'init') {
     const title = takeOption(rest, '--title');
+    const owner = takeOption(rest, '--owner');
+    const source = takeOption(rest, '--approval-source');
+    const approvedBy = takeOption(rest, '--approved-by');
     const id = rest[0];
     if (!id || rest.length > 1) return usage('init needs <id>');
+    if (approvedBy !== undefined && approvedBy !== 'cairn' && approvedBy !== 'human') {
+      return usage('--approved-by must be cairn or human');
+    }
+    const approvalSource = source
+      ?.split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry !== '');
+    if (source !== undefined && (!approvalSource || approvalSource.length === 0)) {
+      return usage('--approval-source must name at least one source');
+    }
     try {
-      const dir = initMission(id, { title });
+      const dir = initMission(id, {
+        title,
+        owner,
+        approvalSource,
+        approvedBy: approvedBy as 'cairn' | 'human' | undefined,
+      });
       process.stdout.write(`created ${dir}\n`);
       return 0;
     } catch (error) {
@@ -121,6 +141,18 @@ function main(argv: string[]): number {
   }
 
   if (command === 'record') {
+    if (rest.includes('--amended')) {
+      rest.splice(rest.indexOf('--amended'), 1);
+      const artifact = takeOption(rest, '--artifact');
+      const why = takeOption(rest, '--why');
+      const approvedBy = takeOption(rest, '--approved-by') ?? 'cairn';
+      if (!artifact || rest.length > 0) {
+        return usage(
+          'record --amended needs --artifact <path> --why <text> [--approved-by cairn|human]',
+        );
+      }
+      return amendment(missionDir, artifact, why ?? '', approvedBy);
+    }
     if (rest.includes('--mission-done')) {
       if (rest.length !== 1) return usage('record --mission-done takes no task');
       return recordMission(missionDir);
@@ -330,6 +362,90 @@ function committedLedgerBlob(missionDir: string): string | null {
     encoding: 'utf8',
   });
   return blob.status === 0 ? blob.stdout : null;
+}
+
+const AMENDABLE = new Set(['mission.md', 'plan.md', 'policy.md', 'docs/protocol.md']);
+const HUMAN_ONLY = new Set(['mission.md', 'policy.md', 'docs/protocol.md']);
+
+/**
+ * The runtime writer for `mission_amended`. The old hash comes from the frozen
+ * chain, the new one from the file on disk; a target that cannot prove both is
+ * refused, so no amendment is accepted on trust. `plan.md` is the executor's
+ * workspace; the contract, the policy, and `docs/protocol.md` need a human.
+ */
+function amendment(
+  missionDir: string,
+  artifact: string,
+  why: string,
+  approvedBy: string,
+): number {
+  const doc = loadMission(missionDir);
+  const agent = artifact.replace(/\\/g, '/');
+  if (!AMENDABLE.has(agent)) return refuse(`unknown target artifact ${artifact}`);
+  if (approvedBy !== 'cairn' && approvedBy !== 'human') {
+    return refuse('--approved-by must be cairn or human');
+  }
+  if (why.trim() === '') return refuse('--why is required');
+  if (HUMAN_ONLY.has(agent) && approvedBy !== 'human') {
+    return refuse(`${agent} requires --approved-by human`);
+  }
+
+  const chain = new Map<string, string>();
+  for (const event of doc.events) {
+    if (event.event === 'mission_created') applyFrozen(chain, event.data?.artifacts);
+    if (event.event === 'mission_amended') applyFrozen(chain, event.data?.new);
+  }
+  const old = chain.get(agent);
+  if (!old) return refuse(`${agent} was never frozen; only a frozen target can be amended`);
+
+  const file = agent === 'docs/protocol.md' ? resolve(repoRootOf(doc.missionDir), agent) : resolve(doc.missionDir, agent);
+  if (!existsSync(file)) return refuse(`${agent}: artifact is missing`);
+  const now = sha256File(file);
+
+  const event = appendEvent(doc.missionDir, {
+    ts: nextTimestamp(doc.events),
+    event: 'mission_amended',
+    mission: doc.mission.id,
+    actor: approvedBy,
+    data: {
+      old: { [agent]: old },
+      new: { [agent]: now },
+      acceptance: doc.mission.acceptance.map((criterion) => criterion.id),
+      why,
+      approved_by: approvedBy,
+    },
+  });
+  process.stdout.write(`${JSON.stringify(event, null, 2)}\n`);
+  return 0;
+}
+
+function applyFrozen(chain: Map<string, string>, artifacts: unknown): void {
+  if (artifacts === null || typeof artifacts !== 'object' || Array.isArray(artifacts)) return;
+  for (const [key, value] of Object.entries(artifacts as Record<string, unknown>)) {
+    if (typeof value === 'string') chain.set(key.replace(/\\/g, '/'), value);
+  }
+}
+
+/** The repository root around `.cairn/missions/<id>` or legacy `missions/<id>`. */
+function repoRootOf(missionDir: string): string {
+  let current = resolve(missionDir);
+  const id = basename(current);
+  for (;;) {
+    const parent = dirname(current);
+    if (parent === current) break;
+    if (
+      existsSync(join(parent, '.cairn', 'missions', id)) ||
+      (basename(parent) !== '.cairn' && existsSync(join(parent, 'missions', id)))
+    ) {
+      return parent;
+    }
+    current = parent;
+  }
+  return resolve(missionDir, '..', '..', '..');
+}
+
+function sha256File(file: string): string {
+  return `sha256:${createHash('sha256').update(readFileSync(file)).digest('hex')}`;
 }
 
 function recordMission(missionDir: string): number {

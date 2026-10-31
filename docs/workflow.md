@@ -94,6 +94,30 @@ Pack availability is advisory and does not block the tick:
 node scripts/check-method.mjs --packs
 ```
 
+## Creating and amending a mission
+
+`cairn init` is the writer of `mission_created`. It scaffolds `mission.md`, `plan.md`, and
+`policy.md`, freezes their sha256 in the ledger, freezes `docs/protocol.md` when the repository
+has one, and makes the new mission active.
+
+```sh
+node src/cli.ts init <id> --title <title> --owner <owner> --approval-source <ids> \
+  --approved-by cairn|human
+```
+
+`--owner` defaults to `replace-me`, `--approval-source` to `none`, and `--approved-by` to
+`cairn`. Only a human passes `--approved-by human`; `init` never claims it on its own.
+
+A target file changes only through an amendment with the old and the new hash:
+
+```sh
+node src/cli.ts record --amended --artifact plan.md --why <why> --approved-by cairn
+```
+
+`plan.md` may be amended by `cairn`. `mission.md`, `policy.md`, and `docs/protocol.md` require
+`--approved-by human`. `validate-mission` recomputes the chain for the active mission; a
+mismatch fails the `mission` gate.
+
 ## Task states
 
 The ledger decides a task's state, not `plan.md`:

@@ -208,6 +208,8 @@ tasks:
       - test/check-targets.test.mjs
       - .github/workflows/gates.yml
       - docs/i18n.md
+      - docs/workflow.md
+      - docs/workflow.zh.md
       - .cairn/missions/002-completion-integrity/
     interfaces:
       produces:

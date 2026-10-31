@@ -1,0 +1,123 @@
+✖ the active mission satisfies its target hash chain (3.4493ms)
+✔ accepts a complete hash chain with mission-relative keys (7.0373ms)
+✔ rejects a target file changed after the freeze (6.2344ms)
+✔ rejects a target that was never frozen (5.254ms)
+✔ rejects a missing target file (5.1429ms)
+✔ rejects an amendment whose old hash does not match the chain (5.2349ms)
+✔ accepts a valid amendment and checks the new file (5.1895ms)
+✔ rejects an artifact key that escapes the repository (4.3798ms)
+✔ skips a closed mission that is not the active mission (4.7193ms)
+✔ still checks a closed mission that is the active mission (5.2502ms)
+✔ the check-targets script prints the skip line and exits 0 (66.2438ms)
+✔ status --json reports Mission #0 and every coverage link (76.8536ms)
+✔ the default mission is the active mission from .cairn/config.json (72.6023ms)
+✔ a bare mission id and a legacy missions/<id> path resolve (150.0347ms)
+✔ init scaffolds a mission in an empty repository (150.2278ms)
+✔ the init scaffold gate fails, so the scaffold cannot be recorded done (561.9181ms)
+✔ next prints a packet for the task status reports (147.208ms)
+✔ record refuses a task with no gate evidence and does not write (80.243ms)
+✔ record refuses a task that was never started and writes nothing (79.1278ms)
+✔ verify and record complete a task with no manual ledger write (621.2452ms)
+✔ record refuses an unknown task (74.2408ms)
+✔ start records task_started with the base commit and refuses a second start (235.0829ms)
+✔ start refuses an unmet dependency and names it (150.0964ms)
+✔ start refuses a second active task and names it (239.6457ms)
+✔ a parked task can be answered and then completed (711.117ms)
+✔ answer refuses a task that is not parked (73.2552ms)
+✔ review writes a review_result from a JSON file (76.6239ms)
+✔ review refuses an invalid verdict and writes nothing (73.0752ms)
+✔ usage exits 2 (72.8263ms)
+✔ init writes mission_created and the new mission validates (123.3162ms)
+✔ init defaults to cairn and never claims a human approval (75.554ms)
+✖ record --amended writes old and new hashes and enforces the approver (149.2614ms)
+✔ a bare id resolves under .cairn/missions first (1.9914ms)
+✔ a legacy missions/<id> directory still resolves (1.1184ms)
+✔ an old missions/<path> prefers the migrated .cairn path (1.6992ms)
+✔ the active mission comes from .cairn/config.json (1.6529ms)
+✔ without config, a legacy bootstrap mission is the fallback (1.2403ms)
+✔ an explicit path wins even when it is outside the repository (1.0672ms)
+✔ initMission scaffolds .cairn/missions/<id> and makes it active (5.2914ms)
+✔ initMission refuses to overwrite an existing mission (2.9256ms)
+✔ initMission rejects an unsafe mission id (0.3898ms)
+✔ accepts the repository mission (4.5866ms)
+✔ accepts a minimal valid mission (1.8596ms)
+✔ rejects the fixture whose task has no gate (0.5602ms)
+✔ rejects duplicate task ids (1.4482ms)
+✔ rejects an unresolvable dependency (1.5463ms)
+✔ rejects a task whose gates are advisory only (1.6148ms)
+✔ rejects an unknown ledger event (1.5289ms)
+✔ rejects a task_done without a passing blocking gate (1.4761ms)
+✔ rejects a gate_result whose evidence file is missing (1.4516ms)
+✔ accepts a gate_result whose evidence file exists (2.0345ms)
+✔ rejects an evidence path that escapes the mission directory (1.6495ms)
+✔ accepts mission_amended with old and new hashes (1.8425ms)
+✔ rejects mission_amended without an approver (1.6404ms)
+✔ rejects YAML it does not understand instead of guessing (1.8645ms)
+✔ accepts a new-shape mission whose hashes match (3.4955ms)
+✔ rejects a new-shape mission whose target hash was tampered with (4.1097ms)
+✔ rejects a task_done whose base or head is not a commit (45.8823ms)
+✔ rejects a task_done that omits a blocking gate (42.0051ms)
+✔ rejects a task_done whose head is not in HEAD history (299.7177ms)
+ℹ tests 60
+ℹ suites 0
+ℹ pass 58
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4051.9731
+
+✖ failing tests:
+
+test at test\check-targets.test.mjs:59:1
+✖ the active mission satisfies its target hash chain (3.4493ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 4
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/check-targets.test.mjs:63:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 4,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:534:1
+✖ record --amended writes old and new hashes and enforces the approver (149.2614ms)
+  AssertionError [ERR_ASSERTION]: record --amended needs --artifact <path> --why <text> [--approved-by cairn|human]
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn answer <task> --text <text> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:552:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
