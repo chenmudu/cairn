@@ -1,4 +1,4 @@
-<!-- translation of docs/workflow.md at the Mission #2 T5 revision; the English file is authoritative -->
+<!-- translation of docs/workflow.md at the Mission #2 T6 revision; the English file is authoritative -->
 
 # 一个 tick
 
@@ -50,6 +50,8 @@
    ```
 
    `verify` 把 head 和 tree 写进每个 `gate_result`；闸门运行期间被跟踪内容变化就是漂移。
+   任何闸门运行之前，它先拒绝不在 `allowed_commands` 的命令，或命中 `forbidden_commands`
+   且没有已记录例外的命令。
 
 6. **记录。** 只有最新的阻塞闸门结果指名当前 head 和 tree、工作区在 `.cairn/` 之外仍然干净、
    每个证据文件都在时，才追加 `task_done`。同时交任务返回的两条 pack 记录。
@@ -177,6 +179,35 @@ node src/cli.ts answer <task> --text "决定内容" --mission .cairn/missions/<i
 
 `scope` 和 `approved_by` 会被检查，`why` 与 `date` 不能为空，事件必须晚于最后一条
 `review_result`。`paths` 可以把授权收窄到指定路径。形状见决策 0007，不存在第二个 reason 字段。
+
+## 策略、预算与授权
+
+`policy.md` 在可执行的地方就是可执行的：
+
+- **闸门命令。** 任何闸门运行之前，`verify` 先用首个 token 查 `allowed_commands`，再用完整
+  命令精确匹配 `approved_exceptions`，最后按精确或空格前缀匹配 `forbidden_commands`。拒绝
+  会点名 gate 和 policy 路径，且发生在命令运行之前。
+- **尝试次数。** 任务的 `task_started` 数量达到 `max_attempts_per_task` 后，`start` 和
+  `answer` 拒绝。
+- **墙钟时间。** 从当前尝试的 start 起超过 `max_wall_time_per_tick_minutes` 时，`record` 以
+  `budget_exhausted` 拒绝；需要人类扩展预算。
+- **停止标签。** `stop_condition_labels.auto` 中的条件可检测，并在拒绝信息里点名；`human`
+  条件保持检查点，永不自动化。
+- **不测量。** `max_fix_rounds` 和 token 预算没有可靠来源。运行时不会假装执行它们，保持
+  human/unmeasured。
+
+`git push origin main` 默认被禁止，只由已记录的 `approved_exceptions` 条目放行。
+`git push origin dev` 和 `git push --force origin main` 不匹配该例外，会被拒绝。
+
+声明文件之外的写入需要人类授权事件：
+
+```sh
+node src/cli.ts record --authorized --paths a.md,dir/ --why <why> --approved-by human
+```
+
+事件形状是 `{scope: "writes", paths, approved_by: "human", why, date}`。此后
+`audit-session` 接受这些路径内的写入，仍然报告没有对应写入的授权，也仍然报告路径外的写入。
+`--approved-by` 必须是 `human`；agent 不能给自己授权。
 
 ## 人类检查点
 

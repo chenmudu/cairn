@@ -212,6 +212,20 @@ test('record refuses an unknown task', (t) => {
 
 test('start records task_started with the base commit and refuses a second start', (t) => {
   const dir = makeTempMission(t);
+  // Three attempts, so the second start is refused by the state machine, not
+  // by the attempt budget that T6 adds.
+  writeFileSync(
+    join(dir, 'policy.md'),
+    `---
+schema: cairn/policy@0.1
+mission: temp-mission
+budgets:
+  max_attempts_per_task: 3
+allowed_commands:
+  - node
+---
+`,
+  );
   const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
   assert.equal(git('init', '-q').status, 0);
   assert.equal(git('add', '.').status, 0);
@@ -586,4 +600,171 @@ test('record --amended writes old and new hashes and enforces the approver', (t)
   );
   assert.equal(human.status, 0, human.stderr);
   assert.equal(JSON.parse(human.stdout).data.approved_by, 'human');
+});
+
+const gatePlan = (command, args) => `---
+schema: cairn/plan@0.1
+mission: temp-mission
+tasks:
+  - id: T-001
+    title: Gate probe
+    deps: []
+    risk: low
+    status: todo
+    serves: [F1]
+    files:
+      - README.md
+    gates:
+      - id: probe
+        command: ${command}
+        args: [${args.map((arg) => JSON.stringify(arg)).join(', ')}]
+        severity: block
+---
+`;
+
+const startEvent = (ts) =>
+  JSON.stringify({
+    ts,
+    event: 'task_started',
+    mission: 'temp-mission',
+    task: 'T-001',
+    actor: 'test',
+    data: { base: 'deadbee' },
+  }) + '\n';
+
+test('verify refuses an out-of-list gate command and names the policy', (t) => {
+  const mission = makeTempMission(t);
+  writeFileSync(join(mission, 'plan.md'), gatePlan('npx', ['eslint']));
+  const result = run('verify', 'T-001', '--mission', mission);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /probe/);
+  assert.match(result.stderr, /npx/);
+  assert.match(result.stderr, /policy\.md/);
+});
+
+test('verify refuses a forbidden gate command', (t) => {
+  const mission = makeTempMission(t);
+  writeFileSync(
+    join(mission, 'policy.md'),
+    `---
+schema: cairn/policy@0.1
+mission: temp-mission
+allowed_commands:
+  - node
+  - git
+forbidden_commands:
+  - git push
+---
+`,
+  );
+  writeFileSync(join(mission, 'plan.md'), gatePlan('git', ['push', 'origin', 'dev']));
+  const result = run('verify', 'T-001', '--mission', mission);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /forbidden/);
+  assert.match(result.stderr, /git push/);
+  assert.match(result.stderr, /policy\.md/);
+});
+
+test('start refuses a task at max_attempts_per_task', (t) => {
+  const mission = makeTempMission(t);
+  writeFileSync(join(mission, 'ledger.jsonl'), startEvent('2026-10-31T00:00:00.000Z'));
+  const result = run('start', 'T-001', '--mission', mission);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /budget_exhausted/);
+  assert.match(result.stderr, /policy\.md/);
+});
+
+test('record refuses a tick over max_wall_time_per_tick_minutes', (t) => {
+  const mission = makeTempMission(t);
+  writeFileSync(
+    join(mission, 'policy.md'),
+    `---
+schema: cairn/policy@0.1
+mission: temp-mission
+budgets:
+  max_attempts_per_task: 3
+  max_wall_time_per_tick_minutes: 1
+stop_conditions:
+  - budget_exhausted
+stop_condition_labels:
+  auto:
+    - budget_exhausted
+---
+`,
+  );
+  writeFileSync(
+    join(mission, 'ledger.jsonl'),
+    startEvent(new Date(Date.now() - 5 * 60_000).toISOString()),
+  );
+  const result = run('record', 'T-001', '--status', 'done', '--mission', mission);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /budget_exhausted/);
+  assert.match(result.stderr, /human/);
+});
+
+test('record --authorized writes an authorization event', (t) => {
+  const mission = makeTempMission(t);
+  const result = run(
+    'record',
+    '--authorized',
+    '--paths',
+    'docs/guide.md,src/new.ts',
+    '--why',
+    'the human widened the write set',
+    '--approved-by',
+    'human',
+    '--mission',
+    mission,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const event = JSON.parse(result.stdout);
+  assert.equal(event.event, 'authorization');
+  assert.equal(event.actor, 'human');
+  assert.equal(event.data.scope, 'writes');
+  assert.deepEqual(event.data.paths, ['docs/guide.md', 'src/new.ts']);
+  assert.equal(event.data.approved_by, 'human');
+  assert.equal(event.data.why, 'the human widened the write set');
+  assert.match(event.data.date, /^\d{4}-\d{2}-\d{2}$/);
+});
+
+test('record --authorized refuses a non-human approval and missing fields', (t) => {
+  const mission = makeTempMission(t);
+  const cairn = run(
+    'record',
+    '--authorized',
+    '--paths',
+    'docs/guide.md',
+    '--why',
+    'agent tried to authorize itself',
+    '--approved-by',
+    'cairn',
+    '--mission',
+    mission,
+  );
+  assert.equal(cairn.status, 2, cairn.stdout);
+  assert.match(cairn.stderr, /human/);
+
+  const noPaths = run(
+    'record',
+    '--authorized',
+    '--why',
+    'no paths',
+    '--approved-by',
+    'human',
+    '--mission',
+    mission,
+  );
+  assert.equal(noPaths.status, 2, noPaths.stdout);
+
+  const noWhy = run(
+    'record',
+    '--authorized',
+    '--paths',
+    'docs/guide.md',
+    '--approved-by',
+    'human',
+    '--mission',
+    mission,
+  );
+  assert.equal(noWhy.status, 2, noWhy.stdout);
 });

@@ -42,11 +42,26 @@ export interface Plan {
   tasks: Task[];
 }
 
+export interface ApprovedException {
+  command: string;
+  scope?: string;
+  approved_by?: string;
+  date?: string;
+  reason?: string;
+}
+
+export interface StopConditionLabels {
+  auto?: string[];
+  human?: string[];
+}
+
 export interface Policy {
   budgets?: Record<string, unknown>;
   allowed_commands?: string[];
   forbidden_commands?: string[];
   stop_conditions?: string[];
+  stop_condition_labels?: StopConditionLabels;
+  approved_exceptions?: ApprovedException[];
 }
 
 export type TaskState = 'todo' | 'active' | 'parked' | 'done';
@@ -126,6 +141,40 @@ export function taskState(task: Task, events: LedgerEvent[]): TaskState {
     else if (event.event === 'task_parked') state = 'parked';
   }
   return state;
+}
+
+/** How many times the task has been started; `answer` also writes a start. */
+export function attemptCount(taskId: string, events: LedgerEvent[]): number {
+  return events.filter((event) => event.event === 'task_started' && event.task === taskId).length;
+}
+
+/** The start that opened the current attempt. */
+export function latestStart(taskId: string, events: LedgerEvent[]): LedgerEvent | undefined {
+  return events.filter((event) => event.event === 'task_started' && event.task === taskId).at(-1);
+}
+
+/** A numeric budget; the YAML subset leaves scalars as strings. */
+export function budgetValue(policy: Policy, name: string): number | null {
+  const raw = policy.budgets?.[name];
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null;
+  if (typeof raw === 'string' && raw.trim() !== '') {
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  }
+  return null;
+}
+
+/**
+ * `stop_conditions` are split in the policy. Only `auto` conditions are
+ * detectable; a `human` condition is a checkpoint and is never automated.
+ */
+export function stopConditionKind(
+  policy: Policy,
+  condition: string,
+): 'auto' | 'human' | 'unlabelled' {
+  if (policy.stop_condition_labels?.auto?.includes(condition)) return 'auto';
+  if (policy.stop_condition_labels?.human?.includes(condition)) return 'human';
+  return 'unlabelled';
 }
 
 export function nextTask(plan: Plan, events: LedgerEvent[]): Task | undefined {

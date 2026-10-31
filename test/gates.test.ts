@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { runGate } from '../src/gates.ts';
+import { checkGatePolicy, runGate } from '../src/gates.ts';
 import { checkEvidence, verifyTask } from '../src/verify.ts';
 import { readLedger } from '../src/ledger.ts';
 import { loadMission, type Gate } from '../src/plan.ts';
@@ -198,4 +198,65 @@ test('--expect-invalid passes on the missing-gate fixture and fails on a valid m
   );
   assert.equal(valid.status, 1, valid.stderr);
   assert.match(valid.stderr, /unexpected valid/);
+});
+
+const POLICY = {
+  allowed_commands: ['node', 'git'],
+  forbidden_commands: ['git push', 'rm -rf'],
+  approved_exceptions: [{ command: 'git push origin main' }],
+};
+
+const gateOf = (id: string, command: string, args: string[] = []): Gate => ({
+  id,
+  command,
+  args,
+  severity: 'block',
+});
+
+test('checkGatePolicy refuses a command outside allowed_commands and names the policy path', () => {
+  const errors = checkGatePolicy(
+    [gateOf('lint', 'npx', ['eslint'])],
+    POLICY,
+    '.cairn/missions/002/policy.md',
+  );
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /lint/);
+  assert.match(errors[0], /npx/);
+  assert.match(errors[0], /policy\.md/);
+});
+
+test('checkGatePolicy refuses a forbidden command', () => {
+  const errors = checkGatePolicy([gateOf('push', 'git', ['push', 'origin', 'dev'])], POLICY, 'policy.md');
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /forbidden/);
+  assert.match(errors[0], /git push/);
+});
+
+test('checkGatePolicy allows the recorded push exception and nothing wider', () => {
+  assert.deepEqual(
+    checkGatePolicy([gateOf('push', 'git', ['push', 'origin', 'main'])], POLICY, 'policy.md'),
+    [],
+  );
+  assert.match(
+    checkGatePolicy([gateOf('push', 'git', ['push', 'origin', 'dev'])], POLICY, 'policy.md')[0],
+    /forbidden/,
+  );
+  assert.match(
+    checkGatePolicy(
+      [gateOf('push', 'git', ['push', '--force', 'origin', 'main'])],
+      POLICY,
+      'policy.md',
+    )[0],
+    /forbidden/,
+  );
+});
+
+test('checkGatePolicy checks every gate, not the first', () => {
+  const errors = checkGatePolicy(
+    [gateOf('ok', 'node', ['-e', '0']), gateOf('bad', 'npx')],
+    POLICY,
+    'policy.md',
+  );
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /bad/);
 });

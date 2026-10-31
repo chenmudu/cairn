@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import type { Gate } from './plan.ts';
+import type { Gate, Policy } from './plan.ts';
 
 const DEFAULT_TIMEOUT_MS = 600_000;
 const DEFAULT_TAIL = 16_384;
@@ -66,6 +66,62 @@ export function runGate(gate: Gate, options: RunGateOptions = {}): GateResult {
 
 export function displayCommand(gate: Gate): string {
   return [gate.command, ...(gate.args ?? [])].join(' ');
+}
+
+export function normalizeCommand(command: string): string {
+  return command.trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * The forbidden rule for a command, or null. An `approved_exceptions` entry is
+ * an exact command match: it allows `git push origin main` and still refuses
+ * `git push origin dev` or `git push --force origin main`.
+ */
+export function forbiddenMatch(
+  command: string,
+  policy: Pick<Policy, 'forbidden_commands' | 'approved_exceptions'>,
+): string | null {
+  const normalized = normalizeCommand(command);
+  for (const exception of policy.approved_exceptions ?? []) {
+    if (typeof exception?.command === 'string' && normalizeCommand(exception.command) === normalized) {
+      return null;
+    }
+  }
+  for (const entry of policy.forbidden_commands ?? []) {
+    if (typeof entry !== 'string' || entry.trim() === '') continue;
+    const forbidden = normalizeCommand(entry);
+    if (normalized === forbidden || normalized.startsWith(`${forbidden} `)) return entry;
+  }
+  return null;
+}
+
+/**
+ * Check every gate against the policy before any command runs. Order: the
+ * first token must be allowed; a recorded exception allows the exact command;
+ * a forbidden entry refuses it; anything else is allowed.
+ */
+export function checkGatePolicy(
+  gates: Gate[],
+  policy: Policy,
+  policyPath: string,
+): string[] {
+  const allowed = policy.allowed_commands;
+  const errors: string[] = [];
+  for (const gate of gates ?? []) {
+    if (Array.isArray(allowed) && !allowed.includes(gate.command)) {
+      errors.push(
+        `gate ${gate.id}: command "${gate.command}" is not in allowed_commands (${policyPath})`,
+      );
+      continue;
+    }
+    const forbidden = forbiddenMatch(displayCommand(gate), policy);
+    if (forbidden) {
+      errors.push(
+        `gate ${gate.id}: command "${displayCommand(gate)}" matches forbidden "${forbidden}" (${policyPath})`,
+      );
+    }
+  }
+  return errors;
 }
 
 function tail(text: string, limit: number): string {

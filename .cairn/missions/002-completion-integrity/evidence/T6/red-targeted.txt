@@ -1,0 +1,240 @@
+✔ reports alignment corrections, gate-less claims, unplanned writes, and confirmation asks (2.5642ms)
+✔ does not flag a claim in a turn that ran a gate (1.0372ms)
+✔ ignores writes outside the repository (0.934ms)
+✔ reads a long transcript in bounded chunks (1.4273ms)
+✔ fails on an over-limit line instead of crashing (1.0747ms)
+✔ does not count the injected system reminder as a human correction (0.7841ms)
+✔ keeps the human text after an injected reminder (0.7754ms)
+✔ does not audit writes replayed inside a compaction summary (0.9948ms)
+✔ audits work anchored by a summary when no later user turn exists (1.2486ms)
+✔ audits the latest request, not a larger pre-compaction snapshot (1.0987ms)
+✔ ignores runtime evidence writes under the mission directory (0.747ms)
+✔ recognizes a mission_amended event as an amendment (1.3602ms)
+✖ a write inside an authorized path is not drift (1.2382ms)
+✖ an authorization with no matching write is reported separately (0.809ms)
+✖ a forbidden command without an exception is a violation (0.7975ms)
+✖ a forbidden command covered by an exception is not a violation (0.7514ms)
+✔ status --json reports Mission #0 and every coverage link (83.1473ms)
+✔ the default mission is the active mission from .cairn/config.json (77.1076ms)
+✔ a bare mission id and a legacy missions/<id> path resolve (149.037ms)
+✔ init scaffolds a mission in an empty repository (140.6352ms)
+✔ the init scaffold gate fails, so the scaffold cannot be recorded done (550.2834ms)
+✔ next prints a packet for the task status reports (143.6426ms)
+✔ record refuses a task with no gate evidence and does not write (76.5989ms)
+✔ record refuses a task that was never started and writes nothing (73.3484ms)
+✔ verify and record complete a task with no manual ledger write (599.6625ms)
+✔ record refuses an unknown task (73.2689ms)
+✔ start records task_started with the base commit and refuses a second start (238.9955ms)
+✔ start refuses an unmet dependency and names it (144.1211ms)
+✔ start refuses a second active task and names it (230.2479ms)
+✔ a parked task can be answered and then completed (670.8211ms)
+✔ answer refuses a task that is not parked (71.6119ms)
+✔ review writes a review_result from a JSON file (73.966ms)
+✔ review refuses an invalid verdict and writes nothing (71.5694ms)
+✔ usage exits 2 (67.4423ms)
+✔ init writes mission_created and the new mission validates (120.9344ms)
+✔ init defaults to cairn and never claims a human approval (71.7966ms)
+✔ record --amended writes old and new hashes and enforces the approver (305.8208ms)
+✖ verify refuses an out-of-list gate command and names the policy (117240.398ms)
+✖ verify refuses a forbidden gate command (200.1733ms)
+✖ start refuses a task at max_attempts_per_task (75.3566ms)
+✖ record refuses a tick over max_wall_time_per_tick_minutes (75.1596ms)
+✖ record --authorized writes an authorization event (73.6676ms)
+✔ record --authorized refuses a non-human approval and missing fields (210.5597ms)
+file:///D:/project/github/cairn/test/gates.test.ts:7
+import { checkGatePolicy, runGate } from '../src/gates.ts';
+         ^^^^^^^^^^^^^^^
+SyntaxError: The requested module '../src/gates.ts' does not provide an export named 'checkGatePolicy'
+    at #asyncInstantiate (node:internal/modules/esm/module_job:319:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:422:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.14.0
+✖ test\gates.test.ts (65.5527ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 34
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121967.4795
+
+✖ failing tests:
+
+test at test\audit-session.test.mjs:259:1
+✖ a write inside an authorized path is not drift (1.2382ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/audit-session.test.mjs:270:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\audit-session.test.mjs:276:1
+✖ an authorization with no matching write is reported separately (0.809ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/audit-session.test.mjs:284:52)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\audit-session.test.mjs:289:1
+✖ a forbidden command without an exception is a violation (0.7975ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/audit-session.test.mjs:303:48)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\audit-session.test.mjs:309:1
+✖ a forbidden command covered by an exception is not a violation (0.7514ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/audit-session.test.mjs:323:48)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at test\cli.test.mjs:621:1
+✖ verify refuses an out-of-list gate command and names the policy (117240.398ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /probe/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:626:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /probe/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:631:1
+✖ verify refuses a forbidden gate command (200.1733ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /forbidden/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:649:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /forbidden/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:654:1
+✖ start refuses a task at max_attempts_per_task (75.3566ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /budget_exhausted/. Input:
+  
+  'refused: T-001 is already started\n'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:659:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'refused: T-001 is already started\n',
+    expected: /budget_exhausted/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:663:1
+✖ record refuses a tick over max_wall_time_per_tick_minutes (75.1596ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /budget_exhausted/. Input:
+  
+  'refused: T-001: blocking gate gate has no result\n'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:687:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'refused: T-001: blocking gate gate has no result\n',
+    expected: /budget_exhausted/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:691:1
+✖ record --authorized writes an authorization event (73.6676ms)
+  AssertionError [ERR_ASSERTION]: record needs <task> --status done
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn answer <task> --text <text> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:705:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\gates.test.ts:1:1
+✖ test\gates.test.ts (65.5527ms)
+  'test failed'

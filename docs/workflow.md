@@ -55,7 +55,8 @@ same change.
    ```
 
    `verify` records the head and tree in every `gate_result` and fails if tracked content
-   changes while the gates run.
+   changes while the gates run. Before any gate runs, it refuses a command outside
+   `allowed_commands` or matching a `forbidden_commands` entry without a recorded exception.
 
 6. **Record.** Append `task_done` only when the latest blocking-gate results name the current
    head and tree, the worktree is still clean outside `.cairn/`, and every evidence file is
@@ -198,6 +199,38 @@ one event:
 `scope` and `approved_by` are checked, `why` and `date` must be non-empty, and the event must
 be later than the last `review_result`. `paths` may narrow the authorization to specific paths.
 The shape is decision 0007; no second reason field exists.
+
+## Policy, budgets, and authorizations
+
+`policy.md` is executable where it can be:
+
+- **Gate commands.** Before any gate runs, `verify` checks the first token against
+  `allowed_commands`, then the full command against `approved_exceptions` (exact match), then
+  `forbidden_commands` (exact or space-prefixed). A refusal names the gate and the policy path
+  and happens before the command runs.
+- **Attempts.** `start` and `answer` refuse when a task already has
+  `max_attempts_per_task` `task_started` events.
+- **Wall time.** `record` refuses with `budget_exhausted` when the time since the current
+  attempt's start exceeds `max_wall_time_per_tick_minutes`; a human must extend the budget.
+- **Stop labels.** `stop_condition_labels.auto` conditions are detectable and named in the
+  refusal; `human` conditions stay checkpoints and are never automated.
+- **Not measured.** `max_fix_rounds` and the token budget have no reliable source. The runtime
+  does not pretend to enforce them; they remain human/unmeasured.
+
+`git push origin main` is forbidden by default and allowed only by the recorded
+`approved_exceptions` entry. `git push origin dev` and `git push --force origin main` do not
+match that exception and are refused.
+
+A write outside the declared files needs a human authorization event:
+
+```sh
+node src/cli.ts record --authorized --paths a.md,dir/ --why <why> --approved-by human
+```
+
+The event is `{scope: "writes", paths, approved_by: "human", why, date}`. `audit-session` then
+accepts writes inside those paths, still reports an authorization with no matching write, and
+still reports a write outside the paths. `--approved-by` must be `human`; the agent cannot
+authorize itself.
 
 ## Human checkpoints
 

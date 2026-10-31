@@ -1,0 +1,49 @@
+[
+  {
+    "case": "inside",
+    "verdict": "clean",
+    "unplanned": [],
+    "unused": [],
+    "violations": []
+  },
+  {
+    "case": "outside",
+    "verdict": "drift",
+    "unplanned": [
+      "README.md"
+    ],
+    "unused": [
+      [
+        "docs/guide.md"
+      ]
+    ],
+    "violations": []
+  },
+  {
+    "case": "unused",
+    "verdict": "attention",
+    "unplanned": [],
+    "unused": [
+      [
+        "src/new.ts"
+      ]
+    ],
+    "violations": []
+  },
+  {
+    "case": "push-dev",
+    "verdict": "drift",
+    "unplanned": [],
+    "unused": [],
+    "violations": [
+      "git push origin dev [git push]"
+    ]
+  },
+  {
+    "case": "push-main",
+    "verdict": "clean",
+    "unplanned": [],
+    "unused": [],
+    "violations": []
+  }
+]

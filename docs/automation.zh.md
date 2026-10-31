@@ -1,4 +1,4 @@
-<!-- translation of docs/automation.md at the target-check commit; the English file is authoritative -->
+<!-- translation of docs/automation.md at the Mission #2 T6 revision; the English file is authoritative -->
 
 # 自动化——目标守卫与会话审计
 
@@ -39,7 +39,7 @@ node scripts/audit-session.mjs --strict     # verdict 为 drift 时退出 1
 node scripts/audit-session.mjs --out report.md
 ```
 
-它读取 ZCode `model-io-*.jsonl` 中最新的一次请求，报告四类信号。它不读消息最多的请求：
+它读取 ZCode `model-io-*.jsonl` 中最新的一次请求，报告六类信号。它不读消息最多的请求：
 压缩后旧快照更大，审计旧快照会漏掉之后的工作。没有更晚的人类回合时，压缩摘要作为后续工作的
 锚点；摘要之后还有人类回合时则跳过摘要，避免把重放的历史再判一次。mission 的 `evidence/`
 下的写入是运行时产物，不算漂移。
@@ -48,15 +48,18 @@ node scripts/audit-session.mjs --out report.md
 |---|---|
 | 目标纠正 | 人类不得不重述目标、定位或项目范围。守卫本应让这件事不必要。 |
 | 无闸门声明 | 某一轮声称完成，但同一轮没有跑任何闸门。声明不是证据。 |
-| 计划外写入 | `Write`/`Edit` 写到了没有任何任务声明的路径。除非有 ruling 或修订记录，否则就是漂移。 |
+| 计划外写入 | `Write`/`Edit` 写到了没有任务声明、也没有 `authorization` 覆盖的路径。除非有 ruling、修订或授权记录，否则就是漂移。 |
+| 无对应写入的授权 | `authorization` 点名的路径没有被任何写入触碰。计划中的写入没有发生。 |
+| 禁用命令 | `Bash` 命令命中 `forbidden_commands`，且没有精确匹配的 `approved_exceptions`。 |
 | 请求确认 | agent 把决定推回给人类。有些是合理的；这个数字是趋势，不是判决。 |
 
-verdict 为 `drift` 表示存在无闸门声明或计划外写入；只有目标纠正或请求确认时为 `attention`；
-否则为 `clean`。审计是诊断工具，只有 `--strict` 会把 `drift` 变成退出 1。会话记录包含完整对话，
-不要提交进仓库。
+verdict 为 `drift` 表示存在无闸门声明、计划外写入或禁用命令；只有目标纠正、请求确认或未使用的
+授权时为 `attention`；否则为 `clean`。审计是诊断工具，只有 `--strict` 会把 `drift` 变成退出 1。
+会话记录包含完整对话，不要提交进仓库。
 
-`--mission <dir>` 提供 plan 声明的文件列表和 ledger，让审计能区分计划内与计划外写入。
-默认是 `.cairn/config.json` 里的活动 mission（本仓库是 `.cairn/missions/001-method-pack`）。
+`--mission <dir>` 提供 plan 声明的文件列表、ledger、`authorization` 事件，以及 policy 的禁用
+命令和已批准例外，让审计能区分计划内与计划外写入、被覆盖与违规的命令。默认是
+`.cairn/config.json` 里的活动 mission（本仓库是 `.cairn/missions/002-completion-integrity`）。
 
 ## 规则、检查与注入
 

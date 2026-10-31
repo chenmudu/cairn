@@ -1,0 +1,46 @@
+# Captured from a temp mission under .cairn/missions/temp-mission (2026-10-31).
+
+--- out-of-list gate ---
+$ cairn verify T-001
+refused: gate probe: command "npx" is not in allowed_commands (…\temp-mission\policy.md)
+exit=2
+
+--- forbidden gate ---
+$ cairn verify T-001
+refused: gate probe: command "git push origin dev" matches forbidden "git push" (…\temp-mission\policy.md)
+exit=2
+
+--- excepted gate (policy allows it; git itself fails in a non-repository) ---
+$ cairn verify T-001
+{ "task": "T-001", "passed": false, "head": null, "tree": null, … }
+exit=2
+
+The allowed half is asserted directly in test/gates.test.ts:
+checkGatePolicy([git push origin main], policy) → []
+
+--- attempt budget on start ---
+$ cairn start T-001
+refused: T-001: budget_exhausted [auto]: 1 starts reach max_attempts_per_task=1 (…\temp-mission\policy.md)
+exit=2
+
+--- wall-time budget on record ---
+$ cairn record T-001 --status done
+refused: T-001: budget_exhausted [auto]: 5 minutes since the last start exceeds max_wall_time_per_tick_minutes=1 (…\temp-mission\policy.md); a human must extend the budget
+exit=2
+
+--- authorization event ---
+$ cairn record --authorized --paths docs/guide.md,src/new.ts --why "human widened the write set" --approved-by human
+{
+  "ts": "2026-10-31T15:58:01.657Z",
+  "event": "authorization",
+  "mission": "temp-mission",
+  "actor": "human",
+  "data": {
+    "scope": "writes",
+    "paths": ["docs/guide.md", "src/new.ts"],
+    "approved_by": "human",
+    "why": "human widened the write set",
+    "date": "2026-10-31"
+  }
+}
+exit=0

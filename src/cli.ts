@@ -6,21 +6,26 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { appendEvent, nextTimestamp } from './ledger.ts';
 import {
+  attemptCount,
+  budgetValue,
   buildPacket,
   gitCount,
   gitHead,
   gitTree,
+  latestStart,
   loadMission,
   nextTask,
   statusReport,
   taskState,
   worktreeChanges,
+  type MissionDocuments,
   type StatusReport,
 } from './plan.ts';
 import { recordReview } from './review.ts';
 import { withPacks } from './packet.ts';
 import { packsActivated, validatePackRecords } from './packs.ts';
 import { checkEvidence, checkTreeBinding, verifyTask } from './verify.ts';
+import { checkGatePolicy } from './gates.ts';
 import { reconcileMission } from './reconcile.ts';
 import { completeMission } from './complete.ts';
 import { initMission, resolveMission } from './paths.ts';
@@ -36,6 +41,7 @@ const USAGE = `usage:
   cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--packs <json>] [--mission <dir>]
   cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--mission <dir>]
+  cairn record --authorized --paths <a,b> --why <text> --approved-by human [--mission <dir>]
   cairn record --mission-done [--mission <dir>]
 `;
 
@@ -106,6 +112,15 @@ function main(argv: string[]): number {
     const taskId = rest[0];
     if (!taskId || rest.length > 1) return usage('verify needs <task>');
     try {
+      const doc = loadMission(missionDir);
+      const task = doc.plan.tasks.find((candidate) => candidate.id === taskId);
+      if (!task) return refuse(`unknown task ${taskId}`);
+      const policyErrors = checkGatePolicy(
+        task.gates ?? [],
+        doc.policy,
+        join(doc.missionDir, 'policy.md'),
+      );
+      if (policyErrors.length > 0) return refuse(policyErrors.join('; '));
       const result = verifyTask(missionDir, taskId);
       process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
       return result.passed ? 0 : 2;
@@ -141,6 +156,18 @@ function main(argv: string[]): number {
   }
 
   if (command === 'record') {
+    if (rest.includes('--authorized')) {
+      rest.splice(rest.indexOf('--authorized'), 1);
+      const paths = takeOption(rest, '--paths');
+      const why = takeOption(rest, '--why');
+      const approvedBy = takeOption(rest, '--approved-by');
+      if (!paths || rest.length > 0) {
+        return usage(
+          'record --authorized needs --paths <a,b> --why <text> --approved-by human',
+        );
+      }
+      return authorize(missionDir, paths, why ?? '', approvedBy);
+    }
     if (rest.includes('--amended')) {
       rest.splice(rest.indexOf('--amended'), 1);
       const artifact = takeOption(rest, '--artifact');
@@ -176,6 +203,8 @@ function start(missionDir: string, taskId: string): number {
 
   const state = taskState(task, doc.events);
   if (state === 'done') return refuse(`${taskId} is already done`);
+  const attemptError = checkAttemptBudget(doc, taskId);
+  if (attemptError) return refuse(attemptError);
   if (state === 'parked') return refuse(`${taskId} is parked; answer the escalation first`);
   if (state === 'active') return refuse(`${taskId} is already started`);
 
@@ -219,6 +248,8 @@ function answer(missionDir: string, taskId: string, text: string): number {
   if (state !== 'parked') {
     return refuse(`${taskId} is ${state}; answer applies to a parked task`);
   }
+  const attemptError = checkAttemptBudget(doc, taskId);
+  if (attemptError) return refuse(attemptError);
 
   const base = gitHead(doc.missionDir);
   if (!base) return refuse('no git commit exists');
@@ -232,6 +263,59 @@ function answer(missionDir: string, taskId: string, text: string): number {
     data: { base, answer: text, approved_by: 'human' },
   });
   process.stdout.write(`${JSON.stringify(resumed, null, 2)}\n`);
+  return 0;
+}
+
+/** The per-task attempt budget: `answer` also opens a new attempt. */
+function checkAttemptBudget(doc: MissionDocuments, taskId: string): string | null {
+  const max = budgetValue(doc.policy, 'max_attempts_per_task');
+  if (max === null) return null;
+  const attempts = attemptCount(taskId, doc.events);
+  if (attempts < max) return null;
+  return `${taskId}: budget_exhausted [auto]: ${attempts} starts reach max_attempts_per_task=${max} (${join(doc.missionDir, 'policy.md')})`;
+}
+
+/** The wall-time budget runs from the start that opened the current attempt. */
+function checkWallTimeBudget(doc: MissionDocuments, taskId: string): string | null {
+  const max = budgetValue(doc.policy, 'max_wall_time_per_tick_minutes');
+  if (max === null) return null;
+  const start = latestStart(taskId, doc.events);
+  if (!start) return null;
+  const elapsed = (Date.now() - Date.parse(start.ts)) / 60_000;
+  if (!(elapsed > max)) return null;
+  return `${taskId}: budget_exhausted [auto]: ${Math.round(elapsed)} minutes since the last start exceeds max_wall_time_per_tick_minutes=${max} (${join(doc.missionDir, 'policy.md')}); a human must extend the budget`;
+}
+
+/**
+ * The human authorizes writes outside the plan. This grants scope, not
+ * approval of content: paths, why, and `approved_by: human` are all required,
+ * and the agent cannot write this event for itself.
+ */
+function authorize(missionDir: string, paths: string, why: string, approvedBy?: string): number {
+  if (approvedBy !== 'human') return refuse('--approved-by must be human');
+  if (why.trim() === '') return refuse('--why is required');
+  const list = paths
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '');
+  if (list.length === 0) return refuse('--paths must name at least one path');
+
+  const doc = loadMission(missionDir);
+  const ts = nextTimestamp(doc.events);
+  const event = appendEvent(doc.missionDir, {
+    ts,
+    event: 'authorization',
+    mission: doc.mission.id,
+    actor: 'human',
+    data: {
+      scope: 'writes',
+      paths: list,
+      approved_by: 'human',
+      why,
+      date: ts.slice(0, 10),
+    },
+  });
+  process.stdout.write(`${JSON.stringify(event, null, 2)}\n`);
   return 0;
 }
 
@@ -260,6 +344,9 @@ function record(missionDir: string, taskId: string, packsFile?: string): number 
   if (state === 'done') return refuse(`${taskId} is already done`);
   if (state === 'parked') return refuse(`${taskId} is parked; answer the escalation first`);
   if (state !== 'active') return refuse(`${taskId} has no task_started; run cairn start first`);
+
+  const wallTimeError = checkWallTimeBudget(doc, taskId);
+  if (wallTimeError) return refuse(wallTimeError);
 
   if (!Array.isArray(task.serves) || task.serves.length === 0) {
     return refuse(`${taskId}: no serves link`);

@@ -255,3 +255,71 @@ test('recognizes a mission_amended event as an amendment', (t) => {
 
   assert.equal(report.amendmentRecorded, true);
 });
+
+test('a write inside an authorized path is not drift', (t) => {
+  const file = writeTranscript(t, [
+    USER('继续'),
+    ASSISTANT([TOOL('Write', { file_path: 'D:/repo/docs/guide.md' })]),
+    ASSISTANT([TOOL('Write', { file_path: 'D:/repo/README.md' })]),
+  ]);
+  const report = auditTranscript(file, {
+    planFiles: [],
+    repoRoot: 'D:/repo',
+    authorizations: [{ paths: ['docs/guide.md'], why: 'human widened the write set' }],
+  });
+  assert.equal(report.signals.unplannedWrites.length, 1);
+  assert.equal(report.signals.unplannedWrites[0].path, 'README.md');
+  assert.equal(report.signals.unusedAuthorizations.length, 0);
+  assert.equal(report.verdict, 'drift');
+});
+
+test('an authorization with no matching write is reported separately', (t) => {
+  const file = writeTranscript(t, [USER('继续'), ASSISTANT([TEXT('nothing written')])]);
+  const report = auditTranscript(file, {
+    planFiles: [],
+    repoRoot: 'D:/repo',
+    authorizations: [{ paths: ['src/new.ts'], why: 'expected a new file' }],
+  });
+  assert.equal(report.signals.unplannedWrites.length, 0);
+  assert.equal(report.signals.unusedAuthorizations.length, 1);
+  assert.equal(report.signals.unusedAuthorizations[0].paths[0], 'src/new.ts');
+  assert.equal(report.verdict, 'attention');
+});
+
+test('a forbidden command without an exception is a violation', (t) => {
+  const file = writeTranscript(t, [
+    USER('继续'),
+    ASSISTANT([TOOL('Bash', { command: 'git push origin dev' })]),
+    RESULT('refused'),
+  ]);
+  const report = auditTranscript(file, {
+    planFiles: [],
+    repoRoot: 'D:/repo',
+    policy: {
+      forbidden_commands: ['git push'],
+      approved_exceptions: [{ command: 'git push origin main' }],
+    },
+  });
+  assert.equal(report.signals.policyViolations.length, 1);
+  assert.equal(report.signals.policyViolations[0].command, 'git push origin dev');
+  assert.equal(report.signals.policyViolations[0].forbidden, 'git push');
+  assert.equal(report.verdict, 'drift');
+});
+
+test('a forbidden command covered by an exception is not a violation', (t) => {
+  const file = writeTranscript(t, [
+    USER('继续'),
+    ASSISTANT([TOOL('Bash', { command: 'git push origin main' })]),
+    RESULT('ok'),
+  ]);
+  const report = auditTranscript(file, {
+    planFiles: [],
+    repoRoot: 'D:/repo',
+    policy: {
+      forbidden_commands: ['git push'],
+      approved_exceptions: [{ command: 'git push origin main' }],
+    },
+  });
+  assert.equal(report.signals.policyViolations.length, 0);
+  assert.equal(report.verdict, 'clean');
+});

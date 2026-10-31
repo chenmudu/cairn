@@ -30,6 +30,7 @@ import { StringDecoder } from 'node:string_decoder';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readMission } from './validate-mission.mjs';
+import { forbiddenMatch } from '../src/gates.ts';
 import { resolveMission } from '../src/paths.ts';
 const WRITE_TOOLS = new Set(['Write', 'Edit']);
 const CLAIM =
@@ -41,6 +42,9 @@ const CONFIRM = /(需要你|请你|回一句|要不要|等你|确认后|由你|�
 
 export function auditTranscript(file, options = {}) {
   const planFiles = Array.isArray(options.planFiles) ? options.planFiles : [];
+  const authorizations = Array.isArray(options.authorizations) ? options.authorizations : [];
+  const policy =
+    options.policy && typeof options.policy === 'object' ? options.policy : null;
   const repoRoot = options.repoRoot ? resolve(options.repoRoot) : null;
   const { records, messages } = readLatest(file, options.maxLineBytes);
   const turns = buildTurns(messages);
@@ -71,13 +75,48 @@ export function auditTranscript(file, options = {}) {
       const raw = tool.input?.file_path ?? tool.input?.path;
       if (typeof raw !== 'string' || raw === '') continue;
       const path = toRepoRelative(raw, repoRoot);
-      if (!path || matchesPlan(path, planFiles) || isMissionEvidence(path)) continue;
+      if (!path) continue;
       const key = path.toLowerCase();
       if (writes.has(key)) continue;
       writes.set(key, { turn: turn.index, message: turn.messageIndex, path });
     }
   }
-  const unplannedWrites = [...writes.values()];
+  const allWrites = [...writes.values()];
+  const authorized = (path) =>
+    authorizations.some((auth) => matchesDeclared(path, auth?.paths ?? []));
+  const unplannedWrites = allWrites.filter(
+    (write) =>
+      !matchesPlan(write.path, planFiles) &&
+      !isMissionEvidence(write.path) &&
+      !authorized(write.path),
+  );
+  const unusedAuthorizations = authorizations.filter((auth) => {
+    const paths = Array.isArray(auth?.paths) ? auth.paths : [];
+    return !allWrites.some((write) => matchesDeclared(write.path, paths));
+  });
+
+  const policyViolations = [];
+  if (policy) {
+    const seen = new Set();
+    for (const turn of turns) {
+      for (const tool of turn.tools) {
+        if (tool.name !== 'Bash' || typeof tool.input?.command !== 'string') continue;
+        for (const command of commandSegments(tool.input.command)) {
+          const forbidden = forbiddenMatch(command, policy);
+          if (!forbidden) continue;
+          const key = `${turn.index}:${command}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          policyViolations.push({
+            turn: turn.index,
+            message: turn.messageIndex,
+            command,
+            forbidden,
+          });
+        }
+      }
+    }
+  }
 
   const confirmationRequests = turns
     .filter((turn) => CONFIRM.test(turn.assistant))
@@ -90,8 +129,10 @@ export function auditTranscript(file, options = {}) {
       };
     });
 
-  const critical = claimsWithoutGate.length + unplannedWrites.length;
-  const attention = alignmentCorrections.length + confirmationRequests.length;
+  const critical =
+    claimsWithoutGate.length + unplannedWrites.length + policyViolations.length;
+  const attention =
+    alignmentCorrections.length + confirmationRequests.length + unusedAuthorizations.length;
   const verdict = critical > 0 ? 'drift' : attention > 0 ? 'attention' : 'clean';
 
   return {
@@ -105,6 +146,8 @@ export function auditTranscript(file, options = {}) {
       alignmentCorrections,
       claimsWithoutGate,
       unplannedWrites,
+      unusedAuthorizations,
+      policyViolations,
       confirmationRequests,
     },
   };
@@ -147,6 +190,17 @@ export function formatAudit(report) {
     (item) => `- ${item.path} (turn ${item.turn}, message ${item.message})`,
   );
   section(
+    'Authorizations with no matching write',
+    report.signals.unusedAuthorizations,
+    (item) => `- ${(item.paths ?? []).join(', ')}${item.why ? `: ${item.why}` : ''}`,
+  );
+  section(
+    'Forbidden commands without a recorded exception',
+    report.signals.policyViolations,
+    (item) =>
+      `- turn ${item.turn} (message ${item.message}):\n  \`${item.command}\` matches forbidden \`${item.forbidden}\``,
+  );
+  section(
     'Confirmation requests to the human',
     report.signals.confirmationRequests,
     (item) => `- turn ${item.turn} (message ${item.message}): "${item.quote}"`,
@@ -155,7 +209,8 @@ export function formatAudit(report) {
   lines.push(
     'Interpretation: alignment corrections count the human doing the guard\'s job;',
     'claims without a gate are the failure the ledger exists to prevent;',
-    'unplanned writes are drift unless a ruling or amendment records them.',
+    'unplanned writes are drift unless a ruling or amendment records them;',
+    'an authorization covers only the paths it names.',
   );
   return lines.join('\n');
 }
@@ -361,11 +416,38 @@ function toRepoRelative(file, repoRoot) {
 }
 
 function matchesPlan(path, planFiles) {
+  return matchesDeclared(path, planFiles);
+}
+
+/** A declared path is a file, or a directory when it ends with `/`. */
+function matchesDeclared(path, entries) {
+  if (!Array.isArray(entries)) return false;
   const lower = path.toLowerCase();
-  return planFiles.some((entry) => {
+  return entries.some((entry) => {
+    if (typeof entry !== 'string' || entry.trim() === '') return false;
     const declared = entry.replace(/\\/g, '/').toLowerCase();
     return declared.endsWith('/') ? lower.startsWith(declared) : lower === declared;
   });
+}
+
+/**
+ * Shell commands in the transcript arrive as one string. Split the compound
+ * forms so `cd x && git push` is still seen as a push, and drop redirections
+ * so `git push origin main 2>&1` matches the recorded exception.
+ */
+function commandSegments(command) {
+  return command
+    .split(/&&|\|\||[;|\n]/)
+    .map((segment) => stripRedirections(segment))
+    .map((segment) => segment.trim().replace(/\s+/g, ' '))
+    .filter((segment) => segment !== '');
+}
+
+function stripRedirections(segment) {
+  return segment
+    .split(/\s+/)
+    .filter((token) => !/^\d*(?:>>?|<)\S*$/.test(token) && !/^\d*>&\d+$/.test(token))
+    .join(' ');
 }
 
 /**
@@ -459,6 +541,8 @@ function main(argv) {
 
   let planFiles = [];
   let ledgerFile = null;
+  let authorizations = [];
+  let policy = null;
   const missionDir = resolveMission(options.mission ?? undefined);
   if (existsSync(missionDir)) {
     const loaded = readMission(missionDir);
@@ -467,6 +551,20 @@ function main(argv) {
       Array.isArray(task?.files) ? task.files : [],
     );
     ledgerFile = join(loaded.missionDir, 'ledger.jsonl');
+    authorizations = loaded.events
+      .filter((event) => event.event === 'authorization' && event.data?.scope === 'writes')
+      .map((event) => ({
+        paths: Array.isArray(event.data.paths) ? event.data.paths : [],
+        why: typeof event.data.why === 'string' ? event.data.why : '',
+      }));
+    policy = {
+      forbidden_commands: Array.isArray(loaded.policy?.forbidden_commands)
+        ? loaded.policy.forbidden_commands
+        : [],
+      approved_exceptions: Array.isArray(loaded.policy?.approved_exceptions)
+        ? loaded.policy.approved_exceptions
+        : [],
+    };
   }
 
   let report;
@@ -475,6 +573,8 @@ function main(argv) {
       planFiles,
       repoRoot: process.cwd(),
       ledgerFile,
+      authorizations,
+      policy,
     });
   } catch (error) {
     process.stderr.write(`${error.message}\n`);

@@ -1,0 +1,54 @@
+superpowers:test-driven-development
+
+# Invocation (ZCode desktop session, 2026-10-31)
+skill id: superpowers:test-driven-development
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T6 followed it: the
+fourteen tests covering gate policy, attempt and wall-time budgets, the authorization writer,
+and the audit signals were written and run against the pre-T6 runtime before src/gates.ts,
+src/plan.ts, src/cli.ts, and scripts/audit-session.mjs changed.
+
+RED
+$ node --test test/gates.test.ts test/cli.test.mjs test/audit-session.test.mjs
+exit 1
+✖ a write inside an authorized path is not drift
+✖ an authorization with no matching write is reported separately
+✖ a forbidden command without an exception is a violation
+✖ a forbidden command covered by an exception is not a violation
+✖ verify refuses an out-of-list gate command and names the policy (117240.398ms)
+✖ verify refuses a forbidden gate command
+✖ start refuses a task at max_attempts_per_task
+✖ record refuses a tick over max_wall_time_per_tick_minutes
+✖ record --authorized writes an authorization event
+✖ test\gates.test.ts
+ℹ tests 44
+ℹ pass 34
+ℹ fail 10
+
+The 117-second failure is the proof that nothing checked the policy: `verify` actually ran the
+`npx eslint` gate and waited for the network. `test\gates.test.ts` failed to load because
+`checkGatePolicy` did not exist. The audit tests failed because the signals did not exist. The
+full output is `evidence/T6/red-targeted.txt`.
+
+GREEN
+$ node --test test/gates.test.ts test/cli.test.mjs test/audit-session.test.mjs
+exit 0
+ℹ tests 56
+ℹ pass 56
+ℹ fail 0
+
+$ node --test   # full suite, T6 runtime, 2026-10-31
+exit 0
+ℹ tests 229
+ℹ pass 229
+ℹ fail 0
+
+$ pnpm typecheck
+exit 0
+
+The full outputs are `evidence/T6/red-to-green.txt`, `evidence/T6/green-full.txt`, and
+`evidence/T6/typecheck.txt`.
+
+Fixture note: the existing T4 test "start ... refuses a second start" used the temp fixture's
+`max_attempts_per_task: 1`, so the new attempt budget fired before the state machine. Its
+assertion `/already started/` is unchanged; the fixture now sets three attempts so the test
+still proves the state-machine refusal, and the separate budget test covers the cap.

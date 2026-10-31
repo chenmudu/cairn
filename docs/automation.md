@@ -41,7 +41,7 @@ node scripts/audit-session.mjs --strict     # exit 1 on a drift verdict
 node scripts/audit-session.mjs --out report.md
 ```
 
-It reads the latest request in a ZCode `model-io-*.jsonl` transcript and reports four signals.
+It reads the latest request in a ZCode `model-io-*.jsonl` transcript and reports six signals.
 It does not read the largest request: after a compaction the older snapshot is larger, and
 auditing it would miss the work that followed. A compaction summary anchors the work that
 follows when no later user turn exists; a summary followed by a later user turn is skipped so
@@ -52,17 +52,21 @@ and are not drift.
 |---|---|
 | Alignment corrections | The human had to restate the goal, positioning, or project scope. The guard should have made this unnecessary. |
 | Claims without a gate | A completion claim in a turn that ran no gate. The claim is not evidence. |
-| Writes outside the plan | A `Write`/`Edit` to a path no task declares. Drift unless a ruling or amendment records it. |
+| Writes outside the plan | A `Write`/`Edit` to a path no task declares and no `authorization` covers. Drift unless a ruling, amendment, or authorization records it. |
+| Authorizations with no matching write | An `authorization` names a path that no write touched. The planned write did not happen. |
+| Forbidden commands | A `Bash` command matches `forbidden_commands` without an exact `approved_exceptions` match. |
 | Confirmation requests | The agent pushed a decision back to the human. Some are legitimate; the count is a trend, not a verdict. |
 
-The verdict is `drift` when a claim or an unplanned write exists, `attention` when only
-alignment or confirmation signals exist, and `clean` otherwise. The audit is diagnostic; only
-`--strict` turns `drift` into exit 1. Transcripts contain the whole conversation: keep them
-out of the repository.
+The verdict is `drift` when a claim, an unplanned write, or a forbidden command exists,
+`attention` when only alignment, confirmation, or unused-authorization signals exist, and
+`clean` otherwise. The audit is diagnostic; only `--strict` turns `drift` into exit 1.
+Transcripts contain the whole conversation: keep them out of the repository.
 
-`--mission <dir>` supplies the plan's declared files and the ledger, so the audit can tell a
-planned write from an unplanned one. The default is the active mission from
-`.cairn/config.json` (`.cairn/missions/001-method-pack` in this repository).
+`--mission <dir>` supplies the plan's declared files, the ledger, the `authorization` events,
+and the policy's forbidden commands and approved exceptions, so the audit can tell a planned
+write from an unplanned one and a covered command from a violation. The default is the active
+mission from `.cairn/config.json` (`.cairn/missions/002-completion-integrity` in this
+repository).
 
 ## Rules, checks, and injection
 
