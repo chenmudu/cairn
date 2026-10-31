@@ -23,10 +23,11 @@ test('status --json reports Mission #0 and every coverage link', () => {
 });
 
 test('the default mission is the active mission from .cairn/config.json', () => {
+  const config = JSON.parse(readFileSync(join(repo, '.cairn', 'config.json'), 'utf8'));
   const result = run('status', '--json');
   assert.equal(result.status, 0, result.stderr);
   const report = JSON.parse(result.stdout);
-  assert.equal(report.mission.id, '001-method-pack');
+  assert.equal(report.mission.id, config.active_mission);
 });
 
 test('a bare mission id and a legacy missions/<id> path resolve', () => {
