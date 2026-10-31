@@ -1,0 +1,19 @@
+[
+  {
+    "capability": "test-first",
+    "pack": "superpowers",
+    "skill": "superpowers:test-driven-development",
+    "version": "7.0.1",
+    "mode": "use",
+    "evidence": "evidence/T4/superpowers-use.txt"
+  },
+  {
+    "capability": "design-review",
+    "pack": "impeccable",
+    "skill": "impeccable:design-review",
+    "version": "4.8.0+df3a4ab",
+    "mode": "not-applicable",
+    "reason": "task files contain no markup or URL target",
+    "evidence": "evidence/T4/impeccable-none.txt"
+  }
+]

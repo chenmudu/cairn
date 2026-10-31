@@ -82,6 +82,29 @@
 node scripts/check-method.mjs --packs
 ```
 
+## 任务状态
+
+任务状态由台账决定，不是 `plan.md`：
+
+- `todo` — 既无 `task_started` 也无 `task_parked`；
+- `active` — `task_started` 与 `task_parked` 中最后出现的是 start；
+- `parked` — 最后出现的是 park；
+- `done` — 存在 `task_done`，且它是终态。
+
+`start` 拒绝未完成的依赖并点名，也拒绝第二个活动任务并点名。`record` 要求任务自己的
+`task_started`，base 提交来自该事件，不再回退到 HEAD 的父提交。在规则生效之前已经记为 done 的任务
+仍然有效。
+
+escalation 由人回答，不由执行者回答：
+
+```sh
+node src/cli.ts answer <task> --text "决定内容" --mission .cairn/missions/<id>
+```
+
+`answer` 只对 parked 任务有效，追加一条带 `base`、`answer`、`approved_by: human` 的
+`task_started`，任务由此恢复，可以继续 verify 和 record。它是目前唯一恢复任务的写入者；还没有
+`park` 命令，该事件的所有权在 T7 随契约一起收口。
+
 ## 关闭 mission
 
 `record --mission-done` 要求工作区台账逐字节等于 HEAD 的台账，因为关闭也是仓库的属性。关闭是两次提交：

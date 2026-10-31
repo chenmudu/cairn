@@ -1,0 +1,203 @@
+✔ status --json reports Mission #0 and every coverage link (70.0103ms)
+✔ the default mission is the active mission from .cairn/config.json (67.3697ms)
+✔ a bare mission id and a legacy missions/<id> path resolve (136.2205ms)
+✔ init scaffolds a mission in an empty repository (138.9851ms)
+✔ the init scaffold gate fails, so the scaffold cannot be recorded done (336.83ms)
+✔ next prints a packet for the task status reports (142.0719ms)
+✔ record refuses a task with no gate evidence and does not write (71.8364ms)
+✖ record refuses a task that was never started and writes nothing (72.7646ms)
+✔ verify and record complete a task with no manual ledger write (620.4626ms)
+✔ record refuses an unknown task (71.6753ms)
+✔ start records task_started with the base commit and refuses a second start (238.6566ms)
+✖ start refuses an unmet dependency and names it (172.9985ms)
+✖ start refuses a second active task and names it (268.2892ms)
+✖ a parked task can be answered and then completed (228.256ms)
+✖ answer refuses a task that is not parked (83.3191ms)
+✔ review writes a review_result from a JSON file (78.394ms)
+✔ review refuses an invalid verdict and writes nothing (78.5334ms)
+✔ usage exits 2 (72.9122ms)
+✔ nextTask follows dependencies and the ledger (3.9814ms)
+✔ a task is not done because plan.md says so (2.3498ms)
+✔ a historical task_done without task_started is still done (1.4164ms)
+✖ the latest of task_started and task_parked decides the state (2.3041ms)
+✔ the real mission covers every acceptance criterion (1.5584ms)
+✔ buildPacket carries the task, serves, gates, constraints, and base (15.7493ms)
+✔ serveErrors is empty on the real mission (1.1654ms)
+✔ coverage maps each acceptance id to its serving tasks (1.8562ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 20
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3004.2756
+
+✖ failing tests:
+
+test at test\cli.test.mjs:132:1
+✖ record refuses a task that was never started and writes nothing (72.7646ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /refused:.*task_started/. Input:
+  
+  'refused: T-001: blocking gate gate has no result\n'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:137:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'refused: T-001: blocking gate gate has no result\n',
+    expected: /refused:.*task_started/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:221:1
+✖ start refuses an unmet dependency and names it (172.9985ms)
+  AssertionError [ERR_ASSERTION]: {
+    "ts": "2026-10-31T14:37:47.019Z",
+    "event": "task_started",
+    "mission": "temp-mission",
+    "task": "T-002",
+    "actor": "cairn",
+    "data": {
+      "base": "c31722ba2390fab4c3c17ee0c4e6f2f268451bcc"
+    }
+  }
+  
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:240:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:245:1
+✖ start refuses a second active task and names it (268.2892ms)
+  AssertionError [ERR_ASSERTION]: {
+    "ts": "2026-10-31T14:37:47.287Z",
+    "event": "task_started",
+    "mission": "temp-mission",
+    "task": "T-002",
+    "actor": "cairn",
+    "data": {
+      "base": "8b855333303f10a175c75ebe7092870eed971a2b"
+    }
+  }
+  
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:300:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:304:1
+✖ a parked task can be answered and then completed (228.256ms)
+  AssertionError [ERR_ASSERTION]: unknown command answer
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:338:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:355:1
+✖ answer refuses a task that is not parked (83.3191ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /refused:.*(parked|state)/. Input:
+  
+  'unknown command answer\n' +
+    'usage:\n' +
+    '  cairn init <id> [--title <title>]\n' +
+    '  cairn status [--json] [--mission <dir>]\n' +
+    '  cairn next [--mission <dir>]\n' +
+    '  cairn start <task> [--mission <dir>]\n' +
+    '  cairn verify <task> [--mission <dir>]\n' +
+    '  cairn review --file <json> [--mission <dir>]\n' +
+    '  cairn reconcile [--mission <dir>]\n' +
+    '  cairn record <task> --status done [--packs <json>] [--mission <dir>]\n' +
+    '  cairn record --mission-done [--mission <dir>]\n'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:359:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'unknown command answer\nusage:\n  cairn init <id> [--title <title>]\n  cairn status [--json] [--mission <dir>]\n  cairn next [--mission <dir>]\n  cairn start <task> [--mission <dir>]\n  cairn verify <task> [--mission <dir>]\n  cairn review --file <json> [--mission <dir>]\n  cairn reconcile [--mission <dir>]\n  cairn record <task> --status done [--packs <json>] [--mission <dir>]\n  cairn record --mission-done [--mission <dir>]\n',
+    expected: /refused:.*(parked|state)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\plan.test.mjs:49:1
+✖ the latest of task_started and task_parked decides the state (2.3041ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'parked' !== 'active'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/plan.test.mjs:70:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'parked',
+    expected: 'active',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

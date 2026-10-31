@@ -175,7 +175,19 @@ function record(mission, taskId, ...extra) {
   return run('record', taskId, '--status', 'done', '--mission', mission, ...extra);
 }
 
+/**
+ * T4 requires a `task_started` before `record`, and a commit between the start
+ * base and HEAD. Start is idempotent here: a task that is already active keeps
+ * its first base, which is what these fixtures want.
+ */
 function verify(mission, taskId) {
+  const start = run('start', taskId, '--mission', mission);
+  if (start.status !== 0 && !/already started/.test(start.stderr)) {
+    assert.fail(`start ${taskId} failed: ${start.stderr}`);
+  }
+  const root = resolve(mission, '..', '..', '..');
+  writeFileSync(join(root, 'src', `work-${taskId}.ts`), 'export const work = 1;\n');
+  commit(root, `work ${taskId}`);
   return run('verify', taskId, '--mission', mission);
 }
 

@@ -94,6 +94,31 @@ Pack availability is advisory and does not block the tick:
 node scripts/check-method.mjs --packs
 ```
 
+## Task states
+
+The ledger decides a task's state, not `plan.md`:
+
+- `todo` — no `task_started` and no `task_parked`;
+- `active` — the latest of `task_started` and `task_parked` is a start;
+- `parked` — the latest is a park;
+- `done` — a `task_done` exists; it is terminal.
+
+`start` refuses an unmet dependency and names it, and refuses a second active task and names
+it. `record` requires the task's own `task_started`; the base commit comes from that event, and
+there is no fallback to the parent of HEAD. A task recorded done before this rule existed stays
+done.
+
+An escalation is answered by a human, not by the executor:
+
+```sh
+node src/cli.ts answer <task> --text "the decision" --mission .cairn/missions/<id>
+```
+
+`answer` applies only to a parked task and appends a `task_started` carrying `base`, `answer`,
+and `approved_by: human`, so the task resumes and can be verified and recorded. It is the only
+writer that resumes a task; there is no `park` command yet, and the ownership of that event is
+settled with the rest of the contract in T7.
+
 ## Closing the mission
 
 `record --mission-done` requires the worktree ledger to equal the ledger at HEAD, byte for

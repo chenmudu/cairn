@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { makeTempMission, makeTempRepo } from './helpers.mjs';
@@ -71,6 +71,27 @@ test('the init scaffold gate fails, so the scaffold cannot be recorded done', (t
   });
   assert.equal(init.status, 0, init.stderr);
 
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      'base',
+    ).status,
+    0,
+  );
+  const start = spawnSync(process.execPath, [cli, 'start', 'T-001'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(start.status, 0, start.stderr);
+
   const verify = spawnSync(process.execPath, [cli, 'verify', 'T-001'], {
     cwd: root,
     encoding: 'utf8',
@@ -111,10 +132,30 @@ test('next prints a packet for the task status reports', () => {
 
 test('record refuses a task with no gate evidence and does not write', (t) => {
   const dir = makeTempMission(t);
+  appendFileSync(
+    join(dir, 'ledger.jsonl'),
+    `${JSON.stringify({
+      ts: '2026-10-31T00:00:00.000Z',
+      event: 'task_started',
+      mission: 'temp-mission',
+      task: 'T-001',
+      actor: 'cairn',
+      data: { base: 'a'.repeat(40) },
+    })}\n`,
+  );
   const before = readFileSync(join(dir, 'ledger.jsonl'), 'utf8');
   const result = run('record', 'T-001', '--status', 'done', '--mission', dir);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /refused:.*(gate|evidence)/);
+  assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8'), before);
+});
+
+test('record refuses a task that was never started and writes nothing', (t) => {
+  const dir = makeTempMission(t);
+  const before = readFileSync(join(dir, 'ledger.jsonl'), 'utf8');
+  const result = run('record', 'T-001', '--status', 'done', '--mission', dir);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /refused:.*task_started/);
   assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8'), before);
 });
 
@@ -134,6 +175,9 @@ test('verify and record complete a task with no manual ledger write', (t) => {
   assert.equal(git('init', '-q').status, 0);
   assert.equal(git('add', '.').status, 0);
   assert.equal(commit('base').status, 0);
+
+  const start = run('start', 'T-001', '--mission', mission);
+  assert.equal(start.status, 0, start.stderr);
 
   writeFileSync(join(root, 'work.txt'), 'work\n');
   assert.equal(git('add', '.').status, 0);
@@ -193,6 +237,147 @@ test('start records task_started with the base commit and refuses a second start
   const again = run('start', 'T-001', '--mission', dir);
   assert.equal(again.status, 2);
   assert.match(again.stderr, /already started/);
+});
+
+test('start refuses an unmet dependency and names it', (t) => {
+  const { root, mission } = makeTempRepo(t);
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      'base',
+    ).status,
+    0,
+  );
+
+  const result = run('start', 'T-002', '--mission', mission);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /refused:.*T-001/);
+  assert.ok(!readFileSync(join(mission, 'ledger.jsonl'), 'utf8').includes('task_started'));
+});
+
+test('start refuses a second active task and names it', (t) => {
+  const { root, mission } = makeTempRepo(t);
+  writeFileSync(
+    join(mission, 'plan.md'),
+    `---
+schema: cairn/plan@0.1
+mission: temp-mission
+tasks:
+  - id: T-001
+    title: First
+    deps: []
+    risk: low
+    status: todo
+    serves: [F1]
+    files: []
+    gates:
+      - id: gate
+        command: node
+        args: ["-e", "process.exit(0)"]
+        severity: block
+  - id: T-002
+    title: Second
+    deps: []
+    risk: low
+    status: todo
+    serves: [F2]
+    files: []
+    gates:
+      - id: gate
+        command: node
+        args: ["-e", "process.exit(0)"]
+        severity: block
+---
+
+# Temp plan
+`,
+  );
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      'base',
+    ).status,
+    0,
+  );
+
+  assert.equal(run('start', 'T-001', '--mission', mission).status, 0);
+  const second = run('start', 'T-002', '--mission', mission);
+  assert.equal(second.status, 2, second.stdout);
+  assert.match(second.stderr, /refused:.*T-001/);
+});
+
+test('a parked task can be answered and then completed', (t) => {
+  const { root, mission } = makeTempRepo(t);
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  const commit = (message) =>
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      message,
+    );
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(commit('base').status, 0);
+
+  appendFileSync(
+    join(mission, 'ledger.jsonl'),
+    `${JSON.stringify({
+      ts: '2026-10-31T00:00:00.000Z',
+      event: 'task_parked',
+      mission: 'temp-mission',
+      task: 'T-001',
+      actor: 'cairn',
+      data: { reason: 'needs a human decision' },
+    })}\n`,
+  );
+
+  const record = run('record', 'T-001', '--status', 'done', '--mission', mission);
+  assert.equal(record.status, 2, record.stdout);
+  assert.match(record.stderr, /parked/);
+
+  const answer = run('answer', 'T-001', '--text', 'go ahead', '--mission', mission);
+  assert.equal(answer.status, 0, answer.stderr);
+  const event = JSON.parse(answer.stdout);
+  assert.equal(event.event, 'task_started');
+  assert.equal(event.data.answer, 'go ahead');
+  assert.equal(event.data.approved_by, 'human');
+  assert.match(event.data.base, /^[0-9a-f]{40}$/);
+
+  writeFileSync(join(root, 'work.txt'), 'work\n');
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(commit('work').status, 0);
+
+  assert.equal(run('verify', 'T-001', '--mission', mission).status, 0);
+  const done = run('record', 'T-001', '--status', 'done', '--mission', mission);
+  assert.equal(done.status, 0, done.stderr);
+  assert.match(readFileSync(join(mission, 'ledger.jsonl'), 'utf8'), /"task":"T-001"/);
+});
+
+test('answer refuses a task that is not parked', (t) => {
+  const dir = makeTempMission(t);
+  const result = run('answer', 'T-001', '--text', 'go ahead', '--mission', dir);
+  assert.equal(result.status, 2, result.stdout);
+  assert.match(result.stderr, /refused:.*(parked|state)/);
 });
 
 test('review writes a review_result from a JSON file', (t) => {

@@ -105,12 +105,14 @@ function commit(dir, message) {
   assert.equal(result.status, 0, result.stderr);
 }
 
-function initRepo(dir) {
+function initRepo(dir, mission) {
   const init = git(dir, 'init', '-q');
   assert.equal(init.status, 0, init.stderr);
   commit(dir, 'base');
-  // A second commit, so the old runtime has a parent to measure the work from
-  // instead of refusing the fixture before the bug is reached.
+  // T4 requires a task_started whose base is behind HEAD, so the start lands on
+  // the base commit and the setup commit is the work the record measures.
+  const start = run('start', 'T1', '--mission', mission);
+  assert.equal(start.status, 0, start.stderr);
   const setup = git(
     dir,
     '-c',
@@ -177,7 +179,7 @@ const REVIEW = {
 
 test('record refuses a gate result that belongs to a different tree', (t) => {
   const { root, mission } = makeMission(t);
-  initRepo(root);
+  initRepo(root, mission);
 
   const verify = run('verify', 'T1', '--mission', mission);
   assert.equal(verify.status, 0, verify.stderr);
@@ -193,7 +195,7 @@ test('record refuses a gate result that belongs to a different tree', (t) => {
 
 test('record refuses a dirty worktree outside the mission runtime paths', (t) => {
   const { root, mission } = makeMission(t);
-  initRepo(root);
+  initRepo(root, mission);
 
   const verify = run('verify', 'T1', '--mission', mission);
   assert.equal(verify.status, 0, verify.stderr);
@@ -208,7 +210,7 @@ test('record refuses a dirty worktree outside the mission runtime paths', (t) =>
 
 test('reconcile reports a completion event that is not in the ledger at HEAD', (t) => {
   const { root, mission } = makeMission(t);
-  initRepo(root);
+  initRepo(root, mission);
 
   assert.equal(run('verify', 'T1', '--mission', mission).status, 0);
   assert.equal(run('record', 'T1', '--status', 'done', '--mission', mission).status, 0);
@@ -220,7 +222,7 @@ test('reconcile reports a completion event that is not in the ledger at HEAD', (
 
 test('mission_done requires the ledger to be committed and closes after the ledger commit', (t) => {
   const { root, mission } = makeMission(t);
-  initRepo(root);
+  initRepo(root, mission);
 
   assert.equal(run('verify', 'T1', '--mission', mission).status, 0);
   assert.equal(run('record', 'T1', '--status', 'done', '--mission', mission).status, 0);

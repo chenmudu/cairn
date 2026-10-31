@@ -8,7 +8,6 @@ import {
   buildPacket,
   gitCount,
   gitHead,
-  gitParent,
   gitTree,
   loadMission,
   nextTask,
@@ -30,6 +29,7 @@ const USAGE = `usage:
   cairn status [--json] [--mission <dir>]
   cairn next [--mission <dir>]
   cairn start <task> [--mission <dir>]
+  cairn answer <task> --text <text> [--mission <dir>]
   cairn verify <task> [--mission <dir>]
   cairn review --file <json> [--mission <dir>]
   cairn reconcile [--mission <dir>]
@@ -100,6 +100,13 @@ function main(argv: string[]): number {
     return start(missionDir, taskId);
   }
 
+  if (command === 'answer') {
+    const taskId = rest[0];
+    const text = takeOption(rest, '--text');
+    if (!taskId || !text || rest.length > 1) return usage('answer needs <task> --text <text>');
+    return answer(missionDir, taskId, text);
+  }
+
   if (command === 'review') {
     const file = takeOption(rest, '--file');
     if (!file || rest.length > 0) return usage('review needs --file <json>');
@@ -140,6 +147,17 @@ function start(missionDir: string, taskId: string): number {
   if (state === 'parked') return refuse(`${taskId} is parked; answer the escalation first`);
   if (state === 'active') return refuse(`${taskId} is already started`);
 
+  const unmet = (task.deps ?? []).filter((dep) => {
+    const dependency = doc.plan.tasks.find((candidate) => candidate.id === dep);
+    return !dependency || taskState(dependency, doc.events) !== 'done';
+  });
+  if (unmet.length > 0) return refuse(`${taskId}: unmet dependency ${unmet.join(', ')}`);
+
+  const active = doc.plan.tasks.find(
+    (candidate) => candidate.id !== taskId && taskState(candidate, doc.events) === 'active',
+  );
+  if (active) return refuse(`${taskId}: ${active.id} is already active`);
+
   const base = gitHead(doc.missionDir);
   if (!base) return refuse('no git commit exists');
 
@@ -152,6 +170,36 @@ function start(missionDir: string, taskId: string): number {
     data: { base },
   });
   process.stdout.write(`${JSON.stringify(started, null, 2)}\n`);
+  return 0;
+}
+
+/**
+ * The human answers an escalation. The event is a `task_started`, which is what
+ * makes the latest-of rule resume the task; the answer and the approval ride in
+ * `data` so no new event type is needed.
+ */
+function answer(missionDir: string, taskId: string, text: string): number {
+  const doc = loadMission(missionDir);
+  const task = doc.plan.tasks.find((candidate) => candidate.id === taskId);
+  if (!task) return refuse(`unknown task ${taskId}`);
+
+  const state = taskState(task, doc.events);
+  if (state !== 'parked') {
+    return refuse(`${taskId} is ${state}; answer applies to a parked task`);
+  }
+
+  const base = gitHead(doc.missionDir);
+  if (!base) return refuse('no git commit exists');
+
+  const resumed = appendEvent(doc.missionDir, {
+    ts: nextTimestamp(doc.events),
+    event: 'task_started',
+    mission: doc.mission.id,
+    task: taskId,
+    actor: 'human',
+    data: { base, answer: text, approved_by: 'human' },
+  });
+  process.stdout.write(`${JSON.stringify(resumed, null, 2)}\n`);
   return 0;
 }
 
@@ -179,6 +227,7 @@ function record(missionDir: string, taskId: string, packsFile?: string): number 
   const state = taskState(task, doc.events);
   if (state === 'done') return refuse(`${taskId} is already done`);
   if (state === 'parked') return refuse(`${taskId} is parked; answer the escalation first`);
+  if (state !== 'active') return refuse(`${taskId} has no task_started; run cairn start first`);
 
   if (!Array.isArray(task.serves) || task.serves.length === 0) {
     return refuse(`${taskId}: no serves link`);
@@ -221,9 +270,8 @@ function record(missionDir: string, taskId: string, packsFile?: string): number 
   const started = doc.events
     .filter((event) => event.event === 'task_started' && event.task === taskId)
     .at(-1);
-  const base =
-    typeof started?.data.base === 'string' ? started.data.base : gitParent(doc.missionDir, head);
-  if (!base) return refuse('no base commit recorded');
+  const base = typeof started?.data.base === 'string' ? started.data.base : null;
+  if (!base) return refuse(`${taskId}: task_started has no base commit`);
   if (gitCount(doc.missionDir, base, head) <= 0) {
     return refuse(`no commit between ${base} and ${head}`);
   }

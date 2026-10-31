@@ -111,12 +111,21 @@ export function loadMission(missionDir: string): MissionDocuments {
   };
 }
 
+/**
+ * `task_done` is terminal. Otherwise the latest of `task_started` and
+ * `task_parked` wins, so answering an escalation resumes the task instead of
+ * leaving it parked for good. A historical `task_done` with no `task_started`
+ * is still done.
+ */
 export function taskState(task: Task, events: LedgerEvent[]): TaskState {
-  const own = events.filter((event) => event.task === task.id);
-  if (own.some((event) => event.event === 'task_done')) return 'done';
-  if (own.some((event) => event.event === 'task_parked')) return 'parked';
-  if (own.some((event) => event.event === 'task_started')) return 'active';
-  return 'todo';
+  let state: TaskState = 'todo';
+  for (const event of events) {
+    if (event.task !== task.id) continue;
+    if (event.event === 'task_done') return 'done';
+    if (event.event === 'task_started') state = 'active';
+    else if (event.event === 'task_parked') state = 'parked';
+  }
+  return state;
 }
 
 export function nextTask(plan: Plan, events: LedgerEvent[]): Task | undefined {
@@ -215,10 +224,6 @@ export function git(missionDir: string, args: string[]): string | null {
 
 export function gitHead(missionDir: string): string | null {
   return git(missionDir, ['rev-parse', 'HEAD']);
-}
-
-export function gitParent(missionDir: string, head: string): string | null {
-  return git(missionDir, ['rev-parse', `${head}^`]);
 }
 
 export function gitCount(missionDir: string, base: string, head: string): number {

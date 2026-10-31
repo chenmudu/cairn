@@ -1,0 +1,42 @@
+superpowers:test-driven-development
+
+# Invocation (ZCode desktop session, 2026-10-31)
+skill id: superpowers:test-driven-development
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T4 followed it: the
+five state-machine tests were written in test/cli.test.mjs and test/plan.test.mjs and run
+against the pre-T4 runtime before src/plan.ts and src/cli.ts changed.
+
+RED
+$ node --test test/cli.test.mjs test/plan.test.mjs   # runtime at 2669c3d, 2026-10-31
+exit 1
+✖ record refuses a task that was never started and writes nothing (72.7646ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression
+  /refused:.*task_started/. Input:
+  'refused: T-001: blocking gate gate has no result\n'
+✖ start refuses an unmet dependency and names it (172.9985ms)
+✖ start refuses a second active task and names it (268.2892ms)
+✖ a parked task can be answered and then completed (228.256ms)
+✖ answer refuses a task that is not parked (83.3191ms)
+✖ the latest of task_started and task_parked decides the state (2.3041ms)
+ℹ tests 26
+ℹ pass 20
+ℹ fail 6
+
+The sixth failure is the state machine reading a park as final; the fifth test, "a historical
+task_done without task_started is still done", passed from the start and is a regression guard,
+not RED evidence. The full output is `evidence/T4/red-targeted.txt`.
+
+GREEN
+$ node --test test/cli.test.mjs test/plan.test.mjs   # T4 runtime, 2026-10-31
+exit 0
+ℹ tests 26
+ℹ pass 26
+ℹ fail 0
+
+$ node --test   # full suite, T4 runtime, 2026-10-31
+exit 0
+ℹ tests 204
+ℹ pass 204
+ℹ fail 0
+
+The full outputs are `evidence/T4/green-targeted.txt` and `evidence/T4/green-full.txt`.

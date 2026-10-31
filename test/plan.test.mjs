@@ -8,6 +8,7 @@ import {
   nextTask,
   serveErrors,
   statusReport,
+  taskState,
 } from '../src/plan.ts';
 import { makeTempMission, taskDone } from './helpers.mjs';
 
@@ -36,6 +37,44 @@ test('a task is not done because plan.md says so', (t) => {
   );
   assert.equal(report.next, 'T-001');
   assert.equal(nextTask(doc.plan, [taskDone('T-001')]).id, 'T-002');
+});
+
+test('a historical task_done without task_started is still done', (t) => {
+  const dir = makeTempMission(t);
+  const doc = loadMission(dir);
+  const task = doc.plan.tasks[0];
+  assert.equal(taskState(task, [taskDone('T-001')]), 'done');
+});
+
+test('the latest of task_started and task_parked decides the state', (t) => {
+  const dir = makeTempMission(t);
+  const doc = loadMission(dir);
+  const task = doc.plan.tasks[0];
+  const started = (ts) => ({
+    ts,
+    event: 'task_started',
+    mission: 'temp-mission',
+    task: 'T-001',
+    actor: 'test',
+    data: {},
+  });
+  const parked = {
+    ts: '2026-10-31T00:00:01.000Z',
+    event: 'task_parked',
+    mission: 'temp-mission',
+    task: 'T-001',
+    actor: 'test',
+    data: {},
+  };
+  assert.equal(taskState(task, [started('2026-10-31T00:00:00.000Z'), parked]), 'parked');
+  assert.equal(
+    taskState(task, [started('2026-10-31T00:00:00.000Z'), parked, started('2026-10-31T00:00:02.000Z')]),
+    'active',
+  );
+  assert.equal(
+    taskState(task, [started('2026-10-31T00:00:00.000Z'), taskDone('T-001')]),
+    'done',
+  );
 });
 
 test('the real mission covers every acceptance criterion', () => {
