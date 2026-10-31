@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import type { LedgerEvent } from './ledger.ts';
-import { loadMission, taskState } from './plan.ts';
+import { ledgerAtHead, loadMission, taskState } from './plan.ts';
 import { checkEvidence, isEvidenceFile } from './verify.ts';
 
 export interface ReconcileReport {
@@ -69,6 +69,16 @@ export function reconcileMission(missionDir: string): ReconcileReport {
 
   for (const [commit, tasks] of claims) {
     if (tasks.length > 1) findings.push(`commit ${commit} is claimed by ${tasks.join(', ')}`);
+  }
+
+  // Completion is a property of the repository: a completion event that only
+  // exists in the worktree ledger has not been committed and cannot count.
+  const committed = new Set((ledgerAtHead(missionDir) ?? []).map((event) => JSON.stringify(event)));
+  for (const event of doc.events) {
+    if (event.event !== 'task_done' && event.event !== 'mission_done') continue;
+    if (committed.has(JSON.stringify(event))) continue;
+    const where = typeof event.task === 'string' ? `${event.task} ${event.event}` : `mission ${event.event}`;
+    findings.push(`${where} is not in the ledger at HEAD`);
   }
 
   for (const task of doc.plan.tasks) {

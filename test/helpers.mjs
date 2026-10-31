@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -24,6 +24,25 @@ const task = (id, deps, serves) => `  - id: ${id}
 export function makeTempMission(t) {
   const dir = mkdtempSync(join(tmpdir(), 'cairn-t002-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeMission(dir);
+  return dir;
+}
+
+/**
+ * A repository-shaped temp root whose mission lives under `.cairn/missions/`.
+ * Git-bound verify/record only treat `.cairn/` as runtime state, so a mission
+ * outside it cannot be verified on a clean tree.
+ */
+export function makeTempRepo(t) {
+  const root = mkdtempSync(join(tmpdir(), 'cairn-repo-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const mission = join(root, '.cairn', 'missions', 'temp-mission');
+  mkdirSync(mission, { recursive: true });
+  writeMission(mission);
+  return { root, mission };
+}
+
+function writeMission(dir) {
   writeFileSync(
     join(dir, 'mission.md'),
     `---

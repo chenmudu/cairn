@@ -297,6 +297,11 @@ Id: `002-completion-integrity`. Title: `Completion integrity`. Owner: `chenmudu`
 - **T2 — record pack participation per task (D3, ADR 0005, serves A3).** The record, the
   validation, the evidence-file rule, the three hard constraints, and a real RED→GREEN test.
   T1 is grandfathered; T2 is the first `task_done` with packs.
+  Before T2 starts, confirm in a real ZCode session that superpowers is listable and invocable,
+  and record the skill name and the actual output. If it is not invocable, the harness
+  integration is inside T2's scope; `absent` is not a substitute. T2's done-when also requires
+  at least one superpowers `mode: use` in this mission whose evidence is a real RED→GREEN test
+  file.
 - **T3 — bind acceptance and review evidence, authorize the close (D2, serves A2).**
   Per-criterion coverage, non-goals, cold start, reviewer provenance, `ui_surface`, and the
   human authorization event for `mission_done`.
@@ -463,6 +468,15 @@ plan, the ledger is the approval. The options below are kept for history:
 - `approve 0006` — accept D1–D8 and the sequence.
 - `adjust 0006 -- ...` — change a decision, a granularity boundary, or the order.
 - `reject 0006` — keep Mission #1 closed and record why.
+
+### Approval traceability
+
+`mission_created` names the approval source but carries no hash of this file or of ADR 0005.
+The event is frozen in `dc03a9e`, so its contents cannot be extended. The approval is traceable
+through git history: `0872f21` froze the revised 0006 and ADR 0005 text, and `dc03a9e` froze
+the `mission_created` event. Git history is the evidence; the ledger is not amended, and no
+manual `note` or `ruling` is appended to repair it. The Mission #2 end review cites both
+commits.
 
 ## Issue map
 

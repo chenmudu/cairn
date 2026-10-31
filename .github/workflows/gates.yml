@@ -26,11 +26,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: node --test
+      - run: node --test test/p0.test.mjs
       - run: node scripts/validate-mission.mjs .cairn/missions/000-bootstrap
       - run: node scripts/validate-mission.mjs .cairn/missions/001-method-pack
+      - run: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity
       - run: node scripts/check-decisions.mjs
       - run: node scripts/check-enforcement.mjs
-      - run: node scripts/check-targets.mjs
+      - run: node scripts/check-targets.mjs .cairn/missions/001-method-pack
+      - run: node scripts/check-targets.mjs .cairn/missions/002-completion-integrity
+      - run: node src/cli.ts reconcile --mission .cairn/missions/002-completion-integrity
       - run: node scripts/check-bilingual.mjs
       - run: node scripts/check-workflow.mjs
       - run: node scripts/check-example.mjs --example method/examples/0001-docs-tick

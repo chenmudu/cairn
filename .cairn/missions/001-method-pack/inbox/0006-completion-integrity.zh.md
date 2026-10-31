@@ -246,7 +246,9 @@ Id：`002-completion-integrity`。标题：`Completion integrity`。Owner：`che
   的未提交完成检测、操作顺序和 CI。
 - **T2 — 按任务记录包参与（D3，ADR 0005，serves A3）。** 记录、校验、证据文件规则、三条硬
   约束，以及一个真实的 RED→GREEN 测试。T1 是 grandfather；T2 是第一个带 packs 的
-  `task_done`。
+  `task_done`。T2 开工前，在真实 ZCode 会话确认 superpowers 可列、可调，并记录 skill 名与
+  实际输出；不可调用时，harness 集成属于 T2 范围，`absent` 不是替代品。T2 的 done-when 还
+  要求本 mission 至少一条 superpowers `mode: use`，其 evidence 是真实的 RED→GREEN 测试文件。
 - **T3 — 绑定验收与评审证据，授权关闭（D2，serves A2）。** 逐验收标准 coverage、non-goals、
   cold start、评审者来源、`ui_surface`，以及 `mission_done` 的人类授权事件。
 - **T4 — 执行任务状态机（D4，serves A4）。** 依赖与单活动任务检查、要求 `task_started`，以及
@@ -388,6 +390,13 @@ D4/D5 问题。目标纠正是真实的：第一版计划没有写清 harness �
 - `approve 0006` — 接受 D1–D8 和顺序。
 - `adjust 0006 -- ...` — 修改某个决定、粒度边界或顺序。
 - `reject 0006` — 保持 Mission #1 关闭，并记录原因。
+
+### 批准的可追溯性
+
+`mission_created` 只记批准来源的名字，不带本文件或 ADR 0005 的哈希。该事件已由 `dc03a9e`
+固化，内容补不进去。批准通过 git 历史追溯：`0872f21` 冻结了修订后的 0006 与 ADR 0005 文本，
+`dc03a9e` 冻结了 `mission_created` 事件。git 历史就是证据；台账不再补记，也不许手工追加
+`note` 或 `ruling` 来修补。Mission #2 的收尾评审引用这两个提交。
 
 ## Issue 映射
 

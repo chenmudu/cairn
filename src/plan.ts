@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { readMission } from '../scripts/validate-mission.mjs';
 import type { LedgerEvent } from './ledger.ts';
@@ -224,6 +224,60 @@ export function gitParent(missionDir: string, head: string): string | null {
 export function gitCount(missionDir: string, base: string, head: string): number {
   const count = git(missionDir, ['rev-list', '--count', `${base}..${head}`]);
   return count === null ? 0 : Number(count);
+}
+
+export function gitTree(missionDir: string, head: string): string | null {
+  return git(missionDir, ['rev-parse', `${head}^{tree}`]);
+}
+
+/**
+ * Worktree paths a tick may legitimately leave dirty: only the runtime's own
+ * state under `.cairn/`. Everything else, including the mission contract files
+ * and untracked files anywhere else, must be committed before `verify`.
+ */
+export function worktreeChanges(missionDir: string): string[] {
+  const root = git(missionDir, ['rev-parse', '--show-toplevel']);
+  if (!root) return [];
+  // `git status --porcelain` entries start with the two status columns; the
+  // first column is a space for an unstaged change, so this output must not be
+  // trimmed before slicing the path.
+  const result = spawnSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) return [];
+  const changes: string[] = [];
+  const parts = result.stdout.split('\0');
+  for (let index = 0; index < parts.length; index += 1) {
+    const entry = parts[index];
+    if (entry === '') continue;
+    const status = entry.slice(0, 2);
+    const path = entry.slice(3);
+    // A rename or copy lists the source path in the next field.
+    if (status.includes('R') || status.includes('C')) index += 1;
+    if (!isRuntimePath(path)) changes.push(path);
+  }
+  return changes;
+}
+
+/** The committed ledger at HEAD, or null when no ledger is committed there. */
+export function ledgerAtHead(missionDir: string): LedgerEvent[] | null {
+  const root = git(missionDir, ['rev-parse', '--show-toplevel']);
+  if (!root) return null;
+  const rel = relative(root, missionDir).split(sep).join('/');
+  const path = rel === '' ? 'ledger.jsonl' : `${rel}/ledger.jsonl`;
+  const text = git(missionDir, ['show', `HEAD:${path}`]);
+  if (text === null) return null;
+  if (text.trim() === '') return [];
+  return text
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== '')
+    .map((line) => JSON.parse(line) as LedgerEvent);
+}
+
+function isRuntimePath(path: string): boolean {
+  const value = path.split('\\').join('/');
+  return value === '.cairn' || value.startsWith('.cairn/');
 }
 
 function missionBody(missionDir: string): string {

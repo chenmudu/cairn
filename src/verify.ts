@@ -2,7 +2,16 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import { appendEvent, nextTimestamp, type LedgerEvent } from './ledger.ts';
 import { displayCommand, runGate, type GateResult } from './gates.ts';
-import { git, loadMission, taskState, type Gate, type Task } from './plan.ts';
+import {
+  git,
+  gitHead,
+  gitTree,
+  loadMission,
+  taskState,
+  worktreeChanges,
+  type Gate,
+  type Task,
+} from './plan.ts';
 
 export interface GateOutcome extends GateResult {
   id: string;
@@ -15,13 +24,17 @@ export interface GateOutcome extends GateResult {
 export interface VerifyResult {
   task: string;
   passed: boolean;
+  head: string | null;
+  tree: string | null;
   gates: GateOutcome[];
+  drift?: string;
 }
 
 /**
  * Run every gate a task declares, newest result last. Each result becomes an
- * evidence file and a `gate_result` event. Only a failing blocking gate fails
- * the run; advisory gates are recorded but never decide.
+ * evidence file and a `gate_result` event naming the head and tree it ran on.
+ * Only a failing blocking gate fails the run; advisory gates are recorded but
+ * never decide. A tracked change during the run is reported as drift.
  */
 export function verifyTask(missionDir: string, taskId: string): VerifyResult {
   const doc = loadMission(missionDir);
@@ -35,6 +48,14 @@ export function verifyTask(missionDir: string, taskId: string): VerifyResult {
     throw new Error(`${taskId}: no gates`);
   }
   for (const gate of task.gates) evidenceName(gate.id);
+
+  const head = gitHead(doc.missionDir);
+  const tree = head === null ? null : gitTree(doc.missionDir, head);
+  if (head !== null && tree === null) throw new Error(`cannot read the tree of ${head}`);
+  const dirty = worktreeChanges(doc.missionDir);
+  if (dirty.length > 0) {
+    throw new Error(`worktree has changes outside .cairn: ${dirty.join(', ')}`);
+  }
 
   const root = git(doc.missionDir, ['rev-parse', '--show-toplevel']) ?? process.cwd();
   mkdirSync(join(doc.missionDir, 'evidence', taskId), { recursive: true });
@@ -60,6 +81,7 @@ export function verifyTask(missionDir: string, taskId: string): VerifyResult {
         command: displayCommand(gate),
         exit_code: run.exit_code,
         evidence,
+        ...(head !== null && tree !== null ? { head, tree } : {}),
       },
     });
     events.push(event);
@@ -73,10 +95,23 @@ export function verifyTask(missionDir: string, taskId: string): VerifyResult {
     });
   }
 
+  const afterHead = gitHead(doc.missionDir);
+  const afterTree = afterHead === null ? null : gitTree(doc.missionDir, afterHead);
+  const afterDirty = worktreeChanges(doc.missionDir);
+  const drift =
+    afterHead !== head || afterTree !== tree || afterDirty.length > 0
+      ? 'the tracked content changed while the gates ran'
+      : undefined;
+
   return {
     task: taskId,
-    passed: gates.every((gate) => gate.severity !== 'block' || gate.exit_code === 0),
+    passed:
+      gates.every((gate) => gate.severity !== 'block' || gate.exit_code === 0) &&
+      drift === undefined,
+    head,
+    tree,
     gates,
+    ...(drift ? { drift } : {}),
   };
 }
 
@@ -127,6 +162,33 @@ export function isEvidenceFile(missionDir: string, value: unknown): boolean {
   if (typeof value !== 'string' || value === '') return false;
   const path = resolve(missionDir, value);
   return isInside(missionDir, path) && existsSync(path) && statSync(path).isFile();
+}
+
+/**
+ * A gate result proves a tree, not just a command. `record` refuses a result
+ * whose head or tree is not the tree it is about to stamp.
+ */
+export function checkTreeBinding(
+  task: Task,
+  events: LedgerEvent[],
+  binding: { head: string; tree: string },
+): string[] {
+  const errors: string[] = [];
+  for (const gate of task.gates.filter((candidate) => candidate.severity === 'block')) {
+    const latest = events
+      .filter(
+        (event) =>
+          event.event === 'gate_result' &&
+          event.task === task.id &&
+          event.data.gate === gate.id,
+      )
+      .at(-1);
+    if (!latest) continue; // checkEvidence already reported the missing result
+    if (latest.data.head !== binding.head || latest.data.tree !== binding.tree) {
+      errors.push(`${task.id}: blocking gate ${gate.id} was verified on a different tree`);
+    }
+  }
+  return errors;
 }
 
 function evidenceName(id: string): string {

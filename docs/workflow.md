@@ -44,27 +44,37 @@ same change.
    first and see it fail for the expected reason. If the task cannot name the acceptance
    criterion it advances, stop.
 
-4. **Verify.** Run every blocking gate and write evidence.
+4. **Commit the work.** Commit the code, the tests, and the docs before verifying. `verify`
+   refuses a worktree with changes outside `.cairn/`, because a gate result proves a tree.
+
+5. **Verify.** Run every blocking gate and write evidence.
 
    ```sh
    node src/cli.ts verify <task> --mission .cairn/missions/<id>
    ```
 
-5. **Commit.** Commit the work, the evidence, and the `gate_result` events. Do not push.
+   `verify` records the head and tree in every `gate_result` and fails if tracked content
+   changes while the gates run.
 
-6. **Record.** Append `task_done` only after the commit and the gates.
+6. **Record.** Append `task_done` only when the latest blocking-gate results name the current
+   head and tree, the worktree is still clean outside `.cairn/`, and every evidence file is
+   there.
 
    ```sh
    node src/cli.ts record <task> --status done --mission .cairn/missions/<id>
    ```
 
-7. **Reconcile.** Check the ledger against git and the evidence.
+7. **Commit the ledger.** Commit the ledger, the evidence, and nothing else. `task_done` is a
+   property of the repository, not of the conversation.
+
+8. **Reconcile.** Check the ledger against git and the evidence. A completion event that is in
+   the worktree ledger but not in the ledger at HEAD is drift.
 
    ```sh
    node src/cli.ts reconcile --mission .cairn/missions/<id>
    ```
 
-8. **Audit before the claim.** Report drift signals; if the audit cannot run, record that and
+9. **Audit before the claim.** Report drift signals; if the audit cannot run, record that and
    the substitute evidence.
 
    ```sh
@@ -76,6 +86,19 @@ Pack availability is advisory and does not block the tick:
 ```sh
 node scripts/check-method.mjs --packs
 ```
+
+## Closing the mission
+
+`record --mission-done` requires the worktree ledger to equal the ledger at HEAD, because the
+close is a property of the repository too. The close is two commits:
+
+1. commit `task_done`, the review, and the evidence;
+2. `node src/cli.ts record --mission-done --mission .cairn/missions/<id>`;
+3. commit `mission_done`;
+4. `node src/cli.ts reconcile --mission .cairn/missions/<id>` exits 0.
+
+A `record --mission-done` that closes the worktree ledger but not HEAD is refused. Do not edit
+the ledger to make it match; commit it.
 
 ## Human checkpoints
 
@@ -142,10 +165,12 @@ Use the floor everywhere:
 1. `node scripts/goal-check.mjs`
 2. `node src/cli.ts next`
 3. write the test first, then the change
-4. `node src/cli.ts verify <task>`
-5. commit, `node src/cli.ts record <task> --status done`
-6. `node src/cli.ts reconcile`
-7. fresh-context review with the in-repo checklist
+4. commit the work
+5. `node src/cli.ts verify <task>`
+6. `node src/cli.ts record <task> --status done`
+7. commit the ledger and the evidence
+8. `node src/cli.ts reconcile`
+9. fresh-context review with the in-repo checklist
 
 Every task report says `absent, floor used`. The gates still pass; that is the test of the
 floor.
@@ -155,12 +180,13 @@ floor.
 A task is done only when all three are true:
 
 - a commit exists;
-- every blocking gate exits 0 with evidence;
-- `task_done` is in the ledger.
+- every blocking gate exits 0 with evidence on the verified tree;
+- `task_done` is in the ledger at HEAD.
 
 A green gate proves the step, not the goal. At mission end, run the milestone audit, write the
-verdict to a JSON file with `reviewer`, `verdict`, `findings`, and `packs`, record it, and only
-then `cairn record --mission-done`.
+verdict to a JSON file with `reviewer`, `verdict`, `findings`, and `packs`, record it, commit
+the ledger, and only then `cairn record --mission-done`. Commit `mission_done` afterwards. See
+"Closing the mission".
 
 ```sh
 node src/cli.ts review --file review.json --mission .cairn/missions/<id>

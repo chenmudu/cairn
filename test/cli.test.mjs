@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { makeTempMission } from './helpers.mjs';
+import { makeTempMission, makeTempRepo } from './helpers.mjs';
 
 const repo = resolve(import.meta.dirname, '..');
 const cli = resolve(repo, 'src', 'cli.ts');
@@ -119,8 +119,8 @@ test('record refuses a task with no gate evidence and does not write', (t) => {
 });
 
 test('verify and record complete a task with no manual ledger write', (t) => {
-  const dir = makeTempMission(t);
-  const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  const { root, mission } = makeTempRepo(t);
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
   const commit = (message) =>
     git(
       '-c',
@@ -135,21 +135,28 @@ test('verify and record complete a task with no manual ledger write', (t) => {
   assert.equal(git('add', '.').status, 0);
   assert.equal(commit('base').status, 0);
 
-  const verify = run('verify', 'T-001', '--mission', dir);
-  assert.equal(verify.status, 0, verify.stderr);
-  const report = JSON.parse(verify.stdout);
-  assert.equal(report.passed, true);
+  writeFileSync(join(root, 'work.txt'), 'work\n');
   assert.equal(git('add', '.').status, 0);
   assert.equal(commit('work').status, 0);
 
-  const record = run('record', 'T-001', '--status', 'done', '--mission', dir);
+  const verify = run('verify', 'T-001', '--mission', mission);
+  assert.equal(verify.status, 0, verify.stderr);
+  const report = JSON.parse(verify.stdout);
+  assert.equal(report.passed, true);
+  assert.match(report.head, /^[0-9a-f]{40}$/);
+  assert.match(report.tree, /^[0-9a-f]{40}$/);
+
+  const record = run('record', 'T-001', '--status', 'done', '--mission', mission);
   assert.equal(record.status, 0, record.stderr);
-  const events = readFileSync(join(dir, 'ledger.jsonl'), 'utf8')
+  const events = readFileSync(join(mission, 'ledger.jsonl'), 'utf8')
     .trim()
     .split('\n')
     .map((line) => JSON.parse(line));
-  assert.ok(events.some((event) => event.event === 'task_done' && event.task === 'T-001'));
-  assert.ok(existsSync(join(dir, report.gates[0].evidence)));
+  const done = events.find((event) => event.event === 'task_done' && event.task === 'T-001');
+  assert.ok(done);
+  assert.equal(done.data.head, report.head);
+  assert.equal(done.data.tree, report.tree);
+  assert.ok(existsSync(join(mission, report.gates[0].evidence)));
 });
 
 test('record refuses an unknown task', (t) => {

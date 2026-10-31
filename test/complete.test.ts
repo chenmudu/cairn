@@ -177,6 +177,22 @@ test('refuses a review that predates the last task_done', (t) => {
 
 test('cairn record --mission-done appends mission_done and refuses a second time', (t) => {
   const dir = makeMission(t, { ledger: COMPLETE });
+  const git = (...args: string[]) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(git('init', '-q').status, 0);
+  assert.equal(git('add', '.').status, 0);
+  assert.equal(
+    git(
+      '-c',
+      'user.name=fixture',
+      '-c',
+      'user.email=fixture@example.com',
+      'commit',
+      '-qm',
+      'base',
+    ).status,
+    0,
+  );
+
   const first = run('record', '--mission-done', '--mission', dir);
   assert.equal(first.status, 0, first.stderr);
   const events = readLedger(dir);

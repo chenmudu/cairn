@@ -8,15 +8,18 @@ import {
   gitCount,
   gitHead,
   gitParent,
+  gitTree,
+  ledgerAtHead,
   loadMission,
   nextTask,
   statusReport,
   taskState,
+  worktreeChanges,
   type StatusReport,
 } from './plan.ts';
 import { recordReview } from './review.ts';
 import { withPacks } from './packet.ts';
-import { checkEvidence, verifyTask } from './verify.ts';
+import { checkEvidence, checkTreeBinding, verifyTask } from './verify.ts';
 import { reconcileMission } from './reconcile.ts';
 import { completeMission } from './complete.ts';
 import { initMission, resolveMission } from './paths.ts';
@@ -189,6 +192,17 @@ function record(missionDir: string, taskId: string): number {
 
   const head = gitHead(doc.missionDir);
   if (!head) return refuse('no git commit exists');
+  const tree = gitTree(doc.missionDir, head);
+  if (!tree) return refuse(`cannot read the tree of ${head}`);
+
+  const stale = checkTreeBinding(task, doc.events, { head, tree });
+  if (stale.length > 0) return refuse(stale[0]);
+
+  const changes = worktreeChanges(doc.missionDir);
+  if (changes.length > 0) {
+    return refuse(`worktree has changes outside .cairn: ${changes.join(', ')}`);
+  }
+
   const started = doc.events
     .filter((event) => event.event === 'task_started' && event.task === taskId)
     .at(-1);
@@ -225,6 +239,7 @@ function record(missionDir: string, taskId: string): number {
     data: {
       base,
       head,
+      tree,
       commits: [head],
       gates,
     },
@@ -237,6 +252,13 @@ function recordMission(missionDir: string): number {
   const report = completeMission(missionDir);
   if (!report.ok) return refuse(report.errors[0]);
   const doc = loadMission(missionDir);
+
+  const committed = ledgerAtHead(doc.missionDir);
+  if (committed === null) return refuse('the ledger is not committed at HEAD');
+  if (JSON.stringify(committed) !== JSON.stringify(doc.events)) {
+    return refuse('the ledger has changes that are not committed at HEAD');
+  }
+
   const completed = appendEvent(doc.missionDir, {
     ts: nextTimestamp(doc.events),
     event: 'mission_done',

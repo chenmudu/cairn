@@ -5,17 +5,17 @@ import { unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { reconcileMission } from '../src/reconcile.ts';
 import { verifyTask } from '../src/verify.ts';
-import { makeTempMission } from './helpers.mjs';
+import { makeTempRepo } from './helpers.mjs';
 
-function initRepo(dir) {
-  spawnSync('git', ['init', '-q'], { cwd: dir });
-  spawnSync('git', ['add', '.'], { cwd: dir });
+function initRepo(root) {
+  spawnSync('git', ['init', '-q'], { cwd: root });
+  spawnSync('git', ['add', '.'], { cwd: root });
   spawnSync(
     'git',
     ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.com', 'commit', '-qm', 'base'],
-    { cwd: dir },
+    { cwd: root },
   );
-  return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).stdout.trim();
+  return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
 }
 
 function taskDone(task, base, head, evidence) {
@@ -35,42 +35,42 @@ function taskDone(task, base, head, evidence) {
 }
 
 test('reconcile explains the crash window after verify and before record', (t) => {
-  const dir = makeTempMission(t);
-  initRepo(dir);
-  verifyTask(dir, 'T-001');
-  const report = reconcileMission(dir);
+  const { root, mission } = makeTempRepo(t);
+  initRepo(root);
+  verifyTask(mission, 'T-001');
+  const report = reconcileMission(mission);
   assert.equal(report.ok, true, report.findings.join('\n'));
   assert.deepEqual(report.pending, ['T-001']);
 });
 
 test('reconcile reports a gate result whose evidence is gone', (t) => {
-  const dir = makeTempMission(t);
-  initRepo(dir);
-  const result = verifyTask(dir, 'T-001');
-  unlinkSync(join(dir, result.gates[0].evidence));
-  const report = reconcileMission(dir);
+  const { root, mission } = makeTempRepo(t);
+  initRepo(root);
+  const result = verifyTask(mission, 'T-001');
+  unlinkSync(join(mission, result.gates[0].evidence));
+  const report = reconcileMission(mission);
   assert.equal(report.ok, false);
   assert.match(report.findings.join('\n'), /evidence missing/);
 });
 
 test('reconcile reports a task_done whose head is not a commit', (t) => {
-  const dir = makeTempMission(t);
-  initRepo(dir);
+  const { root, mission } = makeTempRepo(t);
+  initRepo(root);
   const fake = 'f'.repeat(40);
-  writeFileSync(join(dir, 'ledger.jsonl'), `${taskDone('T-001', fake, fake, 'evidence/T-001/gate.json')}\n`);
-  const report = reconcileMission(dir);
+  writeFileSync(join(mission, 'ledger.jsonl'), `${taskDone('T-001', fake, fake, 'evidence/T-001/gate.json')}\n`);
+  const report = reconcileMission(mission);
   assert.equal(report.ok, false);
   assert.match(report.findings.join('\n'), /head .* is not a commit/);
 });
 
 test('reconcile reports one commit claimed by two tasks', (t) => {
-  const dir = makeTempMission(t);
-  const head = initRepo(dir);
+  const { root, mission } = makeTempRepo(t);
+  const head = initRepo(root);
   writeFileSync(
-    join(dir, 'ledger.jsonl'),
+    join(mission, 'ledger.jsonl'),
     `${taskDone('T-001', head, head, 'evidence/T-001/gate.json')}\n${taskDone('T-002', head, head, 'evidence/T-002/gate.json')}\n`,
   );
-  const report = reconcileMission(dir);
+  const report = reconcileMission(mission);
   assert.equal(report.ok, false);
   assert.match(report.findings.join('\n'), /claimed by T-001, T-002/);
 });

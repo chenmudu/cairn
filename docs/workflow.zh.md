@@ -1,4 +1,4 @@
-<!-- translation of docs/workflow.md at the T5 commit; the English file is authoritative -->
+<!-- translation of docs/workflow.md at the Mission #2 T1 revision; the English file is authoritative -->
 
 # 一个 tick
 
@@ -39,27 +39,33 @@
 3. **工作。** diff 保持在声明的文件内。改变行为时先写测试，看到它因为预期原因失败。任务如果
    说不出它推进哪条验收标准，停下。
 
-4. **验证。** 跑每个阻塞闸门并写证据。
+4. **提交工作。** 在验证前提交代码、测试和文档。`verify` 拒绝 `.cairn/` 之外有改动的工作区，
+   因为闸门结果证明的是一棵树。
+
+5. **验证。** 跑每个阻塞闸门并写证据。
 
    ```sh
    node src/cli.ts verify <task> --mission .cairn/missions/<id>
    ```
 
-5. **提交。** 提交工作、证据和 `gate_result` 事件。不 push。
+   `verify` 把 head 和 tree 写进每个 `gate_result`；闸门运行期间被跟踪内容变化就是漂移。
 
-6. **记录。** 只有提交和闸门都成立后，才追加 `task_done`。
+6. **记录。** 只有最新的阻塞闸门结果指名当前 head 和 tree、工作区在 `.cairn/` 之外仍然干净、
+   每个证据文件都在时，才追加 `task_done`。
 
    ```sh
    node src/cli.ts record <task> --status done --mission .cairn/missions/<id>
    ```
 
-7. **对账。** 对照 git 和证据检查台账。
+7. **提交台账。** 只提交台账和证据。`task_done` 是仓库的属性，不是对话的属性。
+
+8. **对账。** 对照 git 和证据检查台账。完成事件在工作区台账里、但不在 HEAD 的台账里，就是漂移。
 
    ```sh
    node src/cli.ts reconcile --mission .cairn/missions/<id>
    ```
 
-8. **声明前审计。** 报告漂移信号；审计跑不了就记录失败和替代证据。
+9. **声明前审计。** 报告漂移信号；审计跑不了就记录失败和替代证据。
 
    ```sh
    node scripts/audit-session.mjs
@@ -70,6 +76,17 @@
 ```sh
 node scripts/check-method.mjs --packs
 ```
+
+## 关闭 mission
+
+`record --mission-done` 要求工作区台账等于 HEAD 的台账，因为关闭也是仓库的属性。关闭是两次提交：
+
+1. 提交 `task_done`、review 和证据；
+2. `node src/cli.ts record --mission-done --mission .cairn/missions/<id>`；
+3. 提交 `mission_done`；
+4. `node src/cli.ts reconcile --mission .cairn/missions/<id>` 退出 0。
+
+只改了工作区台账、HEAD 没跟上的 `record --mission-done` 会被拒绝。不要编辑台账去凑，提交它。
 
 ## 人类检查点
 
@@ -128,10 +145,12 @@ node scripts/check-method.mjs --packs
 1. `node scripts/goal-check.mjs`
 2. `node src/cli.ts next`
 3. 先写测试，再改
-4. `node src/cli.ts verify <task>`
-5. 提交，`node src/cli.ts record <task> --status done`
-6. `node src/cli.ts reconcile`
-7. 用仓库内清单做全新上下文审查
+4. 提交工作
+5. `node src/cli.ts verify <task>`
+6. `node src/cli.ts record <task> --status done`
+7. 提交台账和证据
+8. `node src/cli.ts reconcile`
+9. 用仓库内清单做全新上下文审查
 
 每个任务报告写 `absent, floor used`。闸门仍然通过；这才是地板的测试。
 
@@ -140,11 +159,12 @@ node scripts/check-method.mjs --packs
 任务只有三样同时成立才算完成：
 
 - 提交存在；
-- 每个阻塞闸门退出 0 并有证据；
-- 台账里有 `task_done`。
+- 每个阻塞闸门在被验证的树上退出 0 并有证据；
+- `task_done` 在 HEAD 的台账里。
 
 绿色闸门证明这一步，不是 mission。mission 结束时跑里程碑审计，把结论写进包含 `reviewer`、
-`verdict`、`findings`、`packs` 的 JSON 文件并记录，然后才 `cairn record --mission-done`。
+`verdict`、`findings`、`packs` 的 JSON 文件并记录，提交台账，然后才
+`cairn record --mission-done`。之后再提交 `mission_done`。见「关闭 mission」。
 
 ```sh
 node src/cli.ts review --file review.json --mission .cairn/missions/<id>
