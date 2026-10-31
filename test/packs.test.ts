@@ -115,6 +115,35 @@ test('reports a skill with no engine as not-invocable', () => {
   }
 });
 
+test('invocable is a filesystem fact, so a packet marks use without proving a session call', () => {
+  const root = workspace();
+  try {
+    const sp = superpowers(root);
+    const report = detectPacks({
+      home: root,
+      platform: 'win32',
+      env: {
+        CAIRN_SUPERPOWERS_DIR: sp,
+        CAIRN_IMPECCABLE_DIR: join(root, 'missing/imp'),
+        CAIRN_IMPECCABLE_BIN: join(root, 'missing/engine'),
+      },
+    });
+    // The directory exists, so detection reports present and invocable. The
+    // CLI adapter can still list no plugin skills while the desktop session
+    // resolves them; only a recorded session call proves invocability.
+    assert.equal(report.packs.superpowers.status, 'present');
+    assert.equal(report.packs.superpowers.invocable, true);
+    const byPack = packs(withPacks(packet(['src/a.ts']), report));
+    assert.equal(byPack.superpowers.mode, 'use');
+    // The packet is an instruction, not a proof. `record` refuses a `use` entry
+    // whose evidence does not name the skill, so the flag alone cannot be the
+    // evidence.
+    assert.match(byPack.superpowers.instruction, /test-driven-development/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 function packet(files: string[]): Packet {
   return {
     mission: { id: 'm1', title: 'Mission' },

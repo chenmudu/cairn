@@ -1,11 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { detectPacks, type PackReport } from './packs.ts';
+import { detectPacks, expectedPacks, type PackReport } from './packs.ts';
 import type { Gate, Packet } from './plan.ts';
 
 const TEMPLATE = resolve(import.meta.dirname, '..', 'templates', 'dispatch.md');
-const CODE_FILE = /\.(ts|tsx|js|mjs|cjs|jsx|py|rs|go|java|rb|sh)$/i;
-const UI_FILE = /\.(html?|css|scss|sass|less|tsx|jsx|vue|svelte|astro|svg)$/i;
 
 export type PackMode = 'use' | 'human-in-loop' | 'not-applicable' | 'absent';
 
@@ -30,8 +28,9 @@ export interface PacketWithPacks extends Packet {
  * never a download.
  */
 export function withPacks(packet: Packet, report: PackReport = detectPacks()): PacketWithPacks {
-  const code = packet.task.files.some((file) => CODE_FILE.test(file));
-  const ui = packet.task.files.some((file) => UI_FILE.test(file));
+  const expected = expectedPacks(packet.task.files);
+  const code = expected.superpowers.capability === 'test-first';
+  const ui = expected.impeccable.capability === 'design-check';
   const superpowers = report.packs.superpowers;
   const impeccable = report.packs.impeccable;
   const spPresent = superpowers.status === 'present';
@@ -39,13 +38,11 @@ export function withPacks(packet: Packet, report: PackReport = detectPacks()): P
 
   const packs: PacketPack[] = [
     {
-      capability: code ? 'test-first' : 'verify-before-close',
+      capability: expected.superpowers.capability,
       pack: 'superpowers',
       version: spPresent ? (superpowers.version ?? superpowers.pin) : superpowers.pin,
       mode: spPresent ? 'use' : 'absent',
-      instruction: code
-        ? 'superpowers:test-driven-development'
-        : 'superpowers:verification-before-completion',
+      instruction: expected.superpowers.skill,
       fallback: code
         ? {
             text: 'write the test first, then the implementation, then run the gate',
@@ -57,7 +54,7 @@ export function withPacks(packet: Packet, report: PackReport = detectPacks()): P
           },
     },
     {
-      capability: ui ? 'design-check' : 'design-review',
+      capability: expected.impeccable.capability,
       pack: 'impeccable',
       version: impeccable.pin,
       mode: impPresent ? (ui ? 'use' : 'not-applicable') : 'absent',

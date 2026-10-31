@@ -33,7 +33,8 @@ same change.
    ```
 
 2. **Start and packet.** Record the base, then read the task, files, gates, constraints, packs,
-   and base commit.
+   and base commit. The packet's `packs` list is the record the task must return: two entries,
+   one per pack, selected from the declared files.
 
    ```sh
    node src/cli.ts start <task>
@@ -58,11 +59,17 @@ same change.
 
 6. **Record.** Append `task_done` only when the latest blocking-gate results name the current
    head and tree, the worktree is still clean outside `.cairn/`, and every evidence file is
-   there.
+   there. Pass the two-entry pack record returned by the task.
 
    ```sh
-   node src/cli.ts record <task> --status done --mission .cairn/missions/<id>
+   node src/cli.ts record <task> --status done --packs <json> --mission .cairn/missions/<id>
    ```
+
+   `record` recomputes the capability from the declared files, so a code task cannot report
+   verify-before-close to escape test-first. A record with one entry, an unknown mode, a
+   capability or skill that disagrees with the task, or evidence outside the mission is
+   refused. After the first `task_done` in a mission carries packs, every later `task_done`
+   must carry them too; omission is refused.
 
 7. **Commit the ledger.** Commit the ledger, the evidence, and nothing else. `task_done` is a
    property of the repository, not of the conversation.
@@ -125,6 +132,10 @@ ruling: record it in the ledger, continue, and name the cost if it is wrong.
   audit as passed.
 - **A pack is absent.** Use the executable fallback and record `absent, floor used`. This is
   not a blocker unless the acceptance criterion requires the pack.
+- **The pack record is missing or refused.** `record` exits 2 and names the reason. Return the
+  two entries with the evidence the refusal asks for; do not retry with a weaker capability or
+  drop the record. After the first packs-bearing `task_done`, a task that cannot produce the
+  record is a blocking question, not an omission.
 - **A pack is `mismatch` or `not-invocable`.** Use the fallback and record the detected
   version. Do not invoke a launcher that would download an engine.
 - **No runnable task.** Check the dependency chain, the ledger, and `goal-check`. A plan that
@@ -136,6 +147,45 @@ ruling: record it in the ledger, continue, and name the cost if it is wrong.
 
 The floor is always executable. The pack is better when present and pinned. The seam is
 Cairn's: detect, inject, record, reconcile.
+
+### The pack record
+
+Every task after the first packs-bearing `task_done` returns two entries, one for each pack:
+
+```json
+[
+  {
+    "capability": "test-first",
+    "pack": "superpowers",
+    "skill": "superpowers:test-driven-development",
+    "version": "7.0.1",
+    "mode": "use",
+    "evidence": "evidence/T2/superpowers-use.txt"
+  },
+  {
+    "capability": "design-review",
+    "pack": "impeccable",
+    "skill": "impeccable:design-review",
+    "version": "4.8.0+df3a4ab",
+    "mode": "not-applicable",
+    "reason": "task files contain no markup or URL target",
+    "evidence": "evidence/T2/impeccable-none.txt"
+  }
+]
+```
+
+- `mode` is `use`, `human-in-loop`, `not-applicable`, or `absent`.
+- `capability` and `skill` follow the declared files: a code file means `test-first` /
+  `superpowers:test-driven-development`, a UI file means `design-check` /
+  `impeccable:design-check`, otherwise `verify-before-close` /
+  `superpowers:verification-before-completion` and `design-review` /
+  `impeccable:design-review`. `record` recomputes this rule and refuses a mismatch.
+- `not-applicable` needs a `reason`. `absent` needs a `reason` and the floor's evidence.
+- Every `evidence` value is a file inside the mission. A `use` entry's evidence must be a text
+  file whose first line names the skill; test-first evidence must also contain a `RED` block
+  and a `GREEN` block. A filename alone proves nothing.
+- `invocable` from detection is a filesystem fact, not proof that a session could call the
+  skill. Only the evidence of an actual invocation counts.
 
 ### Both packs
 

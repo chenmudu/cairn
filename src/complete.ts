@@ -1,4 +1,5 @@
 import { coverage, loadMission, taskState } from './plan.ts';
+import { validateMissionPacks } from './packs.ts';
 import { checkEvidence } from './verify.ts';
 
 export interface AcceptanceEvidence {
@@ -58,6 +59,8 @@ export function completeMission(missionDir: string): CompleteReport {
       errors.push('latest review_result is not after the last task_done');
     }
   }
+
+  errors.push(...validateMissionPacks(missionDir, doc.plan, doc.events, lastReview));
 
   const acceptance = doc.mission.acceptance.map((criterion) => {
     const tasks = (map[criterion.id] ?? []).filter((id) => done.has(id));

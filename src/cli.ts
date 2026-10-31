@@ -19,6 +19,7 @@ import {
 } from './plan.ts';
 import { recordReview } from './review.ts';
 import { withPacks } from './packet.ts';
+import { packsActivated, validatePackRecords } from './packs.ts';
 import { checkEvidence, checkTreeBinding, verifyTask } from './verify.ts';
 import { reconcileMission } from './reconcile.ts';
 import { completeMission } from './complete.ts';
@@ -32,7 +33,7 @@ const USAGE = `usage:
   cairn verify <task> [--mission <dir>]
   cairn review --file <json> [--mission <dir>]
   cairn reconcile [--mission <dir>]
-  cairn record <task> --status done [--mission <dir>]
+  cairn record <task> --status done [--packs <json>] [--mission <dir>]
   cairn record --mission-done [--mission <dir>]
 `;
 
@@ -119,10 +120,11 @@ function main(argv: string[]): number {
     }
     const taskId = rest[0];
     const status = takeOption(rest, '--status');
+    const packsFile = takeOption(rest, '--packs');
     if (!taskId || status !== 'done' || rest.length > 1) {
       return usage('record needs <task> --status done');
     }
-    return record(missionDir, taskId);
+    return record(missionDir, taskId, packsFile);
   }
 
   return usage(command ? `unknown command ${command}` : 'missing command');
@@ -169,7 +171,7 @@ function review(missionDir: string, file: string): number {
   }
 }
 
-function record(missionDir: string, taskId: string): number {
+function record(missionDir: string, taskId: string, packsFile?: string): number {
   const doc = loadMission(missionDir);
   const task = doc.plan.tasks.find((candidate) => candidate.id === taskId);
   if (!task) return refuse(`unknown task ${taskId}`);
@@ -185,6 +187,19 @@ function record(missionDir: string, taskId: string): number {
   const unknown = task.serves.filter((id) => !known.has(id));
   if (unknown.length > 0) {
     return refuse(`${taskId}: serves unknown acceptance ${unknown.join(', ')}`);
+  }
+
+  let packs: unknown;
+  if (packsFile !== undefined) {
+    try {
+      packs = readPacksFile(packsFile);
+    } catch (error) {
+      return refuse(error instanceof Error ? error.message : String(error));
+    }
+    const invalid = validatePackRecords(doc.missionDir, task, packs);
+    if (invalid.length > 0) return refuse(invalid[0]);
+  } else if (packsActivated(doc.events)) {
+    return refuse(`${taskId}: packs record required; pass --packs <json>`);
   }
 
   const errors = checkEvidence(doc.missionDir, task, doc.events);
@@ -242,6 +257,7 @@ function record(missionDir: string, taskId: string): number {
       tree,
       commits: [head],
       gates,
+      ...(packs === undefined ? {} : { packs }),
     },
   });
   process.stdout.write(`${JSON.stringify(completed, null, 2)}\n`);
@@ -289,6 +305,12 @@ function takeOption(args: string[], name: string): string | undefined {
   if (index === -1) return undefined;
   const value = args[index + 1];
   args.splice(index, 2);
+  return value;
+}
+
+function readPacksFile(file: string): unknown {
+  const value = JSON.parse(readFileSync(file, 'utf8'));
+  if (!Array.isArray(value)) throw new Error('packs file must contain a JSON list');
   return value;
 }
 
