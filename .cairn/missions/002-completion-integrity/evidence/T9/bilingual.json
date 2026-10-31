@@ -1,0 +1,15 @@
+{
+  "gate": {
+    "id": "bilingual",
+    "command": "node",
+    "args": [
+      "scripts/check-bilingual.mjs"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "bilingual: ok",
+  "duration_ms": 52,
+  "timed_out": false
+}
