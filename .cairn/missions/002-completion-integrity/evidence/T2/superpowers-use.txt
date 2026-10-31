@@ -1,0 +1,44 @@
+superpowers:test-driven-development
+
+# Invocation (ZCode desktop session, 2026-10-31)
+skill id: superpowers:test-driven-development
+first line of the returned content: # Skill: test-driven-development
+The returned body states the Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST,
+then RED-GREEN-REFACTOR and the verification checklist. This task followed it:
+test/packs-record.test.mjs was written and run before any runtime change.
+
+RED
+$ mkdir -p /tmp/cairn-t2-red && git archive 8f1284e | tar -x -C /tmp/cairn-t2-red
+$ cp test/packs-record.test.mjs /tmp/cairn-t2-red/test/packs-record.test.mjs
+$ cd /tmp/cairn-t2-red && node --test test/packs-record.test.mjs
+exit 1
+✖ the first task_done may omit packs, and later omissions are refused (825.8295ms)
+✖ record refuses a record with one entry instead of two (412.604ms)
+✖ record refuses an unknown mode (424.1899ms)
+✖ record refuses not-applicable without a reason (430.3304ms)
+✖ record refuses absent without a floor evidence file (432.4927ms)
+✖ record refuses evidence outside the mission directory (442.9556ms)
+✖ record recomputes capability and refuses a code task that evades test-first (421.8466ms)
+✖ a use record must name the skill on the first line and show RED and GREEN (432.6159ms)
+✖ record writes a valid two-entry record into task_done (429.4719ms)
+ℹ tests 9
+ℹ pass 0
+ℹ fail 9
+Cause: the runtime at 8f1284e does not parse --packs, so every record call
+refused with "record needs <task> --status done"; the expected behavior was absent.
+
+GREEN
+$ node --test test/packs-record.test.mjs   # T2 runtime, 2026-10-31
+exit 0
+✔ the first task_done may omit packs, and later omissions are refused (1237.7947ms)
+✔ record refuses a record with one entry instead of two (422.439ms)
+✔ record refuses an unknown mode (420.897ms)
+✔ record refuses not-applicable without a reason (433.9665ms)
+✔ record refuses absent without a floor evidence file (414.6571ms)
+✔ record refuses evidence outside the mission directory (441.2643ms)
+✔ record recomputes capability and refuses a code task that evades test-first (497.5205ms)
+✔ a use record must name the skill on the first line and show RED and GREEN (567.7833ms)
+✔ record writes a valid two-entry record into task_done (508.4362ms)
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0

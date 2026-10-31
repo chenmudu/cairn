@@ -1,0 +1,13 @@
+skill id: superpowers:test-driven-development
+first line of the returned content: # Skill: test-driven-development
+invoked with the session Skill tool on 2026-10-31. The returned body contains the Iron Law
+("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST"), RED-GREEN-REFACTOR, and the verification
+checklist.
+
+Second invocation in the same session:
+skill id: superpowers:verification-before-completion
+first line of the returned content: # Skill: verification-before-completion
+returned body: "Evidence before claims, always."
+
+This file records a session invocation, not a filesystem detection. See skills-visible.txt for
+the listing and the adapter distinction.

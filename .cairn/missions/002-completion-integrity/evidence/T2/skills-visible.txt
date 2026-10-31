@@ -1,0 +1,40 @@
+Session skill listing (ZCode desktop), observed 2026-10-31:
+- superpowers:using-superpowers
+- superpowers:test-driven-development
+- superpowers:verification-before-completion
+
+All three required ids are visible in this session's available-skills list. The desktop session
+resolves the superpowers plugin cache at 7.0.1 and exposes its skills under the
+`superpowers:` prefix.
+
+Adapter distinction:
+- The CLI skill adapter, when pointed at the workspace instead of the plugin root, lists only
+  non-plugin skills. The desktop session resolves plugins and lists the three ids above.
+- `detectPacks()` reports `invocable: true` from the filesystem: the skills directory exists at
+  the pinned version. That flag is not a session fact; it cannot prove this session can invoke
+  the skill. Session access is proven by the Skill call recorded in invocation.txt, not by the
+  flag.
+
+Filesystem detection in this workspace (`node scripts/check-method.mjs --packs --json`), exit 0:
+
+{
+  "schema": "cairn/packs@0.1",
+  "packs": {
+    "superpowers": {
+      "status": "present",
+      "path": "C:\\Users\\Administrator\\.zcode\\cli\\plugins\\cache\\superpowers-dev\\superpowers\\7.0.1",
+      "version": "7.0.1",
+      "pin": "7.0.1",
+      "invocable": true
+    },
+    "impeccable": {
+      "status": "present",
+      "path": "C:\\Users\\Administrator\\.zcode\\skills\\impeccable",
+      "pin": "4.8.0+df3a4ab",
+      "skill_version": "4.8.0",
+      "engine_version": "0.1.18",
+      "engine": "C:\\Users\\Administrator\\.impeccable\\bin\\0.1.18\\impeccable.exe",
+      "invocable": true
+    }
+  }
+}
