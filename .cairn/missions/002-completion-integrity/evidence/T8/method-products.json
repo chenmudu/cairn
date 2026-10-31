@@ -1,0 +1,17 @@
+{
+  "gate": {
+    "id": "method-products",
+    "command": "node",
+    "args": [
+      "scripts/check-method.mjs",
+      "--products",
+      "--strict"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "products: ok",
+  "duration_ms": 79,
+  "timed_out": false
+}

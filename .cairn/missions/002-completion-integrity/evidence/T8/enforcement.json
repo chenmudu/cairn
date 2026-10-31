@@ -1,0 +1,15 @@
+{
+  "gate": {
+    "id": "enforcement",
+    "command": "node",
+    "args": [
+      "scripts/check-enforcement.mjs"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "enforcement: ok (15 rows, 7 human/review)",
+  "duration_ms": 62,
+  "timed_out": false
+}

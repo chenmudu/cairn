@@ -1,0 +1,15 @@
+{
+  "gate": {
+    "id": "decisions",
+    "command": "node",
+    "args": [
+      "scripts/check-decisions.mjs"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "decisions: ok (16 files)",
+  "duration_ms": 63,
+  "timed_out": false
+}

@@ -1,0 +1,17 @@
+{
+  "gate": {
+    "id": "example",
+    "command": "node",
+    "args": [
+      "scripts/check-example.mjs",
+      "--example",
+      "method/examples/0001-docs-tick"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "example: ok",
+  "duration_ms": 169,
+  "timed_out": false
+}

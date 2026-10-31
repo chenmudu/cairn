@@ -1,0 +1,15 @@
+{
+  "gate": {
+    "id": "targets",
+    "command": "node",
+    "args": [
+      "scripts/check-targets.mjs"
+    ],
+    "severity": "block"
+  },
+  "cwd": "D:\\project\\github\\cairn",
+  "exit_code": 0,
+  "output": "targets: ok (4 artifacts)",
+  "duration_ms": 76,
+  "timed_out": false
+}
