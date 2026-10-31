@@ -287,9 +287,66 @@ tasks:
         args: ["src/cli.ts", "reconcile"]
         severity: block
 
+  - id: T9
+    title: Make the harness claims match the runtime
+    deps: [T6]
+    risk: medium
+    status: todo
+    serves: [A6]
+    files:
+      - AGENTS.md
+      - .zcode/config.json
+      - .zcode/hooks/session-start.mjs
+      - scripts/goal-check.mjs
+      - test/hook.test.mjs
+      - test/goal-check.test.mjs
+      - test/status-sources.test.mjs
+      - docs/automation.md
+      - docs/automation.zh.md
+      - docs/self-hosting.md
+      - docs/self-hosting.zh.md
+      - docs/decision-routing.md
+      - docs/decision-routing.zh.md
+      - docs/adapter.md
+      - docs/adapter.zh.md
+      - docs/i18n.md
+      - .cairn/missions/002-completion-integrity/
+    interfaces:
+      produces:
+        - "goal-check --anchor emits the anchor and a warning when the check fails, exit 0"
+        - "the hook always injects the anchor; no failure branch drops it"
+        - "the matcher is startup|resume and the tests assert it"
+        - "a status-sources test fails when a status surface names a non-active or closed mission as active"
+        - "AGENTS.md and the hook docs match the runtime"
+    gates:
+      - id: typecheck
+        command: pnpm
+        args: ["typecheck"]
+        severity: block
+      - id: test
+        command: node
+        args: ["--test"]
+        severity: block
+      - id: mission
+        command: node
+        args: ["scripts/validate-mission.mjs", ".cairn/missions/002-completion-integrity"]
+        severity: block
+      - id: targets
+        command: node
+        args: ["scripts/check-targets.mjs"]
+        severity: block
+      - id: reconcile
+        command: node
+        args: ["src/cli.ts", "reconcile"]
+        severity: block
+      - id: bilingual
+        command: node
+        args: ["scripts/check-bilingual.mjs"]
+        severity: block
+
   - id: T7
     title: Make the contract and status sources tell the truth
-    deps: [T6]
+    deps: [T6, T9]
     risk: medium
     status: todo
     serves: [A6]
@@ -508,6 +565,19 @@ reports an authorization with no matching write, and still reports a write outsi
 
 Done when: an out-of-list gate is refused; a push without the recorded exception is refused; an
 authorized write is not drift; a write outside the paths is still drift; all gates exit 0.
+
+### T9 — harness claims match the runtime (A6)
+
+Make the harness claims match the runtime. `goal-check` gains a read-only `--anchor` mode that
+always emits the goal anchor and appends a warning when the check fails; the SessionStart hook
+calls it and never drops the anchor. The matcher becomes `startup|resume`. The hook and
+goal-check tests stop depending on the real repository's audit state, and a status-sources test
+fails when AGENTS.md or README names a closed or non-active mission as active. Docs record the
+pending-trust fact.
+
+Done when: `goal-check --anchor` exits 0 with the anchor and a warning on an audit-due fixture;
+the hook test passes regardless of the real repo's audit state; the status-sources test rejects
+a false active claim; AGENTS.md and the hook docs match the runtime; all six gates exit 0.
 
 ### T7 — contract and status truth (D7, A6)
 
