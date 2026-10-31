@@ -179,14 +179,9 @@ test('refuses coverage evidence that is not a list of references', () => {
   ]);
 });
 
-test('requires coverage for every acceptance id and no duplicates', (t) => {
+test('refuses coverage with a duplicate or unknown criterion', (t) => {
   const dir = makeTempMission(t);
   writeArtifact(dir);
-  const partial = REVIEW().coverage.slice(0, 2);
-  assert.throws(
-    () => recordReview(dir, { ...REVIEW(), coverage: partial }),
-    /coverage must name every acceptance criterion: missing F3/,
-  );
   const duplicate = [
     ...REVIEW().coverage,
     { criterion: 'F1', tasks: ['T-001'], evidence: [{ path: 'evidence/review.json' }], verdict: 'pass' },
@@ -202,6 +197,18 @@ test('requires coverage for every acceptance id and no duplicates', (t) => {
   assert.throws(
     () => recordReview(dir, { ...REVIEW(), coverage: unknown }),
     /coverage names unknown acceptance F9/,
+  );
+});
+
+test('accepts a milestone review that covers only the completed criteria', (t) => {
+  const dir = makeTempMission(t);
+  writeArtifact(dir);
+  const partial = REVIEW().coverage.slice(0, 2);
+  const event = recordReview(dir, { ...REVIEW(), coverage: partial });
+  assert.equal(event.event, 'review_result');
+  assert.deepEqual(
+    event.data.coverage.map((entry) => entry.criterion),
+    ['F1', 'F2'],
   );
 });
 

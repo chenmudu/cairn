@@ -352,6 +352,22 @@ test('refuses a review missing any field the close rule names', (t) => {
   }
 });
 
+test('refuses a close review that does not cover every acceptance criterion', (t) => {
+  const dir = makeMission(t, {
+    mission: missionTwo,
+    ledger: `${gateFor('T-001', '2026-10-31T00:00:00.000Z')}\n${doneFor(
+      'T-001',
+      '2026-10-31T00:00:01.000Z',
+    )}\n${reviewEvent('2026-10-31T00:00:02.000Z')}\n${authEvent('2026-10-31T00:00:03.000Z')}\n`,
+  });
+  const report = completeMission(dir);
+  assert.equal(report.ok, false);
+  assert.match(
+    report.errors.join('\n'),
+    /coverage must name every acceptance criterion: missing F2/,
+  );
+});
+
 test('refuses a coverage artifact that does not exist', (t) => {
   const coverage = [
     {

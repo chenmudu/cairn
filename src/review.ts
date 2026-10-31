@@ -61,6 +61,7 @@ export interface ReviewPack {
 export interface ReviewOptions {
   missionDir?: string;
   acceptance?: string[];
+  requireAll?: boolean;
 }
 
 /**
@@ -104,7 +105,11 @@ export function validateReview(input: unknown, options: ReviewOptions = {}): str
     input.coverage.forEach((entry, index) => {
       errors.push(...coverageErrors(entry, `coverage[${index}]`));
     });
-    if (options.acceptance) errors.push(...coverageCompleteness(input.coverage, options.acceptance));
+    if (options.acceptance) {
+      errors.push(
+        ...coverageCompleteness(input.coverage, options.acceptance, options.requireAll !== false),
+      );
+    }
   }
 
   if (!Array.isArray(input.non_goals) || input.non_goals.length === 0) {
@@ -165,7 +170,16 @@ function coverageErrors(value: unknown, where: string): string[] {
   return errors;
 }
 
-function coverageCompleteness(entries: unknown[], acceptance: string[]): string[] {
+/**
+ * A criterion the mission does not have, or one named twice, is always wrong.
+ * Naming every criterion is only required of the closing review: an interim
+ * review can only cover what the work has advanced so far.
+ */
+function coverageCompleteness(
+  entries: unknown[],
+  acceptance: string[],
+  requireAll: boolean,
+): string[] {
   const errors: string[] = [];
   const known = new Set(acceptance);
   const seen = new Set<string>();
@@ -176,9 +190,11 @@ function coverageCompleteness(entries: unknown[], acceptance: string[]): string[
     if (seen.has(criterion)) errors.push(`coverage names ${criterion} more than once`);
     seen.add(criterion);
   }
-  const missing = acceptance.filter((id) => !seen.has(id));
-  if (missing.length > 0) {
-    errors.push(`coverage must name every acceptance criterion: missing ${missing.join(', ')}`);
+  if (requireAll) {
+    const missing = acceptance.filter((id) => !seen.has(id));
+    if (missing.length > 0) {
+      errors.push(`coverage must name every acceptance criterion: missing ${missing.join(', ')}`);
+    }
   }
   return errors;
 }
@@ -246,6 +262,7 @@ export function recordReview(missionDir: string, input: unknown): LedgerEvent {
   const errors = validateReview(input, {
     missionDir: doc.missionDir,
     acceptance: doc.mission.acceptance.map((criterion) => criterion.id),
+    requireAll: false,
   });
   if (errors.length > 0) throw new Error(errors.join('\n'));
   const review = input as ReviewInput;
