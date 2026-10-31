@@ -611,8 +611,9 @@ bilingual check checks what it claims; CI proves the Node floor; all gates exit 
 Run a fresh-context review with per-criterion coverage, non-goals, cold start, reviewer
 provenance, and `ui_surface: none` (the mission has no UI). Write the audit report under
 `evidence/audit/` and reference it. Record the review, record the human authorization event for
-`mission_done`, then close. Update `README.md` to state that Mission #2 is complete and what it
-proved.
+`mission_done`, then close. Keep `README.md` pointer-only: the `Status:` paragraph names the
+ledger as the status and archives Mission #0 and Mission #1; it does not state that Mission #2 is
+complete, and `README.md` is not committed after `mission_done`.
 
 Done when: the review is a pass with every field; the audit artifact exists; the authorization
 event precedes `mission_done`; `mission_done` is in the ledger at HEAD; CI is green.

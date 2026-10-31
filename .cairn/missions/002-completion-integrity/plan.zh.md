@@ -599,8 +599,9 @@ CI 证明 Node 下限；全部闸门退出 0。
 
 跑一次全新上下文评审，带逐验收标准 coverage、non-goals、cold start、评审者来源和
 `ui_surface: none`（本 mission 没有 UI）。审计报告写到 `evidence/audit/` 并被引用。记录评审，
-记录 `mission_done` 的人类授权事件，然后关闭。更新 `README.md`，说明 Mission #2 已完成以及
-它证明了什么。
+记录 `mission_done` 的人类授权事件，然后关闭。`README.md` 保持只留指针：`状态：` 段落指明台账
+就是状态、把 Mission #0 和 Mission #1 归入归档，不声明 Mission #2 已完成，且 `mission_done`
+之后不再提交 `README.md`。
 
 完成判据：评审通过且字段齐全；审计产物存在；授权事件在 `mission_done` 之前；`mission_done`
 在 HEAD 的台账里；CI 绿。
