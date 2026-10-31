@@ -192,7 +192,7 @@ Rules:
 | `cairn review --file <json>` | 0 / 2 refused | Validate the review record, then append `review_result`. |
 | `cairn record <task> --status done [--packs <json>]` | 0 / 2 refused | Append `task_done` only when every completion condition holds. |
 | `cairn record --amended --artifact <path> --why <text> [--approved-by cairn\|human] [--acceptance <a,b>]` | 0 / 2 refused | Append `mission_amended` with the old and new hashes. |
-| `cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]` | 0 / 2 refused | Append `authorization` for a human-approved write; `date` defaults to today. |
+| `cairn record --authorized --why <text> --approved-by human [--scope writes\|mission_done] [--paths <a,b>] [--date <YYYY-MM-DD>]` | 0 / 2 refused | Append `authorization` for a human-approved write; `date` defaults to today. |
 | `cairn record --mission-done` | 0 / 2 refused | Append `mission_done` when every criterion has evidence and the ledger is committed at HEAD. |
 
 `cairn next` prints a **dispatch packet** and nothing else on stdout. Diagnostics go to stderr.

@@ -175,7 +175,7 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 | `cairn review --file <json>` | 0 / 2 拒绝 | 校验审查记录，然后追加 `review_result`。 |
 | `cairn record <task> --status done [--packs <json>]` | 0 / 2 拒绝 | 只有全部完成条件都成立才追加 `task_done`。 |
 | `cairn record --amended --artifact <path> --why <text> [--approved-by cairn\|human] [--acceptance <a,b>]` | 0 / 2 拒绝 | 用旧、新哈希追加 `mission_amended`。 |
-| `cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]` | 0 / 2 拒绝 | 为人类批准的写入追加 `authorization`；`date` 默认今天。 |
+| `cairn record --authorized --why <text> --approved-by human [--scope writes\|mission_done] [--paths <a,b>] [--date <YYYY-MM-DD>]` | 0 / 2 拒绝 | 为人类批准的写入追加 `authorization`；`date` 默认今天。 |
 | `cairn record --mission-done` | 0 / 2 拒绝 | 每条验收标准都有证据且台账已提交在 HEAD 时追加 `mission_done`。 |
 
 `cairn next` 只在 stdout 打印 **dispatch packet**，不打印别的。诊断信息走 stderr。
