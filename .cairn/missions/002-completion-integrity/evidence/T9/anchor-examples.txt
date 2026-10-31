@@ -1,0 +1,59 @@
+--- goal-check --anchor (real repo, normal) ---
+$ node scripts/goal-check.mjs --anchor
+exit=0
+Cairn goal anchor — 002-completion-integrity Completion integrity
+Intent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.
+Current task: T9 — Make the harness claims match the runtime
+Serves: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)
+Gates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs
+Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.
+Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.
+
+--- hook additionalContext (real repo, normal) ---
+exit=0
+Cairn goal anchor — 002-completion-integrity Completion integrity
+Intent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.
+Current task: T9 — Make the harness claims match the runtime
+Serves: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)
+Gates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs
+Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.
+Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.
+
+This anchor is generated from the repository. Do not ask the human to restate the goal.
+
+--- goal-check --anchor (temp fixture, milestone audit due) ---
+$ node scripts/goal-check.mjs --anchor <temp>
+exit=0
+Cairn goal anchor — temp-mission Temp mission
+Intent: Prove that the anchor survives a failing check.
+Current task: T-004 — Task T-004
+Serves: F1 (first)
+Gates: gate: node -e process.exit(0)
+Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.
+Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.
+warning: milestone audit due: 3 tasks completed since mission start
+
+--- hook additionalContext (temp fixture, audit due) ---
+exit=0
+Cairn goal anchor — temp-mission Temp mission
+Intent: Prove that the anchor survives a failing check.
+Current task: T-004 — Task T-004
+Serves: F1 (first)
+Gates: gate: node -e process.exit(0)
+Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.
+Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.
+warning: milestone audit due: 3 tasks completed since mission start
+
+This anchor is generated from the repository. Do not ask the human to restate the goal.
+
+--- goal-check --anchor (missing mission) ---
+$ node scripts/goal-check.mjs --anchor <missing>
+exit=2
+stdout: Cairn goal anchor unavailable: C:\Users\Administrator\AppData\Local\Temp\cairn-t9-missing-16380: not a directory
+
+--- hook additionalContext (missing mission) ---
+exit=0
+Cairn anchor unavailable; run node scripts/goal-check.mjs
+Cairn goal anchor unavailable: C:\Users\Administrator\AppData\Local\Temp\cairn-t9-missing-16380: not a directory
+
+Do not ask the human to restate the goal.

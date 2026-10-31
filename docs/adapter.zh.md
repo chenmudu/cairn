@@ -103,8 +103,14 @@ markdown 简报。packet 是契约；简报只是给模型看的便利形式。�
 ## Harness
 
 ZCode 是第一个 harness：用渲染后的简报派发子代理，然后由控制器运行 `cairn verify` 和
-`cairn record`。`.zcode` hook 只在会话开始时注入目标锚点，它是胶水，不是契约的一部分。
-任何能执行命令并返回 JSON 的 harness 都可以。
+`cairn record`。`.zcode` hook 在 `startup|resume` 时运行
+`node scripts/goal-check.mjs --anchor`；它是胶水，不是契约的一部分。任何能执行命令并返回
+JSON 的 harness 都可以。
+
+工作区 hook 在 `~/.zcode/security/workspace-hook-trust-v1.json` 包含它之前处于
+`pending_trust`。在此之前，adapter 自己运行 `node scripts/goal-check.mjs --anchor` 拿到同一
+份锚点。授信并开启新会话后，上下文中出现 `Cairn goal anchor` 才是真实注入的证据。脚本通过
+测试不等于 harness 真的运行了它。
 
 ## 失败模式
 

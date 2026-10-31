@@ -16,8 +16,14 @@
 - **Legacy**——早于这条规则的决策可以带 `Legacy: true`。检查器仍然执行路径和中文 companion
   检查；它不会回头给历史补字段。
 
-SessionStart hook 从前置元数据注入这条规则。`scripts/check-decisions.mjs` 执行它。
-`cairn-guard` skill 在决策点运行检查。改这个文件，不要改副本：前置元数据是机器契约。
+SessionStart hook 配置在 `startup|resume`，运行 `node scripts/goal-check.mjs --anchor`，由它
+从前置元数据带上这条规则。`scripts/check-decisions.mjs` 执行它。`cairn-guard` skill 在决策点
+运行检查。改这个文件，不要改副本：前置元数据是机器契约。
+
+工作区 hook 在 `~/.zcode/security/workspace-hook-trust-v1.json` 包含它之前处于
+`pending_trust`；在此之前手动运行 `node scripts/goal-check.mjs --anchor`。授信并开启新会话
+后，上下文中出现 `Cairn goal anchor` 才是真实注入的证据。脚本通过测试不等于 harness 真的
+运行了它。
 
 ## 为什么单独成规则
 

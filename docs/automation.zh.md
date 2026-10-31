@@ -90,10 +90,11 @@ Skill 是目录。`SKILL.md` 是 SOP；参考材料放 `docs/` 或 skill 的 `re
 
 - **Skill**——`.zcode/skills/cairn-guard/SKILL.md` 要求 agent 开工前跑守卫、写决策前后跑决策
   检查、改规则执行点前后跑 enforcement 检查、声称完成前跑审计。
-- **Hook**——`.zcode/config.json` 在 `startup`、`clear`、`compact` 时运行
-  `.zcode/hooks/session-start.mjs`，把 `goal-check --brief` 作为 `additionalContext` 注入；
-  brief 从 `docs/decision-routing.md` 读取路由规则，新会话因此从仓库里的锚点开始。ZCode 的
-  工作区 hook 可能需要信任；脚本在任何 harness 里都能单独运行。
+- **Hook**——`.zcode/config.json` 在 `startup` 和 `resume` 时运行
+  `.zcode/hooks/session-start.mjs`。hook 把 `goal-check --anchor` 作为
+  `additionalContext`：锚点总是给出 mission、intent、当前任务、serves 和 gate；检查失败时
+  追加 `warning:` 行，而不是丢掉锚点。ZCode 的工作区 hook 可能需要信任；脚本在任何
+  harness 里都能单独运行。
 - **脚本**——`scripts/check-decisions.mjs` 校验两个决策家并拒绝放错位置的编号决策；
   `scripts/check-enforcement.mjs` 校验失败模式表的机器语法和中文 token 对等；
   `scripts/check-targets.mjs` 重建活动 mission 的目标哈希链，并与工作树比较。三者都是 CI
@@ -101,6 +102,19 @@ Skill 是目录。`SKILL.md` 是 SOP；参考材料放 `docs/` 或 skill 的 `re
   `check-targets` 只作用于活动 mission：已关闭 mission 的哈希描述它关闭时的树，不是后来的
   工作树，所以后续 mission 移动共享协议后，不会回头重查它。
 - **Agent 指令**——`AGENTS.md` 指向同一批检查，并保持为路由器。hook 是适配器，不是契约。
+
+### Hook 信任
+
+脚本通过测试不等于已经注入。要四层同时成立才算生效：
+
+1. `.zcode/config.json` 为 `startup|resume` 配置了 SessionStart hook。
+2. 工作区 hook 已授信。在 `~/.zcode/security/workspace-hook-trust-v1.json` 包含本工作区
+   之前，hook 处于 `pending_trust`，尚未运行；当前环境中该文件不存在。
+3. 授信前，手动获取同一个锚点：`node scripts/goal-check.mjs --anchor`。
+4. 授信并开启新会话后，上下文中出现 `Cairn goal anchor` 才是真实注入的证据。
+
+Script ≠ wiring：测试只覆盖脚本层，不能证明 harness 真的注入了。第 4 层未观察到之前，
+不得报告 hook 正在注入。
 
 要停用 hook，从 `.zcode/config.json` 删除 `SessionStart` 条目即可；命令仍然可用。
 

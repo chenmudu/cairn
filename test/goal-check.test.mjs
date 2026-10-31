@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -242,14 +242,102 @@ test('brief output carries the task, serves, and gate', (t) => {
   assert.match(out, /mission-scoped decisions go to the mission inbox/);
 });
 
-test('the SessionStart hook emits additionalContext', () => {
-  const out = execFileSync(process.execPath, ['.zcode/hooks/session-start.mjs'], {
+test('--anchor emits the anchor and no warning on a healthy mission', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(`  - id: F1
+    check: first
+`),
+    plan: planOf(taskYaml('T-001', { serves: '[F1]' })),
+  });
+  const out = execFileSync(process.execPath, ['scripts/goal-check.mjs', dir, '--anchor'], {
     cwd: repo,
     encoding: 'utf8',
   });
+  assert.match(out, /Cairn goal anchor — temp-mission Temp mission/);
+  assert.match(out, /Intent: Prove that the guard reads the repository\./);
+  assert.match(out, /Current task: T-001/);
+  assert.match(out, /Serves: F1 \(first\)/);
+  assert.match(out, /Gates: gate: node -e/);
+  assert.match(out, /Decision routing: ADR =/);
+  assert.doesNotMatch(out, /^warning:/m);
+});
+
+test('--anchor exits 0 with a warning when the milestone audit is due', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(ONE),
+    plan: planOf(
+      taskYaml('T-001', { serves: '[F1]' }),
+      taskYaml('T-002', { deps: '[T-001]', serves: '[F1]' }),
+      taskYaml('T-003', { deps: '[T-002]', serves: '[F1]' }),
+      taskYaml('T-004', { deps: '[T-003]', serves: '[F1]' }),
+    ),
+    ledger: [
+      doneEvent('T-001', '2026-10-31T00:00:00.000Z'),
+      doneEvent('T-002', '2026-10-31T00:00:01.000Z'),
+      doneEvent('T-003', '2026-10-31T00:00:02.000Z'),
+    ].join('\n') + '\n',
+  });
+  const result = spawnSync(process.execPath, ['scripts/goal-check.mjs', dir, '--anchor'], {
+    cwd: repo,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Cairn goal anchor — temp-mission Temp mission/);
+  assert.match(result.stdout, /Current task: T-004/);
+  assert.match(result.stdout, /Decision routing: ADR =/);
+  assert.match(result.stdout, /^warning: milestone audit due: 3 tasks completed since mission start$/m);
+});
+
+test('--anchor exits 2 with a named error when the mission is unreadable', () => {
+  const missing = join(tmpdir(), `cairn-missing-${process.pid}-${Date.now()}`);
+  const result = spawnSync(process.execPath, ['scripts/goal-check.mjs', missing, '--anchor'], {
+    cwd: repo,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stdout, /Cairn goal anchor unavailable:/);
+  assert.match(result.stdout, /not a directory/);
+});
+
+test('the default mode still exits 1 when the audit is due', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(ONE),
+    plan: planOf(
+      taskYaml('T-001', { serves: '[F1]' }),
+      taskYaml('T-002', { deps: '[T-001]', serves: '[F1]' }),
+      taskYaml('T-003', { deps: '[T-002]', serves: '[F1]' }),
+      taskYaml('T-004', { deps: '[T-003]', serves: '[F1]' }),
+    ),
+    ledger: [
+      doneEvent('T-001', '2026-10-31T00:00:00.000Z'),
+      doneEvent('T-002', '2026-10-31T00:00:01.000Z'),
+      doneEvent('T-003', '2026-10-31T00:00:02.000Z'),
+    ].join('\n') + '\n',
+  });
+  const result = spawnSync(process.execPath, ['scripts/goal-check.mjs', dir], {
+    cwd: repo,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /^goal: FAILED$/m);
+});
+
+test('the SessionStart hook emits additionalContext from a fixture mission', (t) => {
+  const dir = makeMission(t, {
+    mission: missionOf(`  - id: F1
+    check: first
+`),
+    plan: planOf(taskYaml('T-001', { serves: '[F1]' })),
+  });
+  const out = execFileSync(process.execPath, ['.zcode/hooks/session-start.mjs'], {
+    cwd: repo,
+    encoding: 'utf8',
+    env: { ...process.env, CAIRN_MISSION_DIR: dir },
+  });
   const parsed = JSON.parse(out);
   assert.equal(parsed.hookSpecificOutput.hookEventName, 'SessionStart');
-  assert.match(parsed.hookSpecificOutput.additionalContext, /Current task:/);
+  assert.match(parsed.hookSpecificOutput.additionalContext, /Cairn goal anchor/);
+  assert.match(parsed.hookSpecificOutput.additionalContext, /Current task: T-001/);
   assert.match(parsed.hookSpecificOutput.additionalContext, /Decision routing:/);
   assert.match(parsed.hookSpecificOutput.additionalContext, /Do not ask the human/);
 });

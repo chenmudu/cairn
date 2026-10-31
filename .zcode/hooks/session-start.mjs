@@ -14,24 +14,26 @@ import { fileURLToPath } from 'node:url';
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function context() {
+  const mission = process.env.CAIRN_MISSION_DIR;
+  const args = ['scripts/goal-check.mjs', '--anchor', ...(mission ? [mission] : [])];
   try {
-    const brief = execFileSync(
-      process.execPath,
-      ['scripts/goal-check.mjs', '--brief'],
-      { cwd: repo, encoding: 'utf8', timeout: 10000 },
-    ).trim();
+    const anchor = execFileSync(process.execPath, args, {
+      cwd: repo,
+      encoding: 'utf8',
+      timeout: 10000,
+    }).trim();
     return [
-      brief,
+      anchor,
       '',
       'This anchor is generated from the repository. Do not ask the human to restate the goal.',
     ].join('\n');
   } catch (error) {
     const detail = error.stdout?.toString().trim() || error.message;
     return [
-      'Cairn goal check failed. Read README.md, the active mission contract under',
-      '.cairn/missions/, and the ledger before acting; do not guess the goal.',
-      '',
+      'Cairn anchor unavailable; run node scripts/goal-check.mjs',
       detail,
+      '',
+      'Do not ask the human to restate the goal.',
     ].join('\n');
   }
 }

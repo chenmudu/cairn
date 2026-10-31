@@ -7,7 +7,7 @@ repository root. Neither writes the ledger.
 
 ```bash
 node scripts/goal-check.mjs                 # readable report
-node scripts/goal-check.mjs --brief         # the SessionStart anchor
+node scripts/goal-check.mjs --anchor        # the SessionStart anchor
 node scripts/goal-check.mjs --json          # machine-readable
 ```
 
@@ -101,11 +101,11 @@ skill's `references/`; executable checks belong in `scripts/` when shared, or th
 - **Skill** — `.zcode/skills/cairn-guard/SKILL.md` tells the agent to run the guard before work,
   the decision check before and after writing a decision, the enforcement check before and
   after changing a rule's enforcement, and the audit before claiming done.
-- **Hook** — `.zcode/config.json` runs `.zcode/hooks/session-start.mjs` on `startup`, `clear`,
-  and `compact`. The hook prints `goal-check --brief` as `additionalContext`; the brief reads
-  the routing rule from `docs/decision-routing.md`, so a fresh session starts with the anchor
-  from the repository. Workspace hooks may require trust in ZCode; the scripts work without the
-  hook in any harness.
+- **Hook** — `.zcode/config.json` runs `.zcode/hooks/session-start.mjs` on `startup` and
+  `resume`. The hook runs `goal-check --anchor` as `additionalContext`: the anchor always names
+  the mission, intent, current task, serves link, and gates, and appends a `warning:` line when
+  the check fails instead of dropping the anchor. Workspace hooks may require trust in ZCode;
+  the scripts work without the hook in any harness.
 - **Script** — `scripts/check-decisions.mjs` validates both decision homes and rejects stray
   numbered decisions. `scripts/check-enforcement.mjs` validates the failure-mode map's
   machine grammar and the Chinese token parity. `scripts/check-targets.mjs` rebuilds the
@@ -116,6 +116,22 @@ skill's `references/`; executable checks belong in `scripts/` when shared, or th
   the shared protocol.
 - **Agents** — `AGENTS.md` points to the same checks and stays a router. The hook is an
   adapter, not the contract.
+
+### Hook trust
+
+A script that passes its tests is not an injection. The injection is live only after all four
+layers hold:
+
+1. `.zcode/config.json` configures the SessionStart hook for `startup|resume`.
+2. The workspace hook is trusted. Until `~/.zcode/security/workspace-hook-trust-v1.json` holds
+   this workspace, the hook is `pending_trust` and has not run; the file does not exist in the
+   current setup.
+3. Before trust, obtain the same anchor by hand: `node scripts/goal-check.mjs --anchor`.
+4. After trusting the workspace and opening a new session, `Cairn goal anchor` in the session
+   context is the evidence that injection happened.
+
+Script is not wiring: the tests cover the script layer and cannot prove the harness injected
+anything. Do not report the hook as injecting until layer 4 is observed.
 
 Disable the hook by removing the `SessionStart` entry from `.zcode/config.json`; the commands
 remain available.

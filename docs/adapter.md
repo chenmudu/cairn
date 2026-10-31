@@ -113,9 +113,15 @@ policy's attempt budget bounds the loop.
 ## Harnesses
 
 ZCode is the first harness: dispatch a subagent with the rendered brief, then have the
-controller run `cairn verify` and `cairn record`. The `.zcode` hook only injects the goal anchor
-on session start; it is glue, not part of the contract. Any harness that can run a command and
-return JSON works.
+controller run `cairn verify` and `cairn record`. The `.zcode` hook runs
+`node scripts/goal-check.mjs --anchor` on `startup|resume`; it is glue, not part of the contract.
+Any harness that can run a command and return JSON works.
+
+The hook is `pending_trust` until `~/.zcode/security/workspace-hook-trust-v1.json` holds the
+workspace. Before that, an adapter gets the same anchor by running
+`node scripts/goal-check.mjs --anchor` itself. After trusting the workspace and opening a new
+session, `Cairn goal anchor` in the context is the evidence that injection happened. A script
+that passes its tests is not proof that the harness ran it.
 
 ## Failure modes
 

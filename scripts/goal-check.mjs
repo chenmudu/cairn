@@ -7,8 +7,9 @@
  * alone: what are we building, what is the next task, and which acceptance
  * criterion does that task serve?
  *
- * Usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]
- * Exit:  0 ok, 1 goal problem, 2 usage error.
+ * Usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json] [--anchor]
+ * Exit:  0 ok, 1 goal problem, 2 usage error. `--anchor` exits 0 with a warning
+ *        line when the check fails, and 2 only when the mission is unreadable.
  */
 
 import { readFileSync } from 'node:fs';
@@ -170,6 +171,33 @@ export function formatBrief(report) {
   return lines.join('\n');
 }
 
+/**
+ * The anchor is always emitted, even when the check fails. A failing check adds
+ * `warning:` lines and still exits 0, so no harness branch has to drop it.
+ */
+export function formatAnchor(report) {
+  const task = report.currentTask;
+  const lines = [
+    `Cairn goal anchor — ${report.mission ? `${report.mission.id} ${report.mission.title}` : 'unknown mission'}`,
+    `Intent: ${report.intent || '(none)'}`,
+  ];
+  if (task) {
+    const serves = task.acceptance.map((item) => `${item.id} (${item.check})`).join('; ');
+    lines.push(`Current task: ${task.id} — ${task.title}`);
+    lines.push(`Serves: ${serves}`);
+    lines.push(`Gates: ${task.gates.map((gate) => `${gate.id}: ${gate.command}`).join(' | ')}`);
+  } else {
+    lines.push('Current task: none — the mission is complete or blocked.');
+  }
+  try {
+    lines.push(...routingLines());
+  } catch (error) {
+    lines.push(`Decision routing: FAILED — ${error.message}`);
+  }
+  if (!report.ok) lines.push(...report.errors.map((error) => `warning: ${error}`));
+  return lines.join('\n');
+}
+
 export function formatReport(report) {
   const lines = [
     `goal: ${report.ok ? 'ok' : 'FAILED'}`,
@@ -223,12 +251,32 @@ function main(argv) {
   const args = argv.slice(2);
   const brief = args.includes('--brief');
   const json = args.includes('--json');
+  const anchor = args.includes('--anchor');
   const positional = args.filter((arg) => !arg.startsWith('--'));
-  if (positional.length > 1 || args.some((arg) => arg.startsWith('--') && !['--brief', '--json'].includes(arg))) {
-    process.stderr.write('usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]\n');
+  if (
+    positional.length > 1 ||
+    args.some((arg) => arg.startsWith('--') && !['--brief', '--json', '--anchor'].includes(arg))
+  ) {
+    process.stderr.write('usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json] [--anchor]\n');
     return 2;
   }
-  const report = checkGoal(positional[0]);
+  let report;
+  try {
+    report = checkGoal(positional[0]);
+  } catch (error) {
+    if (!anchor) throw error;
+    process.stdout.write(`Cairn goal anchor unavailable: ${error.message}\n`);
+    return 2;
+  }
+  if (anchor) {
+    if (!report.mission) {
+      const detail = report.errors.join('; ') || 'the mission is not readable';
+      process.stdout.write(`Cairn goal anchor unavailable: ${detail}\n`);
+      return 2;
+    }
+    process.stdout.write(formatAnchor(report) + '\n');
+    return 0;
+  }
   if (json) {
     process.stdout.write(JSON.stringify(report, null, 2) + '\n');
   } else if (brief) {

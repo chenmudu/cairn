@@ -4,10 +4,11 @@
 
 1. `README.md` — the positioning and what success means. Read this before the protocol.
 2. `docs/protocol.md` — the contract.
-3. `.cairn/missions/001-method-pack/mission.md` — the active goal, non-goals, and acceptance.
-4. `.cairn/missions/001-method-pack/plan.md` — the current task and its gate.
-5. `.cairn/missions/001-method-pack/inbox/` — decisions waiting for a human. Mission #0 is
-   archived under `.cairn/missions/000-bootstrap/`.
+3. `.cairn/missions/<id>/mission.md` — the active goal, non-goals, and acceptance. `<id>` is
+   `active_mission` in `.cairn/config.json`; `node scripts/goal-check.mjs` names it.
+4. `.cairn/missions/<id>/plan.md` — the current task and its gate.
+5. `.cairn/missions/<id>/inbox/` — decisions waiting for a human. Mission #0 is archived under
+   `.cairn/missions/000-bootstrap/`.
 
 ## Self-observation
 
@@ -17,7 +18,9 @@
   actual transcript and reports alignment corrections, completion claims with no gate, writes
   outside the plan, and confirmation requests.
 - The project skill `.zcode/skills/cairn-guard/` encodes the same checks. The SessionStart hook
-  runs `goal-check --brief` and injects the anchor into every new or compacted session.
+  is configured for `startup|resume` and runs `goal-check --anchor`, which always prints the
+  anchor and appends a warning when the check fails. The hook only runs after the workspace hook
+  is trusted; until then run the command by hand. See `docs/automation.md`.
 - Do not ask the human to restate the goal or positioning. Read `README.md`, the active
   `.cairn/missions/<id>/mission.md`, and the ledger. If the guard is wrong, fix the guard.
 - Documentation is bilingual: English is canonical for machine-checked contracts; Chinese
@@ -44,8 +47,9 @@
 - A task must declare `serves: [<acceptance-id>]`. If it cannot name the acceptance criterion
   it advances, do not start it.
 - Only runtime commands write `ledger.jsonl`. `cairn record` owns task and mission events;
-  `cairn review` owns `review_result` events; `cairn start` owns `task_started`. The Mission #1
-  `mission_created` bootstrap is a recorded ruling, not a standing exception.
+  `cairn review` owns `review_result` events; `cairn start` and `cairn answer` own
+  `task_started`. The Mission #1 `mission_created` bootstrap is a recorded ruling, not a
+  standing exception.
 - Implementer claims are not evidence. Run the gate.
 - A green gate proves the step, not the goal. Report against `README.md`, not only exit codes.
 - Every decision made without a human is a ruling; every blocking question is an escalation.
@@ -77,13 +81,14 @@ Record the result as `review_result`; a fail parks the mission.
 
 ## Bootstrap exception (expired)
 
-Mission #0's bootstrap exception ended when `cairn verify` landed. Mission #1 was created by a
-direct append under ruling `2026-10-30T21:05:25.767Z` because no `cairn init` writer existed;
-T1 adds it. After T1, missions are created by `cairn init` and events by runtime commands. No
-standing manual append is allowed.
+Mission #0's bootstrap exception ended when `cairn verify` landed. `cairn init` writes
+`mission_created`, and since T5 the validator enforces the new-shape chain for missions created
+that way. Mission #2's `mission_created` was a human-authorized manual freeze, the last one; new
+missions use `cairn init`, and events come from runtime commands. No standing manual append is
+allowed.
 
 ## Current step
 
 Run `node scripts/goal-check.mjs` before starting. It resolves the active mission from
 `.cairn/config.json`, derives the next task from the ledger and the plan, and does not go
-stale. Read `.cairn/missions/001-method-pack/inbox/` before starting.
+stale. Read `.cairn/missions/<id>/inbox/` before starting.

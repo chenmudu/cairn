@@ -28,9 +28,16 @@ One decision, one home. Scope decides the home; the path is the check.
 - **Legacy** — a decision that predates this rule may carry `Legacy: true`. The checker still
   enforces its path and Chinese companion; it does not retroactively add fields to history.
 
-The SessionStart hook injects this rule from the frontmatter. `scripts/check-decisions.mjs`
-enforces it. The `cairn-guard` skill runs the check at the decision point. Change this file, not
-a copy: the frontmatter is the machine contract.
+The SessionStart hook is configured for `startup|resume` and runs
+`node scripts/goal-check.mjs --anchor`, which carries this rule from the frontmatter.
+`scripts/check-decisions.mjs` enforces it. The `cairn-guard` skill runs the check at the
+decision point. Change this file, not a copy: the frontmatter is the machine contract.
+
+The workspace hook is `pending_trust` until
+`~/.zcode/security/workspace-hook-trust-v1.json` holds it; before that, run
+`node scripts/goal-check.mjs --anchor` by hand. After trusting the workspace and opening a new
+session, `Cairn goal anchor` in the context is the evidence that injection happened. A script
+that passes its tests is not proof that the harness ran it.
 
 ## Why this is a separate rule
 

@@ -1,0 +1,273 @@
+usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]
+✔ accepts the repository mission and covers every acceptance criterion (3.1063ms)
+✔ names a runnable task with its serves link and gates (2.3417ms)
+✔ rejects a new task when three tasks completed since the last review (1.8425ms)
+✔ a review_result resets the audit cadence (1.7838ms)
+✔ a complete mission needs a passing review after the last task (3.1858ms)
+✔ rejects a task without a serves link (1.4684ms)
+✔ rejects an acceptance criterion no task serves (1.6716ms)
+✔ rejects a serves id that is not in the mission (1.667ms)
+✔ brief output carries the task, serves, and gate (61.3973ms)
+✖ --anchor emits the anchor and no warning on a healthy mission (58.9115ms)
+✖ --anchor exits 0 with a warning when the milestone audit is due (60.1285ms)
+✖ --anchor exits 2 with a named error when the mission is unreadable (57.5983ms)
+✔ the default mode still exits 1 when the audit is due (60.7944ms)
+✖ the SessionStart hook emits additionalContext from a fixture mission (92.3238ms)
+✖ the configured SessionStart hook matches startup and resume (0.953ms)
+✖ the hook injects the anchor and routing rule from a healthy mission (100.7673ms)
+✖ the hook keeps the anchor and adds the warning when the audit is due (93.8863ms)
+✖ the hook names the manual command when the anchor is unavailable (95.8002ms)
+✖ AGENTS.md Read first points only at the active mission or a generic <id> (1.1164ms)
+✔ README.md Status does not call a closed mission active (1.8845ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 11
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 483.8935
+
+✖ failing tests:
+
+test at test\goal-check.test.mjs:245:1
+✖ --anchor emits the anchor and no warning on a healthy mission (58.9115ms)
+  Error: Command failed: D:\project\tools\node-v24.14.0-win-x64\node.exe scripts/goal-check.mjs C:\Users\Administrator\AppData\Local\Temp\cairn-goal-ZMKsmq --anchor
+  usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]
+  
+      at genericNodeError (node:internal/errors:985:15)
+      at wrappedFn (node:internal/errors:539:14)
+      at checkExecSyncError (node:child_process:925:11)
+      at execFileSync (node:child_process:961:15)
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/goal-check.test.mjs:252:15)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12) {
+    status: 2,
+    signal: null,
+    output: [ null, '', 'usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]\n' ],
+    pid: 21176,
+    stdout: '',
+    stderr: 'usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]\n'
+  }
+
+test at test\goal-check.test.mjs:265:1
+✖ --anchor exits 0 with a warning when the milestone audit is due (60.1285ms)
+  AssertionError [ERR_ASSERTION]: usage: node scripts/goal-check.mjs [mission-dir] [--brief] [--json]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/goal-check.test.mjs:284:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\goal-check.test.mjs:291:1
+✖ --anchor exits 2 with a named error when the mission is unreadable (57.5983ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Cairn goal anchor unavailable:/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/goal-check.test.mjs:298:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Cairn goal anchor unavailable:/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\goal-check.test.mjs:325:1
+✖ the SessionStart hook emits additionalContext from a fixture mission (92.3238ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Current task: T-001/. Input:
+  
+  'Cairn goal anchor — 002-completion-integrity Completion integrity\n' +
+    'Intent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\n' +
+    'Current task: T9 — Make the harness claims match the runtime\n' +
+    'Serves: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\n' +
+    'Gates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\n' +
+    'Coverage: 6/6 acceptance criteria covered\n' +
+    "Non-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\n" +
+    'Ledger: 47 events, last task_started\n' +
+    'Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\n' +
+    'Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\n' +
+    'Before claiming done: run the gates, then node scripts/audit-session.mjs.\n' +
+    '\n' +
+    'This anchor is generated from the repository. Do not ask the human to restate the goal.'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/goal-check.test.mjs:340:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Cairn goal anchor — 002-completion-integrity Completion integrity\nIntent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\nCurrent task: T9 — Make the harness claims match the runtime\nServes: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\nGates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\nCoverage: 6/6 acceptance criteria covered\nNon-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\nLedger: 47 events, last task_started\nDecision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\nRule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\nBefore claiming done: run the gates, then node scripts/audit-session.mjs.\n\nThis anchor is generated from the repository. Do not ask the human to restate the goal.",
+    expected: /Current task: T-001/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\hook.test.mjs:122:1
+✖ the configured SessionStart hook matches startup and resume (0.953ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'startup|clear|compact'
+  - 'startup|resume'
+             ^
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/hook.test.mjs:124:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'startup|clear|compact',
+    expected: 'startup|resume',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\hook.test.mjs:130:1
+✖ the hook injects the anchor and routing rule from a healthy mission (100.7673ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Current task: T-001/. Input:
+  
+  'Cairn goal anchor — 002-completion-integrity Completion integrity\n' +
+    'Intent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\n' +
+    'Current task: T9 — Make the harness claims match the runtime\n' +
+    'Serves: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\n' +
+    'Gates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\n' +
+    'Coverage: 6/6 acceptance criteria covered\n' +
+    "Non-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\n" +
+    'Ledger: 47 events, last task_started\n' +
+    'Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\n' +
+    'Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\n' +
+    'Before claiming done: run the gates, then node scripts/audit-session.mjs.\n' +
+    '\n' +
+    'This anchor is generated from the repository. Do not ask the human to restate the goal.'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/hook.test.mjs:133:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Cairn goal anchor — 002-completion-integrity Completion integrity\nIntent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\nCurrent task: T9 — Make the harness claims match the runtime\nServes: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\nGates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\nCoverage: 6/6 acceptance criteria covered\nNon-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\nLedger: 47 events, last task_started\nDecision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\nRule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\nBefore claiming done: run the gates, then node scripts/audit-session.mjs.\n\nThis anchor is generated from the repository. Do not ask the human to restate the goal.",
+    expected: /Current task: T-001/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\hook.test.mjs:139:1
+✖ the hook keeps the anchor and adds the warning when the audit is due (93.8863ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /warning: milestone audit due: 3 tasks completed since mission start/. Input:
+  
+  'Cairn goal anchor — 002-completion-integrity Completion integrity\n' +
+    'Intent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\n' +
+    'Current task: T9 — Make the harness claims match the runtime\n' +
+    'Serves: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\n' +
+    'Gates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\n' +
+    'Coverage: 6/6 acceptance criteria covered\n' +
+    "Non-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\n" +
+    'Ledger: 47 events, last task_started\n' +
+    'Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\n' +
+    'Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\n' +
+    'Before claiming done: run the gates, then node scripts/audit-session.mjs.\n' +
+    '\n' +
+    'This anchor is generated from the repository. Do not ask the human to restate the goal.'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/hook.test.mjs:142:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Cairn goal anchor — 002-completion-integrity Completion integrity\nIntent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\nCurrent task: T9 — Make the harness claims match the runtime\nServes: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\nGates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\nCoverage: 6/6 acceptance criteria covered\nNon-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\nLedger: 47 events, last task_started\nDecision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\nRule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\nBefore claiming done: run the gates, then node scripts/audit-session.mjs.\n\nThis anchor is generated from the repository. Do not ask the human to restate the goal.",
+    expected: /warning: milestone audit due: 3 tasks completed since mission start/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\hook.test.mjs:145:1
+✖ the hook names the manual command when the anchor is unavailable (95.8002ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Cairn anchor unavailable; run node scripts\/goal-check\.mjs/. Input:
+  
+  'Cairn goal anchor — 002-completion-integrity Completion integrity\n' +
+    'Intent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\n' +
+    'Current task: T9 — Make the harness claims match the runtime\n' +
+    'Serves: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\n' +
+    'Gates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\n' +
+    'Coverage: 6/6 acceptance criteria covered\n' +
+    "Non-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\n" +
+    'Ledger: 47 events, last task_started\n' +
+    'Decision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\n' +
+    'Rule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\n' +
+    'Before claiming done: run the gates, then node scripts/audit-session.mjs.\n' +
+    '\n' +
+    'This anchor is generated from the repository. Do not ask the human to restate the goal.'
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/hook.test.mjs:148:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Cairn goal anchor — 002-completion-integrity Completion integrity\nIntent: Mission #1 delivered the method. A post-close audit showed that its completion claims were not bound to the tree that produced them: a red tree could record `task_done` and close the mission. Mission #2 makes completion mean what `README.md` says: the repository, not the conversation, proves the work. It binds gates to the verified tree, binds acceptance and review evidence to criteria, records pack participation per task, enforces the state machine, makes `init`, the validator, and CI check the contract, makes policy executable, records human authorizations, and makes the contract and status sources tell the truth.\nCurrent task: T9 — Make the harness claims match the runtime\nServes: A6 (an out-of-list gate is refused; a push requires a recorded exception; docs/protocol.md matches the CLI; cairn record --authorized writes an authorization event and audit-session accepts covered paths; every mechanizable audit finding has a negative test and every non-mechanizable one is labelled human or review)\nGates: typecheck: pnpm typecheck | test: node --test | mission: node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity | targets: node scripts/check-targets.mjs | reconcile: node src/cli.ts reconcile | bilingual: node scripts/check-bilingual.mjs\nCoverage: 6/6 acceptance criteria covered\nNon-goals: No rewrite of Mission #0's or Mission #1's ledgers, evidence, or target artifacts. They stay No vendoring or merging of the superpowers or Impeccable repositories. They stay external. No UI surface, design system, or hosted service. Impeccable participation is criteria-based; No unattended scheduler or multi-tick loop. Completion integrity comes first; the loop is a No new runtime feature outside D1–D8. No reopening GitHub issues #1–#5. They are closed as superseded by decision 0006; reopen one No protocol change without `approved_by: human`.\nLedger: 47 events, last task_started\nDecision routing: ADR = project-wide decision in docs/decisions/; mission escalation = decision that closes or blocks one mission acceptance and needs a human answer, in .cairn/missions/<id>/inbox/.\nRule: mission-scoped decisions go to the mission inbox; promote to an ADR only when it outlives the mission.\nBefore claiming done: run the gates, then node scripts/audit-session.mjs.\n\nThis anchor is generated from the repository. Do not ask the human to restate the goal.",
+    expected: /Cairn anchor unavailable; run node scripts\/goal-check\.mjs/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\status-sources.test.mjs:60:1
+✖ AGENTS.md Read first points only at the active mission or a generic <id> (1.1164ms)
+  AssertionError [ERR_ASSERTION]: AGENTS.md Read first names 001-method-pack while 002-completion-integrity is the active mission
+  + actual - expected
+  
+  + '001-method-pack'
+  - '002-completion-integrity'
+       ^
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/status-sources.test.mjs:72:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '001-method-pack',
+    expected: '002-completion-integrity',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

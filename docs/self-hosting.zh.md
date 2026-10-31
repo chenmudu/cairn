@@ -58,9 +58,12 @@ node src/cli.ts record --mission-done       # 所有任务完成，每条验收�
 
 ## 冷启动
 
-新会话不需要上一段对话。仓库携带 mission、plan、ledger 和证据。SessionStart hook 会注入
-`node scripts/goal-check.mjs --brief`，它给出当前任务、任务服务的验收标准、gate 和覆盖率图。
-hook 不可用时，手工运行同一条命令会得到同样的答案。
+新会话不需要上一段对话。仓库携带 mission、plan、ledger 和证据。SessionStart hook 配置在
+`startup|resume`，运行 `node scripts/goal-check.mjs --anchor`，给出当前任务、任务服务的验收
+标准、gate 和路由规则。工作区 hook 在
+`~/.zcode/security/workspace-hook-trust-v1.json` 包含它之前处于 `pending_trust`；在此之前
+手动运行同一条命令。授信并开启新会话后，上下文中出现 `Cairn goal anchor` 才是真实注入的
+证据。脚本通过测试不等于 harness 真的运行了它。
 
 里程碑审计直接检验这件事：一个只拿到仓库的全新审查者，必须说出下一个任务、它的 gate，以及
 它为什么服务 mission。即使所有 gate 都是绿的，答错也算 drift。

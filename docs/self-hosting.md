@@ -62,10 +62,13 @@ the evidence.
 ## Cold start
 
 A fresh session does not need the previous conversation. The repository carries the mission,
-the plan, the ledger, and the evidence. The SessionStart hook injects
-`node scripts/goal-check.mjs --brief`, which names the current task, the acceptance criterion it
-serves, its gates, and the coverage map. If the hook is unavailable, the same command run by
-hand gives the same answer.
+the plan, the ledger, and the evidence. The SessionStart hook is configured for `startup|resume`
+and runs `node scripts/goal-check.mjs --anchor`, which names the current task, the acceptance
+criterion it serves, its gates, and the routing rule. The workspace hook is `pending_trust`
+until `~/.zcode/security/workspace-hook-trust-v1.json` holds it; before that, run the same
+command by hand. After trusting the workspace and opening a new session, `Cairn goal anchor` in
+the context is the evidence that injection happened. A script that passes its tests is not proof
+that the harness ran it.
 
 The milestone audit tests this directly: a fresh reviewer, given only the repository, must name
 the next task, its gate, and why it serves the mission. A wrong answer is drift even when every

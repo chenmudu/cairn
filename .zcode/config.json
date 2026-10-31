@@ -5,7 +5,7 @@
     "events": {
       "SessionStart": [
         {
-          "matcher": "startup|clear|compact",
+          "matcher": "startup|resume",
           "hooks": [
             {
               "type": "process",

@@ -1,0 +1,46 @@
+superpowers:test-driven-development
+
+# Applied in the T9 tick (2026-11-01, +0800)
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T9 followed it: the
+new tests in test/goal-check.test.mjs, test/hook.test.mjs, and test/status-sources.test.mjs were
+written and run against the pre-T9 scripts and hook before scripts/goal-check.mjs,
+.zcode/hooks/session-start.mjs, .zcode/config.json, AGENTS.md, or the docs changed.
+
+RED
+$ node --test test/goal-check.test.mjs test/hook.test.mjs test/status-sources.test.mjs
+exit 1
+✖ --anchor emits the anchor and no warning on a healthy mission
+✖ --anchor exits 0 with a warning when the milestone audit is due
+✖ --anchor exits 2 with a named error when the mission is unreadable
+✖ the SessionStart hook emits additionalContext from a fixture mission
+✖ the configured SessionStart hook matches startup and resume
+✖ the hook injects the anchor and routing rule from a healthy mission
+✖ the hook keeps the anchor and adds the warning when the audit is due
+✖ the hook names the manual command when the anchor is unavailable
+✖ AGENTS.md Read first points only at the active mission or a generic <id>
+ℹ tests 20
+ℹ pass 11
+ℹ fail 9
+
+The full output is `evidence/T9/red-targeted.txt`. The two tests that passed on the first run
+are guards, not gated behavior: the default mode still exits 1 on an audit-due fixture, and the
+README Status paragraph does not call a closed mission active.
+
+GREEN
+$ node --test test/goal-check.test.mjs test/hook.test.mjs test/status-sources.test.mjs
+exit 0
+ℹ tests 20
+ℹ pass 20
+ℹ fail 0
+
+$ node --test   # full suite, T9 runtime, 2026-11-01
+exit 0
+ℹ tests 238
+ℹ pass 238
+ℹ fail 0
+
+$ pnpm typecheck
+exit 0
+
+The full outputs are `evidence/T9/green-targeted.txt`, `evidence/T9/green-full.txt`, and
+`evidence/T9/typecheck.txt`.

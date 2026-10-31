@@ -1,0 +1,28 @@
+✔ accepts the repository mission and covers every acceptance criterion (3.0092ms)
+✔ names a runnable task with its serves link and gates (2.3318ms)
+✔ rejects a new task when three tasks completed since the last review (1.8067ms)
+✔ a review_result resets the audit cadence (1.7429ms)
+✔ a complete mission needs a passing review after the last task (3.257ms)
+✔ rejects a task without a serves link (1.4578ms)
+✔ rejects an acceptance criterion no task serves (1.7022ms)
+✔ rejects a serves id that is not in the mission (1.5472ms)
+✔ brief output carries the task, serves, and gate (61.2996ms)
+✔ --anchor emits the anchor and no warning on a healthy mission (61.7846ms)
+✔ --anchor exits 0 with a warning when the milestone audit is due (61.275ms)
+✔ --anchor exits 2 with a named error when the mission is unreadable (58.6875ms)
+✔ the default mode still exits 1 when the audit is due (58.472ms)
+✔ the SessionStart hook emits additionalContext from a fixture mission (93.742ms)
+✔ the configured SessionStart hook matches startup and resume (0.571ms)
+✔ the hook injects the anchor and routing rule from a healthy mission (100.8728ms)
+✔ the hook keeps the anchor and adds the warning when the audit is due (94.5603ms)
+✔ the hook names the manual command when the anchor is unavailable (92.1139ms)
+✔ AGENTS.md Read first points only at the active mission or a generic <id> (0.9097ms)
+✔ README.md Status does not call a closed mission active (1.9628ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 485.4688
