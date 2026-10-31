@@ -28,10 +28,9 @@ Success is not "the gates are green". Success is:
   conversation; and
 - a milestone audit confirms the work still serves the goal, not just the plan.
 
-Status: pre-alpha. Mission #2 (completion integrity) is closing; human authorization pending.
-The ledger is the status: `.cairn/missions/002-completion-integrity/ledger.jsonl`. Mission #0 and
-Mission #1 are complete;
-their `mission_done` events and acceptance evidence are in their ledgers.
+Status: pre-alpha. The ledger is the status: `.cairn/missions/<id>/ledger.jsonl`, where `<id>` is
+`active_mission` in `.cairn/config.json`. Mission #0 and Mission #1 are archived; their ledgers
+hold their `mission_done` events and acceptance evidence.
 
 ## Model
 

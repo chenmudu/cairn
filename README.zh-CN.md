@@ -25,9 +25,9 @@ Cairn 是运行与证据层：它让 mission 跨会话延续，从仓库证明�
 - 一个全新的会话，只拿到这个仓库，就能在没有先前对话的情况下继续 mission；并且
 - milestone 审计确认工作仍然服务目标，而不只是服务计划。
 
-状态：pre-alpha。Mission #2（完成完整性）正在收尾；等待人类授权。台账就是状态：
-`.cairn/missions/002-completion-integrity/ledger.jsonl`。Mission #0 和 Mission #1 已完成；
-它们的 `mission_done` 事件和验收证据在各自的台账里。
+状态：pre-alpha。台账就是状态：`.cairn/missions/<id>/ledger.jsonl`，其中 `<id>` 是
+`.cairn/config.json` 里的 `active_mission`。Mission #0 和 Mission #1 已归档；它们的 `mission_done`
+事件和验收证据在各自的台账里。
 
 ## 模型
 
