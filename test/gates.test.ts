@@ -260,3 +260,17 @@ test('checkGatePolicy checks every gate, not the first', () => {
   assert.equal(errors.length, 1);
   assert.match(errors[0], /bad/);
 });
+
+test(
+  'runGate resolves a Windows .cmd shim through the shell',
+  { skip: process.platform !== 'win32' },
+  (t) => {
+    const dir = mkdtempSync(join(tmpdir(), 'cairn-cmd-'));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    writeFileSync(join(dir, 'cairn-shim.cmd'), '@echo off\r\necho shim-ran\r\nexit /b 0\r\n');
+
+    const result = runGate(gateOf('shim', 'cairn-shim'), { cwd: dir });
+    assert.equal(result.exit_code, 0, result.output);
+    assert.match(result.output, /shim-ran/);
+  },
+);

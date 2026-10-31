@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { auditTranscript } from '../scripts/audit-session.mjs';
+import { join, resolve } from 'node:path';
+import { auditTranscript, formatAudit } from '../scripts/audit-session.mjs';
 
 function writeTranscript(t, messages) {
   const dir = mkdtempSync(join(tmpdir(), 'cairn-audit-'));
@@ -322,4 +323,33 @@ test('a forbidden command covered by an exception is not a violation', (t) => {
   });
   assert.equal(report.signals.policyViolations.length, 0);
   assert.equal(report.verdict, 'clean');
+});
+
+test('the report names the transcript it read', (t) => {
+  const file = writeTranscript(t, [USER('hello')]);
+  const report = auditTranscript(file, { planFiles: [], repoRoot: 'D:/repo' });
+  assert.equal(report.transcript, resolve(file));
+  assert.ok(formatAudit(report).includes(`Transcript: ${resolve(file)}`));
+});
+
+test('without an explicit path the report names the latest transcript', (t) => {
+  const home = mkdtempSync(join(tmpdir(), 'cairn-home-'));
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+  const debug = join(home, '.zcode', 'cli', 'debug');
+  mkdirSync(debug, { recursive: true });
+  const file = join(debug, 'model-io-default.jsonl');
+  writeFileSync(file, JSON.stringify({ request: { body: { messages: [USER('hello')] } } }) + '\n');
+
+  const repo = resolve(import.meta.dirname, '..');
+  const result = spawnSync(
+    process.execPath,
+    ['scripts/audit-session.mjs', '--mission', '.cairn/missions/002-completion-integrity'],
+    {
+      cwd: repo,
+      encoding: 'utf8',
+      env: { ...process.env, HOME: home, USERPROFILE: home },
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stdout.includes(resolve(file)), `report must name ${file}`);
 });

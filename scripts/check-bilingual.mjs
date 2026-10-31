@@ -10,6 +10,7 @@
  * Exit:  0 every pair exists, 1 missing pair or missing header, 2 usage.
  */
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -69,11 +70,34 @@ function relativePath(root, file) {
   return relative(root, file).split('\\').join('/');
 }
 
-/** Pure check: returns missing companions and companions without a source header. */
+/**
+ * The header names the source path and, optionally, a revision. A revision that
+ * contains a hex commit is checked against git; label-only revisions are for a
+ * human to judge, because the checker cannot know what "the T1 commit" means.
+ */
+function headerOf(first) {
+  const match = /^<!--\s*translation of\s+(\S+?)(?:\s+at\s+(.+?))?\s*(?:;|-->)/.exec(first);
+  return match ? { source: match[1], revision: (match[2] ?? '').trim() } : null;
+}
+
+function isReachableCommit(root, sha) {
+  try {
+    execFileSync('git', ['-C', root, 'merge-base', '--is-ancestor', sha, 'HEAD'], {
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Pure check: returns missing companions and companions with a bad header. */
 export function checkBilingual(root = process.cwd()) {
   const base = resolve(root);
   const missing = [];
   const missingHeader = [];
+  const sourceErrors = [];
+  const unreachableCommit = [];
 
   for (const file of canonicalFiles(base)) {
     const rel = relativePath(base, file);
@@ -84,12 +108,35 @@ export function checkBilingual(root = process.cwd()) {
       continue;
     }
     const first = readFileSync(companion, 'utf8').split(/\r?\n/, 1)[0] ?? '';
-    if (!/^<!--\s*translation of\s+/.test(first)) {
+    const header = headerOf(first);
+    if (!header) {
       missingHeader.push(relativePath(base, companion));
+      continue;
+    }
+    const companionRel = relativePath(base, companion);
+    if (header.source !== rel) {
+      sourceErrors.push(`${companionRel}: header names ${header.source}, expected ${rel}`);
+    }
+    if (!existsSync(resolve(base, header.source))) {
+      sourceErrors.push(`${companionRel}: source does not exist: ${header.source}`);
+    }
+    const commit = /\b([0-9a-f]{7,40})\b/i.exec(header.revision)?.[1];
+    if (commit && !isReachableCommit(base, commit)) {
+      unreachableCommit.push(`${companionRel}: commit ${commit} is not reachable from HEAD`);
     }
   }
 
-  return { ok: missing.length === 0 && missingHeader.length === 0, missing, missingHeader };
+  return {
+    ok:
+      missing.length === 0 &&
+      missingHeader.length === 0 &&
+      sourceErrors.length === 0 &&
+      unreachableCommit.length === 0,
+    missing,
+    missingHeader,
+    sourceErrors,
+    unreachableCommit,
+  };
 }
 
 function main(argv) {
@@ -108,6 +155,12 @@ function main(argv) {
   }
   for (const file of report.missingHeader) {
     process.stderr.write(`missing translation header: ${file}\n`);
+  }
+  for (const message of report.sourceErrors) {
+    process.stderr.write(`source header mismatch: ${message}\n`);
+  }
+  for (const message of report.unreachableCommit) {
+    process.stderr.write(`unreachable commit: ${message}\n`);
   }
   return 1;
 }

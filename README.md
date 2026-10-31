@@ -28,9 +28,9 @@ Success is not "the gates are green". Success is:
   conversation; and
 - a milestone audit confirms the work still serves the goal, not just the plan.
 
-Status: pre-alpha. Mission #0 is complete; its `mission_done` event and acceptance evidence are
-in the ledger. Mission #1 (the method pack) is complete; its `mission_done` event and acceptance
-evidence are in `.cairn/missions/001-method-pack/`.
+Status: pre-alpha. Mission #2 (completion integrity) is active; the ledger is the status:
+`.cairn/missions/002-completion-integrity/ledger.jsonl`. Mission #0 and Mission #1 are complete;
+their `mission_done` events and acceptance evidence are in their ledgers.
 
 ## Model
 
@@ -64,13 +64,14 @@ the two source repositories.
 1. Read [`docs/protocol.md`](docs/protocol.md).
 2. Read [`docs/workflow.md`](docs/workflow.md) for the one-tick operator flow: roles, steps,
    human checkpoints, and failure paths.
-3. Read [`.cairn/missions/001-method-pack/`](.cairn/missions/001-method-pack/).
-4. The ledger is the status: [`ledger.jsonl`](.cairn/missions/001-method-pack/ledger.jsonl).
+3. Read [`.cairn/missions/002-completion-integrity/`](.cairn/missions/002-completion-integrity/).
+4. The ledger is the status:
+   [`ledger.jsonl`](.cairn/missions/002-completion-integrity/ledger.jsonl).
 5. Run the current gate:
-   `node scripts/validate-mission.mjs .cairn/missions/001-method-pack`.
-6. Run `node scripts/goal-check.mjs` before starting work. It names the next task, the
-   acceptance criterion it serves, and the gates. The SessionStart hook runs the same check and
-   injects it into a new or compacted session.
+   `node scripts/validate-mission.mjs .cairn/missions/002-completion-integrity`.
+6. Run `node scripts/goal-check.mjs --anchor` before starting work. It names the next task, the
+   acceptance criterion it serves, and the gates. The SessionStart hook runs the same command
+   once the workspace is trusted; until then run it by hand.
 7. Run `node scripts/audit-session.mjs` before claiming completion. It reads the actual
    transcript and reports drift signals; a claim without a gate in the same turn is one.
 

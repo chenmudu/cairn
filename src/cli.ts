@@ -40,8 +40,8 @@ const USAGE = `usage:
   cairn review --file <json> [--mission <dir>]
   cairn reconcile [--mission <dir>]
   cairn record <task> --status done [--packs <json>] [--mission <dir>]
-  cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--mission <dir>]
-  cairn record --authorized --paths <a,b> --why <text> --approved-by human [--mission <dir>]
+  cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>] [--mission <dir>]
+  cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>] [--mission <dir>]
   cairn record --mission-done [--mission <dir>]
 `;
 
@@ -161,24 +161,26 @@ function main(argv: string[]): number {
       const paths = takeOption(rest, '--paths');
       const why = takeOption(rest, '--why');
       const approvedBy = takeOption(rest, '--approved-by');
+      const date = takeOption(rest, '--date');
       if (!paths || rest.length > 0) {
         return usage(
-          'record --authorized needs --paths <a,b> --why <text> --approved-by human',
+          'record --authorized needs --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]',
         );
       }
-      return authorize(missionDir, paths, why ?? '', approvedBy);
+      return authorize(missionDir, paths, why ?? '', approvedBy, date);
     }
     if (rest.includes('--amended')) {
       rest.splice(rest.indexOf('--amended'), 1);
       const artifact = takeOption(rest, '--artifact');
       const why = takeOption(rest, '--why');
       const approvedBy = takeOption(rest, '--approved-by') ?? 'cairn';
+      const acceptance = takeOption(rest, '--acceptance');
       if (!artifact || rest.length > 0) {
         return usage(
-          'record --amended needs --artifact <path> --why <text> [--approved-by cairn|human]',
+          'record --amended needs --artifact <path> --why <text> [--approved-by cairn|human] [--acceptance <a,b>]',
         );
       }
-      return amendment(missionDir, artifact, why ?? '', approvedBy);
+      return amendment(missionDir, artifact, why ?? '', approvedBy, acceptance);
     }
     if (rest.includes('--mission-done')) {
       if (rest.length !== 1) return usage('record --mission-done takes no task');
@@ -291,7 +293,13 @@ function checkWallTimeBudget(doc: MissionDocuments, taskId: string): string | nu
  * approval of content: paths, why, and `approved_by: human` are all required,
  * and the agent cannot write this event for itself.
  */
-function authorize(missionDir: string, paths: string, why: string, approvedBy?: string): number {
+function authorize(
+  missionDir: string,
+  paths: string,
+  why: string,
+  approvedBy?: string,
+  date?: string,
+): number {
   if (approvedBy !== 'human') return refuse('--approved-by must be human');
   if (why.trim() === '') return refuse('--why is required');
   const list = paths
@@ -302,6 +310,15 @@ function authorize(missionDir: string, paths: string, why: string, approvedBy?: 
 
   const doc = loadMission(missionDir);
   const ts = nextTimestamp(doc.events);
+  const chosen = date ?? ts.slice(0, 10);
+  const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(chosen) ? new Date(`${chosen}T00:00:00Z`) : null;
+  if (
+    !parsedDate ||
+    Number.isNaN(parsedDate.getTime()) ||
+    parsedDate.toISOString().slice(0, 10) !== chosen
+  ) {
+    return refuse('--date must be a calendar date in YYYY-MM-DD form');
+  }
   const event = appendEvent(doc.missionDir, {
     ts,
     event: 'authorization',
@@ -312,7 +329,7 @@ function authorize(missionDir: string, paths: string, why: string, approvedBy?: 
       paths: list,
       approved_by: 'human',
       why,
-      date: ts.slice(0, 10),
+      date: chosen,
     },
   });
   process.stdout.write(`${JSON.stringify(event, null, 2)}\n`);
@@ -465,6 +482,7 @@ function amendment(
   artifact: string,
   why: string,
   approvedBy: string,
+  acceptance?: string,
 ): number {
   const doc = loadMission(missionDir);
   const agent = artifact.replace(/\\/g, '/');
@@ -475,6 +493,16 @@ function amendment(
   if (why.trim() === '') return refuse('--why is required');
   if (HUMAN_ONLY.has(agent) && approvedBy !== 'human') {
     return refuse(`${agent} requires --approved-by human`);
+  }
+
+  const known = doc.mission.acceptance.map((criterion) => criterion.id);
+  let scope = known;
+  if (acceptance !== undefined) {
+    const named = [...new Set(acceptance.split(',').map((id) => id.trim()).filter(Boolean))];
+    if (named.length === 0) return refuse('--acceptance must name at least one criterion');
+    const unknown = named.filter((id) => !known.includes(id));
+    if (unknown.length > 0) return refuse(`--acceptance names unknown criteria: ${unknown.join(', ')}`);
+    scope = named;
   }
 
   const chain = new Map<string, string>();
@@ -497,7 +525,7 @@ function amendment(
     data: {
       old: { [agent]: old },
       new: { [agent]: now },
-      acceptance: doc.mission.acceptance.map((criterion) => criterion.id),
+      acceptance: scope,
       why,
       approved_by: approvedBy,
     },

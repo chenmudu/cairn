@@ -1,0 +1,33 @@
+superpowers:test-driven-development
+
+# Applied in the T7 tick (2026-11-01, +0800)
+The skill's Iron Law is NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. T7 followed it for the
+new checks: `test/bilingual.test.mjs` gained the source-path and commit-reachability cases, and
+`test/cli.test.mjs` gained the `record --amended --acceptance` case, before
+`scripts/check-bilingual.mjs` and the `--acceptance` writer changed.
+
+RED
+$ node --test test/bilingual.test.mjs test/audit-session.test.mjs test/gates.test.ts test/cli.test.mjs
+exit 1
+✖ rejects a header whose source path does not match the canonical file
+✖ rejects a header naming a commit that is not reachable
+✖ record --amended --acceptance records only the named criterion
+ℹ tests 69
+ℹ pass 66
+ℹ fail 3
+
+The full output is `evidence/T7/red-targeted.txt`. The transcript-path tests and the Windows
+`.cmd` shim test passed in that run: they are regression guards for behavior that already
+existed, not new production code. The `test/packet.test.ts` negative export test and the
+`test/status-sources.test.mjs` README Start here test were added after the plan amendment that
+put those files in T7, as the T7 instruction required; they pass against the edited files.
+
+GREEN
+$ node --test test/bilingual.test.mjs test/audit-session.test.mjs test/gates.test.ts test/cli.test.mjs test/packet.test.ts test/status-sources.test.mjs
+exit 0
+ℹ tests 73
+ℹ pass 73
+ℹ fail 0
+
+The full output is `evidence/T7/green-targeted.txt`; the full suite is
+`evidence/T7/green-full.txt` (245/245) and the typecheck is `evidence/T7/typecheck.txt` (exit 0).

@@ -1,4 +1,4 @@
-<!-- translation of .cairn/missions/002-completion-integrity/plan.md at the mission creation event; the English file is authoritative -->
+<!-- translation of .cairn/missions/002-completion-integrity/plan.md at the Mission #2 T7 revision; the English file is authoritative -->
 
 ---
 schema: cairn/plan@0.1
@@ -287,9 +287,66 @@ tasks:
         args: ["src/cli.ts", "reconcile"]
         severity: block
 
+  - id: T9
+    title: Make the harness claims match the runtime
+    deps: [T6]
+    risk: medium
+    status: todo
+    serves: [A6]
+    files:
+      - AGENTS.md
+      - .zcode/config.json
+      - .zcode/hooks/session-start.mjs
+      - scripts/goal-check.mjs
+      - test/hook.test.mjs
+      - test/goal-check.test.mjs
+      - test/status-sources.test.mjs
+      - docs/automation.md
+      - docs/automation.zh.md
+      - docs/self-hosting.md
+      - docs/self-hosting.zh.md
+      - docs/decision-routing.md
+      - docs/decision-routing.zh.md
+      - docs/adapter.md
+      - docs/adapter.zh.md
+      - docs/i18n.md
+      - .cairn/missions/002-completion-integrity/
+    interfaces:
+      produces:
+        - "goal-check --anchor emits the anchor and a warning when the check fails, exit 0"
+        - "the hook always injects the anchor; no failure branch drops it"
+        - "the matcher is startup|resume and the tests assert it"
+        - "a status-sources test fails when a status surface names a non-active or closed mission as active"
+        - "AGENTS.md and the hook docs match the runtime"
+    gates:
+      - id: typecheck
+        command: pnpm
+        args: ["typecheck"]
+        severity: block
+      - id: test
+        command: node
+        args: ["--test"]
+        severity: block
+      - id: mission
+        command: node
+        args: ["scripts/validate-mission.mjs", ".cairn/missions/002-completion-integrity"]
+        severity: block
+      - id: targets
+        command: node
+        args: ["scripts/check-targets.mjs"]
+        severity: block
+      - id: reconcile
+        command: node
+        args: ["src/cli.ts", "reconcile"]
+        severity: block
+      - id: bilingual
+        command: node
+        args: ["scripts/check-bilingual.mjs"]
+        severity: block
+
   - id: T7
     title: Make the contract and status sources tell the truth
-    deps: [T6]
+    deps: [T6, T9]
     risk: medium
     status: todo
     serves: [A6]
@@ -305,9 +362,13 @@ tasks:
       - package.json
       - .github/workflows/gates.yml
       - test/gates.test.ts
+      - test/packet.test.ts
+      - test/status-sources.test.mjs
       - README.md
       - README.zh-CN.md
       - docs/i18n.md
+      - docs/adapter.md
+      - docs/adapter.zh.md
       - .cairn/missions/002-completion-integrity/
     interfaces:
       produces:
@@ -500,6 +561,17 @@ superpowers `mode: use`。CI 跑 `reconcile` 和 P0 探针。
 
 完成判据：列表外的闸门被拒绝；没有已记录例外的推送被拒绝；已授权写入不算漂移；路径外写入仍然
 是漂移；全部闸门退出 0。
+
+### T9 — harness 声明与运行时一致（A6）
+
+让 harness 声明与运行时一致。`goal-check` 增加只读的 `--anchor` 模式，总是输出目标锚点，并在检查
+失败时追加警告；SessionStart hook 调用它，任何失败分支都不丢锚点。matcher 改成 `startup|resume`。
+hook 和 goal-check 的测试不再依赖真实仓库的审计状态；当 AGENTS.md 或 README 把已关闭或非活动的
+mission 说成活动时，新的 status-sources 测试失败。文档记录 pending-trust 事实。
+
+完成判据：`goal-check --anchor` 在审计到期的 fixture 上退出 0，带锚点和警告；hook 测试无论真实
+仓库的审计状态如何都通过；status-sources 测试拒绝错误的活动声明；AGENTS.md 和 hook 文档与运行时
+一致；六个闸门全部退出 0。
 
 ### T7 — 契约与状态真实性（D7，A6）
 

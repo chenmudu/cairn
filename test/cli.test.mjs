@@ -768,3 +768,77 @@ test('record --authorized refuses a non-human approval and missing fields', (t) 
   );
   assert.equal(noWhy.status, 2, noWhy.stdout);
 });
+
+test('record --amended --acceptance records only the named criterion', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'cairn-amend-acceptance-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  assert.equal(runIn(root, 'init', 'demo', '--owner', 'fixture').status, 0);
+  const mission = join(root, '.cairn', 'missions', 'demo');
+
+  const missionMd = readFileSync(join(mission, 'mission.md'), 'utf8').replace(
+    '  - id: A1\n    check: replace with a deterministic check\n',
+    '  - id: A1\n    check: replace with a deterministic check\n  - id: A2\n    check: second check\n',
+  );
+  writeFileSync(join(mission, 'mission.md'), missionMd);
+  const addCriterion = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'mission.md',
+    '--why',
+    'add a second criterion for the fixture',
+    '--approved-by',
+    'human',
+  );
+  assert.equal(addCriterion.status, 0, addCriterion.stderr);
+
+  appendFileSync(join(mission, 'plan.md'), '\n# scoped amendment\n');
+  const scoped = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'plan.md',
+    '--why',
+    'only A1 needs this plan edit',
+    '--approved-by',
+    'cairn',
+    '--acceptance',
+    'A1',
+  );
+  assert.equal(scoped.status, 0, scoped.stderr);
+  assert.deepEqual(JSON.parse(scoped.stdout).data.acceptance, ['A1']);
+
+  appendFileSync(join(mission, 'plan.md'), '\n# default amendment\n');
+  const all = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'plan.md',
+    '--why',
+    'the default keeps every criterion',
+    '--approved-by',
+    'cairn',
+  );
+  assert.equal(all.status, 0, all.stderr);
+  assert.deepEqual(JSON.parse(all.stdout).data.acceptance, ['A1', 'A2']);
+
+  appendFileSync(join(mission, 'plan.md'), '\n# invalid amendment\n');
+  const unknown = runIn(
+    root,
+    'record',
+    '--amended',
+    '--artifact',
+    'plan.md',
+    '--why',
+    'an unknown criterion is refused',
+    '--approved-by',
+    'cairn',
+    '--acceptance',
+    'A9',
+  );
+  assert.equal(unknown.status, 2, unknown.stdout);
+  assert.match(unknown.stderr, /A9/);
+});

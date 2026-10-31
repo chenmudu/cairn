@@ -1,0 +1,160 @@
+✔ reports alignment corrections, gate-less claims, unplanned writes, and confirmation asks (3.2893ms)
+✔ does not flag a claim in a turn that ran a gate (1.2896ms)
+✔ ignores writes outside the repository (0.8973ms)
+✔ reads a long transcript in bounded chunks (1.3578ms)
+✔ fails on an over-limit line instead of crashing (1.1597ms)
+✔ does not count the injected system reminder as a human correction (0.9839ms)
+✔ keeps the human text after an injected reminder (0.8658ms)
+✔ does not audit writes replayed inside a compaction summary (1.0182ms)
+✔ audits work anchored by a summary when no later user turn exists (1.275ms)
+✔ audits the latest request, not a larger pre-compaction snapshot (1.0306ms)
+✔ ignores runtime evidence writes under the mission directory (0.9473ms)
+✔ recognizes a mission_amended event as an amendment (1.3857ms)
+✔ a write inside an authorized path is not drift (0.9456ms)
+✔ an authorization with no matching write is reported separately (0.777ms)
+✔ a forbidden command without an exception is a violation (1.0552ms)
+✔ a forbidden command covered by an exception is not a violation (1.1674ms)
+✔ the report names the transcript it read (0.9877ms)
+✔ without an explicit path the report names the latest transcript (71.154ms)
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.zh-CN.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.zh-CN.md', LF will be replaced by CRLF the next time Git touches it
+✔ reports a mission contract without a Chinese companion (5.4362ms)
+✔ accepts a complete pair set and ignores docs/i18n.md (7.685ms)
+✔ reports an inbox decision without a Chinese companion (3.5239ms)
+✔ rejects a companion without a translation header (1.2606ms)
+✔ checks method documentation, including nested README companions (2.1218ms)
+✔ the repository itself is fully paired (7.4579ms)
+✖ rejects a header whose source path does not match the canonical file (1.6318ms)
+✖ rejects a header naming a commit that is not reachable (118.4968ms)
+✔ accepts a header naming a reachable commit (127.7633ms)
+✔ status --json reports Mission #0 and every coverage link (78.8216ms)
+✔ the default mission is the active mission from .cairn/config.json (89.994ms)
+✔ a bare mission id and a legacy missions/<id> path resolve (155.1841ms)
+✔ init scaffolds a mission in an empty repository (150.725ms)
+✔ the init scaffold gate fails, so the scaffold cannot be recorded done (602.6286ms)
+✔ next prints a packet for the task status reports (174.4106ms)
+✔ record refuses a task with no gate evidence and does not write (83.5ms)
+✔ record refuses a task that was never started and writes nothing (78.0971ms)
+✔ verify and record complete a task with no manual ledger write (676.0625ms)
+✔ record refuses an unknown task (83.0483ms)
+✔ start records task_started with the base commit and refuses a second start (237.9368ms)
+✔ start refuses an unmet dependency and names it (166.1243ms)
+✔ start refuses a second active task and names it (255.1815ms)
+✔ a parked task can be answered and then completed (705.0428ms)
+✔ answer refuses a task that is not parked (76.7918ms)
+✔ review writes a review_result from a JSON file (84.3739ms)
+✔ review refuses an invalid verdict and writes nothing (82.3809ms)
+✔ usage exits 2 (78.9083ms)
+✔ init writes mission_created and the new mission validates (120.2851ms)
+✔ init defaults to cairn and never claims a human approval (78.2552ms)
+✔ record --amended writes old and new hashes and enforces the approver (327.9018ms)
+✔ verify refuses an out-of-list gate command and names the policy (75.5567ms)
+✔ verify refuses a forbidden gate command (78.6354ms)
+✔ start refuses a task at max_attempts_per_task (78.7412ms)
+✔ record refuses a tick over max_wall_time_per_tick_minutes (76.1628ms)
+✔ record --authorized writes an authorization event (76.4608ms)
+✔ record --authorized refuses a non-human approval and missing fields (223.8779ms)
+✖ record --amended --acceptance records only the named criterion (224.0296ms)
+✔ runGate records a passing exit code and its output (47.8377ms)
+✔ runGate records a failing exit code and stderr (49.5085ms)
+✔ runGate runs in the requested cwd (54.0826ms)
+✔ verifyTask runs every gate, writes evidence, and passes when blocks pass (159.3697ms)
+✔ verifyTask fails when a blocking gate fails (111.5824ms)
+✔ checkEvidence requires every blocking gate, not just one (164.5214ms)
+✔ checkEvidence rejects a gate whose evidence file is gone (109.9595ms)
+✔ verifyTask refuses an unknown task (1.6951ms)
+✔ --expect-invalid passes on the missing-gate fixture and fails on a valid mission (83.1962ms)
+✔ checkGatePolicy refuses a command outside allowed_commands and names the policy path (0.201ms)
+✔ checkGatePolicy refuses a forbidden command (0.1547ms)
+✔ checkGatePolicy allows the recorded push exception and nothing wider (0.0944ms)
+✔ checkGatePolicy checks every gate, not the first (0.0542ms)
+✔ runGate resolves a Windows .cmd shim through the shell (22.827ms)
+ℹ tests 69
+ℹ suites 0
+ℹ pass 66
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5279.7087
+
+✖ failing tests:
+
+test at test\bilingual.test.mjs:121:1
+✖ rejects a header whose source path does not match the canonical file (1.6318ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/bilingual.test.mjs:127:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\bilingual.test.mjs:132:1
+✖ rejects a header naming a commit that is not reachable (118.4968ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/bilingual.test.mjs:137:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\cli.test.mjs:772:1
+✖ record --amended --acceptance records only the named criterion (224.0296ms)
+  AssertionError [ERR_ASSERTION]: record --amended needs --artifact <path> --why <text> [--approved-by cairn|human]
+  usage:
+    cairn init <id> [--title <title>]
+    cairn status [--json] [--mission <dir>]
+    cairn next [--mission <dir>]
+    cairn start <task> [--mission <dir>]
+    cairn answer <task> --text <text> [--mission <dir>]
+    cairn verify <task> [--mission <dir>]
+    cairn review --file <json> [--mission <dir>]
+    cairn reconcile [--mission <dir>]
+    cairn record <task> --status done [--packs <json>] [--mission <dir>]
+    cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human] [--mission <dir>]
+    cairn record --authorized --paths <a,b> --why <text> --approved-by human [--mission <dir>]
+    cairn record --mission-done [--mission <dir>]
+  
+  
+  2 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/project/github/cairn/test/cli.test.mjs:810:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

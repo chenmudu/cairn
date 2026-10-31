@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -47,15 +48,15 @@ test('accepts a complete pair set and ignores docs/i18n.md', (t) => {
   write(root, 'templates/t.md');
   write(root, 'templates/t.zh.md', '<!-- translation of templates/t.md -->\n');
   write(root, '.cairn/missions/001/mission.md');
-  write(root, '.cairn/missions/001/mission.zh.md', '<!-- translation of mission.md -->\n');
+  write(root, '.cairn/missions/001/mission.zh.md', '<!-- translation of .cairn/missions/001/mission.md -->\n');
   write(root, '.cairn/missions/001/plan.md');
-  write(root, '.cairn/missions/001/plan.zh.md', '<!-- translation of plan.md -->\n');
+  write(root, '.cairn/missions/001/plan.zh.md', '<!-- translation of .cairn/missions/001/plan.md -->\n');
   write(root, '.cairn/missions/001/policy.md');
-  write(root, '.cairn/missions/001/policy.zh.md', '<!-- translation of policy.md -->\n');
+  write(root, '.cairn/missions/001/policy.zh.md', '<!-- translation of .cairn/missions/001/policy.md -->\n');
   write(root, '.cairn/missions/001/inbox/0001.md');
-  write(root, '.cairn/missions/001/inbox/0001.zh.md', '<!-- translation of 0001.md -->\n');
+  write(root, '.cairn/missions/001/inbox/0001.zh.md', '<!-- translation of .cairn/missions/001/inbox/0001.md -->\n');
   write(root, '.zcode/skills/demo/SKILL.md');
-  write(root, '.zcode/skills/demo/SKILL.zh.md', '<!-- translation of SKILL.md -->\n');
+  write(root, '.zcode/skills/demo/SKILL.zh.md', '<!-- translation of .zcode/skills/demo/SKILL.md -->\n');
 
   assert.equal(checkBilingual(root).ok, true);
 });
@@ -103,4 +104,45 @@ test('checks method documentation, including nested README companions', (t) => {
 test('the repository itself is fully paired', () => {
   const report = checkBilingual(repo);
   assert.equal(report.ok, true, `${report.missing.join(', ')} ${report.missingHeader.join(', ')}`);
+});
+
+function gitRoot(t) {
+  const root = makeRoot(t);
+  write(root, 'README.md');
+  write(root, 'README.zh-CN.md', '<!-- translation of README.md at the base commit -->\n');
+  execFileSync('git', ['init', '-q'], { cwd: root, stdio: 'ignore' });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: root });
+  execFileSync('git', ['config', 'user.name', 'test'], { cwd: root });
+  execFileSync('git', ['add', '.'], { cwd: root });
+  execFileSync('git', ['commit', '-qm', 'base'], { cwd: root });
+  return root;
+}
+
+test('rejects a header whose source path does not match the canonical file', (t) => {
+  const root = makeRoot(t);
+  write(root, 'README.md');
+  write(root, 'README.zh-CN.md', '<!-- translation of docs/missing.md -->\n');
+
+  const report = checkBilingual(root);
+  assert.equal(report.ok, false);
+  assert.match(report.sourceErrors.join('\n'), /README\.zh-CN\.md/);
+  assert.match(report.sourceErrors.join('\n'), /missing\.md/);
+});
+
+test('rejects a header naming a commit that is not reachable', (t) => {
+  const root = gitRoot(t);
+  write(root, 'README.zh-CN.md', '<!-- translation of README.md at commit deadbeefdeadbeef -->\n');
+
+  const report = checkBilingual(root);
+  assert.equal(report.ok, false);
+  assert.match(report.unreachableCommit.join('\n'), /README\.zh-CN\.md/);
+  assert.match(report.unreachableCommit.join('\n'), /deadbeefdeadbeef/);
+});
+
+test('accepts a header naming a reachable commit', (t) => {
+  const root = gitRoot(t);
+  const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+  write(root, 'README.zh-CN.md', `<!-- translation of README.md at commit ${sha} -->\n`);
+
+  assert.equal(checkBilingual(root).ok, true);
 });

@@ -1,0 +1,9 @@
+skill: impeccable:design-review
+mode: not-applicable
+
+T7 declares docs/protocol.md, docs/protocol.zh.md, src/packet.ts, src/cli.ts, scripts/*.mjs,
+test/*, package.json, .github/workflows/gates.yml, README.md, README.zh-CN.md, docs/i18n.md,
+docs/adapter.md, docs/adapter.zh.md, and the mission directory. None of those extensions is a UI
+surface (no html, css, tsx, jsx, vue, svelte, astro, svg), so there is no markup or URL for
+`impeccable detect` to read. The review is criteria-based against method/standards/docs.md,
+which is the in-repo floor, not a pack invocation.

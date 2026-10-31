@@ -40,10 +40,9 @@ not completion: an adapter may use the pack, fall back, or record `not-applicabl
 still decides. `cairn next` emits exactly two entries (superpowers and Impeccable), and an
 absent pack is `mode: absent` with its fallback.
 
-`renderDispatch(packet)` in `src/packet.ts` turns the same packet into a markdown brief using
-`templates/dispatch.md`. The packet is the contract; the brief is a convenience for a model.
-The template owns the prose and the report schema; the packet owns the facts. A placeholder the
-renderer does not know fails loudly instead of shipping a half-filled brief.
+The packet is the contract. `templates/dispatch.md` is a human-facing brief: it holds the prose
+and the report schema, while the packet holds the facts. There is no runtime renderer; an
+adapter reads the packet and may use the template by hand.
 
 ## Flow
 

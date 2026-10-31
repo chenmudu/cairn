@@ -362,9 +362,13 @@ tasks:
       - package.json
       - .github/workflows/gates.yml
       - test/gates.test.ts
+      - test/packet.test.ts
+      - test/status-sources.test.mjs
       - README.md
       - README.zh-CN.md
       - docs/i18n.md
+      - docs/adapter.md
+      - docs/adapter.zh.md
       - .cairn/missions/002-completion-integrity/
     interfaces:
       produces:

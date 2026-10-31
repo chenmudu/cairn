@@ -40,9 +40,8 @@
 `not-applicable`；仍然由闸门裁决。`cairn next` 恰好输出两个条目（superpowers 和 Impeccable），
 包缺失时是 `mode: absent` 并带 fallback。
 
-`src/packet.ts` 的 `renderDispatch(packet)` 用 `templates/dispatch.md` 把同一个 packet 渲染成
-markdown 简报。packet 是契约；简报只是给模型看的便利形式。模板拥有说明文字和报告结构，packet
-拥有事实。渲染器不认识的占位符会直接报错，而不是输出一份半成品简报。
+packet 是契约。`templates/dispatch.md` 是给人看的简报：它拥有说明文字和报告结构，packet 拥有
+事实。当前没有运行时渲染器；adapter 读取 packet，也可以手工使用模板。
 
 ## 流程
 

@@ -22,11 +22,33 @@ function missionIdsIn(line) {
   );
 }
 
+function numberedItems(section) {
+  const items = [];
+  let current = null;
+  for (const line of section.split(/\r?\n/)) {
+    if (/^\d+\.\s/.test(line)) {
+      if (current) items.push(current);
+      current = line;
+    } else if (current && /^\s+\S/.test(line)) {
+      current += ` ${line.trim()}`;
+    }
+  }
+  if (current) items.push(current);
+  return items;
+}
+
 function readFirstItems() {
   const text = readFileSync(join(repo, 'AGENTS.md'), 'utf8');
   const section = /^##\s+Read first\s*$([\s\S]*?)(?=^##\s)/m.exec(text);
   assert.ok(section, 'AGENTS.md must keep a "## Read first" section');
-  return section[1].split(/\r?\n/).filter((line) => /^\d+\.\s/.test(line));
+  return numberedItems(section[1]);
+}
+
+function startHereSteps() {
+  const text = readFileSync(join(repo, 'README.md'), 'utf8');
+  const section = /^##\s+Start here\s*$([\s\S]*?)(?=^##\s)/m.exec(text);
+  assert.ok(section, 'README.md must keep a "## Start here" section');
+  return numberedItems(section[1]).filter((line) => /^[34]\.\s/.test(line));
 }
 
 function statusParagraph() {
@@ -92,6 +114,21 @@ test('README.md Status does not call a closed mission active', () => {
         sentence,
         /\bactive\b|\bin progress\b|\bcurrent mission\b/i,
         `README.md Status calls the closed mission ${id} active: ${sentence}`,
+      );
+    }
+  }
+});
+test('README.md Start here steps 3 and 4 point at the active mission and its ledger', () => {
+  const steps = startHereSteps();
+  assert.equal(steps.length, 2, 'Start here must keep numbered steps 3 and 4');
+  for (const line of steps) {
+    const ids = missionIdsIn(line);
+    assert.ok(ids.length > 0, `Start here must name a mission or ledger path: ${line}`);
+    for (const id of ids) {
+      assert.equal(
+        id,
+        active,
+        `README.md Start here names ${id} while ${active} is the active mission`,
       );
     }
   }

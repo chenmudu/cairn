@@ -47,14 +47,19 @@ and keeps a legacy `missions/<id>` fallback, so a migration does not break exist
 prose for the parts a human needs to read. `ledger.jsonl` is machine-only; markdown views are
 generated, never edited.
 
+The ledger is the only status source. `mission.md.status` is the initial declaration;
+`plan.md` task `status` is a deprecated hint. New plans omit it, and existing values stay as
+history and are not edited. `cairn status`, `cairn next`, `goal-check`, and `reconcile` derive
+state from `ledger.jsonl`.
+
 ## Invariants
 
 1. **One active task per worktree.** Parallelism happens across worktrees, never inside one.
 2. **Done means three things agree.** A task is done only when a commit exists, a blocking
    gate recorded exit 0, and a `task_done` event exists in the ledger.
-3. **A task is one commit transaction.** The work commit carries the code, evidence, and
-   `gate_result`; `task_done` lands in the immediately following ledger commit. A work commit
-   without `task_done` is not progress; a `task_done` without its work commit is not progress.
+3. **A task is one commit transaction.** The order is work → commit the work → `verify` →
+   `record` → commit the ledger only. A work commit without `task_done` is not progress; a
+   `task_done` without its work commit is not progress.
 4. **Implementer claims are not evidence.** Only a gate the runtime ran, or a command whose
    exit code and output were recorded, counts.
 5. **The model has two runtime decisions.** A ruling (decide, record, continue) or an
@@ -72,6 +77,21 @@ generated, never edited.
    fresh session derive the same next step? The verdict is a `review_result`; a fail parks the
    mission.
 
+## Completion transaction
+
+1. Work, then commit the work. Evidence files belong to the work commit.
+2. `cairn verify <task>` requires a clean worktree outside `.cairn/`. It captures `head` and
+   `tree` once and writes both into every `gate_result`. A tracked change during the run is
+   drift, and the run fails.
+3. `cairn record <task> --status done` requires a `task_started`, at least one commit after its
+   `base`, and, for every blocking gate, a latest result with the current `head` and `tree`,
+   exit 0. It also requires no worktree change outside `.cairn/` since `verify`, and the task's
+   `packs` record once any `task_done` in the mission carries one (ADR 0005).
+4. Commit the ledger only. `task_done` lands in that commit.
+5. `cairn record --mission-done` requires the worktree ledger to equal the ledger at HEAD, so
+   every `task_done` is committed before the close; the close is proven by the commit that
+   contains `mission_done`.
+
 ## Goal integrity
 
 The goal is not a comment. `mission.md`, `policy.md`, `plan.md`, and this document are frozen
@@ -83,9 +103,13 @@ at `mission_created` by hash. Changing any of them requires a `mission_amended` 
 - `approved_by`: `human` for a goal, non-goal, acceptance, or protocol change; `cairn` for a
   plan change inside the existing acceptance envelope.
 
-Until `cairn record` implements the event (`T-002`), an amendment is recorded as a `ruling`
-carrying the same fields. The milestone audit's three questions and the full failure register
-live in `docs/drift-control.md`.
+`cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human]
+[--acceptance <a,b>]` is the writer. It takes the old hash from the frozen chain, hashes the
+file on disk, and appends the event. It refuses an unknown target, a target that was never
+frozen, a missing file, and an acceptance id the mission does not declare. Without
+`--acceptance`, the event records every mission criterion; a narrower scope names only the
+criteria the change serves. The milestone audit's three questions and the full failure
+register live in `docs/drift-control.md`.
 
 ## Event schema
 
@@ -102,27 +126,32 @@ Every line is one JSON object:
 }
 ```
 
-| Event | Required data | Meaning |
-|---|---|---|
-| `mission_created` | `artifacts` (path → sha256) | Mission artifacts frozen. |
-| `mission_amended` | `old`, `new` (path → sha256), `acceptance`, `why`, `approved_by` | Target artifacts changed on purpose. |
-| `task_started` | `base` (commit) | A tick selected this task. |
-| `gate_result` | `gate`, `command`, `exit_code`, `evidence` | One gate ran. |
-| `review_result` | `reviewer`, `verdict`, `findings`, `packs` | A fresh reviewer judged the task. |
-| `ruling` | `decision`, `why`, `cost_if_wrong` | A decision made without a human. |
-| `task_done` | `base`, `head`, `commits`, `gates` | The task met all three conditions. |
-| `task_parked` | `reason`, `inbox` | The task waits for a human. |
-| `mission_done` | `acceptance` | Every acceptance criterion has evidence. |
-| `mission_aborted` | `reason` | The mission stopped. |
-| `note` | `text` | Human or controller annotation. |
+| Event | Writer | Required data | Meaning |
+|---|---|---|---|
+| `mission_created` | `cairn init` | `artifacts` (path → sha256), `approved_by`, `approval_source` | Mission artifacts frozen. |
+| `mission_amended` | `cairn record --amended` | `old`, `new` (path → sha256), `acceptance`, `why`, `approved_by` | Target artifacts changed on purpose. |
+| `task_started` | `cairn start`, `cairn answer` | `base` (commit) | A tick selected this task. `answer` adds `answer` and `approved_by: human`. |
+| `gate_result` | `cairn verify` | `gate`, `command`, `exit_code`, `head`, `tree`, `evidence` | One gate ran on one verified tree. |
+| `review_result` | `cairn review` | `reviewer`, `context`, `artifact`, `verdict`, `findings`, `packs`, `coverage`, `non_goals`, `cold_start`, `ui_surface` | A reviewer judged the task or mission. |
+| `task_done` | `cairn record` | `base`, `head`, `tree`, `commits`, `gates`, `packs` (once packs are active) | The task met every completion condition. |
+| `authorization` | `cairn record --authorized` | `approved_by: human`, `why`, `date`; optional `scope: mission_done`, `paths` | A human authorized a write or the close. |
+| `mission_done` | `cairn record --mission-done` | `acceptance` (criterion → evidence) | Every acceptance criterion has evidence. |
+| `task_parked` | reserved | `reason`, `inbox` | The task waits for a human. |
+| `ruling` | reserved | `decision`, `why`, `cost_if_wrong` | A decision made without a human. |
+| `mission_aborted` | reserved | `reason` | The mission stopped. |
+| `note` | reserved | `text` | Controller annotation. |
 
 Rules:
 
 - `ts` is UTC ISO 8601.
 - `actor` is `cairn`, `human`, or an adapter name.
 - Events are appended, never edited. Corrections are new events.
-- A single writer appends: `cairn record`. Adapters return reports; they never touch the
-  ledger.
+- Each event type has one runtime owner: `cairn init` owns `mission_created`; `cairn start` and
+  `cairn answer` own `task_started`; `cairn verify` owns `gate_result`; `cairn review` owns
+  `review_result`; `cairn record` owns `task_done`, `mission_amended`, `authorization`, and
+  `mission_done`. Adapters return reports; they never touch the ledger.
+- `task_parked`, `ruling`, `mission_aborted`, and `note` are validator-accepted but have no
+  v0.1 runtime writer. `cairn answer` resolves a `task_parked` event when one exists.
 
 ## Gate contract
 
@@ -144,22 +173,27 @@ Rules:
 - `scope: workspace` runs once per task. `scope: changed` runs on changed files.
 - The **strongest gate** a task declares must run at least once before `task_done`, even if a
   faster gate already passed.
-- A gate command is a fixed argv. No shell interpolation. Values go in `args`.
+- A gate command is a fixed argv. No shell interpolation. Values go in `args`. On Windows, if
+  the command cannot be executed directly (a package-manager `.cmd` shim raises `ENOENT` or
+  `EINVAL`), the runtime retries the same plan-controlled argv through the shell. The fallback
+  is not input; the test is `test/gates.test.ts`.
 
 ## CLI contract (v0.1)
 
 | Command | Exit | Behavior |
 |---|---|---|
-| `cairn init <id>` | 0 | Scaffold a mission directory. |
+| `cairn init <id>` | 0 / 2 refused | Scaffold a mission directory, make it active, and append `mission_created` with the frozen hashes. |
 | `cairn status [--json]` | 0 | Render mission state from the ledger. |
 | `cairn reconcile` | 0 clean / 3 drift | Compare ledger, git, and evidence; repair the cache. |
 | `cairn next` | 0 work / 2 none / 3 blocked | Print the next dispatch packet. |
-| `cairn start <task>` | 0 / 2 refused | Append `task_started` with the current HEAD as `base`; refuse a task that is done, parked, or already started. |
-| `cairn verify <task>` | 0 pass / 2 fail | Run the task's gates; write evidence and `gate_result` events. |
-| `cairn review --file <json>` | 0 / 2 refused | Validate `reviewer`, `verdict`, `findings`, and `packs`, then append `review_result`. |
-| `cairn record <task> --status done` | 0 / 2 refused | Append `task_done` only if the three conditions hold. |
-| `cairn answer <task> --text ...` | 0 | Resolve an escalation and resume the branch. |
-| `cairn export` | 0 | Render a human-readable report. |
+| `cairn start <task>` | 0 / 2 refused | Append `task_started` with the current HEAD as `base`; refuse a task that is done, parked, already started, missing a dependency, or while another task is active. |
+| `cairn answer <task> --text <text>` | 0 / 2 refused | Resolve a parked task's escalation: append a human `task_started` carrying the answer, which resumes the branch. |
+| `cairn verify <task>` | 0 pass / 2 fail | Run the task's gates on a clean tree; write evidence and `gate_result` events with `head` and `tree`. |
+| `cairn review --file <json>` | 0 / 2 refused | Validate the review record, then append `review_result`. |
+| `cairn record <task> --status done [--packs <json>]` | 0 / 2 refused | Append `task_done` only when every completion condition holds. |
+| `cairn record --amended --artifact <path> --why <text> [--approved-by cairn\|human] [--acceptance <a,b>]` | 0 / 2 refused | Append `mission_amended` with the old and new hashes. |
+| `cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]` | 0 / 2 refused | Append `authorization` for a human-approved write; `date` defaults to today. |
+| `cairn record --mission-done` | 0 / 2 refused | Append `mission_done` when every criterion has evidence and the ledger is committed at HEAD. |
 
 `cairn next` prints a **dispatch packet** and nothing else on stdout. Diagnostics go to stderr.
 

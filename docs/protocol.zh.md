@@ -1,4 +1,4 @@
-<!-- translation of docs/protocol.md at the T-006 commit; the English file is authoritative -->
+<!-- translation of docs/protocol.md at the T7 commit; the English file is authoritative -->
 
 # Cairn 协议 v0.1
 
@@ -45,13 +45,17 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 `mission.md`、`policy.md` 和 `plan.md` 用 YAML frontmatter 承载机器可读字段，用正文承载人需要读的
 部分。`ledger.jsonl` 只给机器读；markdown 视图是生成的，永远不手改。
 
+台账是唯一的状态来源。`mission.md.status` 是初始声明；`plan.md` 的任务 `status` 是已弃用的提示。
+新计划不再写它，已有值作为历史保留，不再修改。`cairn status`、`cairn next`、`goal-check` 和
+`reconcile` 都从 `ledger.jsonl` 推导状态。
+
 ## 不变量
 
 1. **一个 worktree 只有一个活动任务。** 并行发生在 worktree 之间，绝不发生在同一个 worktree 内。
 2. **完成意味着三件事一致。** 只有当提交存在、阻塞闸门记录为退出 0、台账里存在 `task_done`
    事件时，任务才算完成。
-3. **一个任务是一次提交事务。** 工作提交携带代码、证据和 `gate_result`；`task_done` 落在紧随其后的
-   台账提交里。没有 `task_done` 的工作提交不是进度；没有工作提交的 `task_done` 也不是进度。
+3. **一个任务是一次提交事务。** 顺序是 工作 → 提交工作 → `verify` → `record` → 只提交台账。
+   没有 `task_done` 的工作提交不是进度；没有工作提交的 `task_done` 也不是进度。
 4. **实现者的声明不是证据。** 只有运行时跑过的闸门，或者记录了退出码和输出的命令，才算数。
 5. **模型只有两个运行时决定。** 裁决（决定、记录、继续）或升级（停住这个分支，其余继续）。预算
    约束两者。
@@ -64,6 +68,19 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
    这一步推进了什么、是否碰了非目标、新会话能否推出同样的下一步？结论记为 `review_result`；
    失败则让 mission 停住。
 
+## 完成事务
+
+1. 先工作，再提交工作。证据文件属于工作提交。
+2. `cairn verify <task>` 要求 `.cairn/` 之外的工作区干净。它只捕获一次 `head` 和 `tree`，并写入
+   每个 `gate_result`。运行期间被跟踪内容发生变化就是漂移，本次运行失败。
+3. `cairn record <task> --status done` 要求存在 `task_started`、`base` 之后至少有一个提交，并且
+   每个阻塞闸门的最新结果都匹配当前 `head` 和 `tree` 且退出 0。它还要求自 `verify` 以来
+   `.cairn/` 之外没有工作区变更；一旦 mission 里任何 `task_done` 带了 `packs`，任务还必须提供
+   `packs` 记录（ADR 0005）。
+4. 只提交台账。`task_done` 落在这次提交里。
+5. `cairn record --mission-done` 要求工作区台账等于 HEAD 处的台账，所以每个 `task_done` 都先
+   提交；关闭由包含 `mission_done` 的那次提交证明。
+
 ## 目标完整性
 
 目标不是注释。`mission.md`、`policy.md`、`plan.md` 和本文在 `mission_created` 时按哈希冻结。修改
@@ -74,8 +91,11 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 - `why`：原因；
 - `approved_by`：目标、非目标、验收或协议变更填 `human`；在既有验收范围内修改计划填 `cairn`。
 
-在 `cairn record` 实现该事件之前（`T-002`），修订记录为携带同样字段的 `ruling`。milestone 审计的
-三个问题和完整的失败清单在 `docs/drift-control.md`。
+`cairn record --amended --artifact <path> --why <text> [--approved-by cairn|human]
+[--acceptance <a,b>]` 是写入者。旧哈希来自冻结链，新哈希来自磁盘文件。它拒绝未知目标、从未
+冻结的目标、缺失文件和 mission 未声明的验收 id。不给 `--acceptance` 时，事件记录 mission 的
+全部验收标准；更窄的范围只写这次变更服务的标准。milestone 审计的三个问题和完整失败清单在
+`docs/drift-control.md`。
 
 ## 事件 schema
 
@@ -92,26 +112,32 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 }
 ```
 
-| 事件 | 必需 data | 含义 |
-|---|---|---|
-| `mission_created` | `artifacts`（path → sha256） | mission 产物冻结。 |
-| `mission_amended` | `old`、`new`（path → sha256）、`acceptance`、`why`、`approved_by` | 目标产物被有意修改。 |
-| `task_started` | `base`（提交） | 某个 tick 选择了这个任务。 |
-| `gate_result` | `gate`、`command`、`exit_code`、`evidence` | 某个闸门跑过。 |
-| `review_result` | `reviewer`、`verdict`、`findings`、`packs` | 全新评审者判断了任务。 |
-| `ruling` | `decision`、`why`、`cost_if_wrong` | 没有人类参与的决定。 |
-| `task_done` | `base`、`head`、`commits`、`gates` | 任务满足全部三个条件。 |
-| `task_parked` | `reason`、`inbox` | 任务等待人类。 |
-| `mission_done` | `acceptance` | 每条验收标准都有证据。 |
-| `mission_aborted` | `reason` | mission 停止。 |
-| `note` | `text` | 人类或控制器的注记。 |
+| 事件 | 写入者 | 必需 data | 含义 |
+|---|---|---|---|
+| `mission_created` | `cairn init` | `artifacts`（path → sha256）、`approved_by`、`approval_source` | mission 产物冻结。 |
+| `mission_amended` | `cairn record --amended` | `old`、`new`（path → sha256）、`acceptance`、`why`、`approved_by` | 目标产物被有意修改。 |
+| `task_started` | `cairn start`、`cairn answer` | `base`（提交） | 某个 tick 选择了这个任务。`answer` 追加 `answer` 和 `approved_by: human`。 |
+| `gate_result` | `cairn verify` | `gate`、`command`、`exit_code`、`head`、`tree`、`evidence` | 某个闸门在某一棵已验证的树上跑过。 |
+| `review_result` | `cairn review` | `reviewer`、`context`、`artifact`、`verdict`、`findings`、`packs`、`coverage`、`non_goals`、`cold_start`、`ui_surface` | 评审者判断了任务或 mission。 |
+| `task_done` | `cairn record` | `base`、`head`、`tree`、`commits`、`gates`、`packs`（packs 激活后） | 任务满足全部完成条件。 |
+| `authorization` | `cairn record --authorized` | `approved_by: human`、`why`、`date`；可选 `scope: mission_done`、`paths` | 人类授权某次写入或关闭。 |
+| `mission_done` | `cairn record --mission-done` | `acceptance`（验收 → 证据） | 每条验收标准都有证据。 |
+| `task_parked` | 保留 | `reason`、`inbox` | 任务等待人类。 |
+| `ruling` | 保留 | `decision`、`why`、`cost_if_wrong` | 没有人类参与的决定。 |
+| `mission_aborted` | 保留 | `reason` | mission 停止。 |
+| `note` | 保留 | `text` | 控制器的注记。 |
 
 规则：
 
 - `ts` 是 UTC ISO 8601。
 - `actor` 是 `cairn`、`human` 或适配器名。
 - 事件只追加，不修改。更正用新事件。
-- 只有一个写入者：`cairn record`。适配器返回报告，永远不碰台账。
+- 每种事件只有一个运行时所有者：`cairn init` 拥有 `mission_created`；`cairn start` 和
+  `cairn answer` 拥有 `task_started`；`cairn verify` 拥有 `gate_result`；`cairn review` 拥有
+  `review_result`；`cairn record` 拥有 `task_done`、`mission_amended`、`authorization` 和
+  `mission_done`。适配器返回报告，永远不碰台账。
+- `task_parked`、`ruling`、`mission_aborted` 和 `note` 通过校验器，但 v0.1 没有运行时写入者。
+  存在 `task_parked` 事件时，`cairn answer` 可以解决它。
 
 ## 闸门契约
 
@@ -131,22 +157,26 @@ Cairn 把它们作为进度的定义，于是任何 agent 都能接上一个 mis
 - `severity: block` 决定任务。`severity: advisory` 记录但不改变退出状态。
 - `scope: workspace` 每个任务跑一次。`scope: changed` 只跑变更文件。
 - 任务声明的最强闸门必须在 `task_done` 之前至少跑过一次，即使更快的闸门已经通过。
-- 闸门命令是固定 argv。不做 shell 插值。值放在 `args` 里。
+- 闸门命令是固定 argv。不做 shell 插值。值放在 `args` 里。在 Windows 上，如果命令无法直接执行
+  （包管理器 `.cmd` shim 抛出 `ENOENT` 或 `EINVAL`），运行时会用 shell 重试同一份由计划控制的
+  argv。这个回退不是输入；测试是 `test/gates.test.ts`。
 
 ## CLI 契约（v0.1）
 
 | 命令 | 退出 | 行为 |
 |---|---|---|
-| `cairn init <id>` | 0 | 脚手架生成 mission 目录。 |
+| `cairn init <id>` | 0 / 2 拒绝 | 脚手架生成 mission 目录，设为活动 mission，并用冻结哈希追加 `mission_created`。 |
 | `cairn status [--json]` | 0 | 从台账渲染 mission 状态。 |
 | `cairn reconcile` | 0 干净 / 3 漂移 | 比较台账、git 和证据；修复缓存。 |
 | `cairn next` | 0 有工作 / 2 无 / 3 阻塞 | 打印下一个 dispatch packet。 |
-| `cairn start <task>` | 0 / 2 拒绝 | 以当前 HEAD 为 `base` 追加 `task_started`；拒绝已完成、已暂停或已开始的任务。 |
-| `cairn verify <task>` | 0 通过 / 2 失败 | 跑任务的闸门；写证据和 `gate_result` 事件。 |
-| `cairn review --file <json>` | 0 / 2 拒绝 | 校验 `reviewer`、`verdict`、`findings`、`packs`，然后追加 `review_result`。 |
-| `cairn record <task> --status done` | 0 / 2 拒绝 | 只有三个条件都成立才追加 `task_done`。 |
-| `cairn answer <task> --text ...` | 0 | 解决一个升级并恢复分支。 |
-| `cairn export` | 0 | 渲染人类可读报告。 |
+| `cairn start <task>` | 0 / 2 拒绝 | 以当前 HEAD 为 `base` 追加 `task_started`；拒绝已完成、已暂停、已开始、依赖未满足，或已有其他活动任务时启动。 |
+| `cairn answer <task> --text <text>` | 0 / 2 拒绝 | 解决一个暂停任务的升级：追加带答案的人类 `task_started`，恢复该分支。 |
+| `cairn verify <task>` | 0 通过 / 2 失败 | 在干净的树上跑任务的闸门；写证据和带 `head`、`tree` 的 `gate_result` 事件。 |
+| `cairn review --file <json>` | 0 / 2 拒绝 | 校验审查记录，然后追加 `review_result`。 |
+| `cairn record <task> --status done [--packs <json>]` | 0 / 2 拒绝 | 只有全部完成条件都成立才追加 `task_done`。 |
+| `cairn record --amended --artifact <path> --why <text> [--approved-by cairn\|human] [--acceptance <a,b>]` | 0 / 2 拒绝 | 用旧、新哈希追加 `mission_amended`。 |
+| `cairn record --authorized --paths <a,b> --why <text> --approved-by human [--date <YYYY-MM-DD>]` | 0 / 2 拒绝 | 为人类批准的写入追加 `authorization`；`date` 默认今天。 |
+| `cairn record --mission-done` | 0 / 2 拒绝 | 每条验收标准都有证据且台账已提交在 HEAD 时追加 `mission_done`。 |
 
 `cairn next` 只在 stdout 打印 **dispatch packet**，不打印别的。诊断信息走 stderr。
 
